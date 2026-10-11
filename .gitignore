@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Xcode. xcodeproj は XcodeGen で生成するので, git に入れない
+*.xcodeproj
+xcuserdata/
+DerivedData/
+
+# SwiftPM
+.build/
+.swiftpm/
+
+# 個人の設定. Team ID と Bundle ID が入る
+Config/Local.xcconfig
+
+# ビルドの成果物と, 取得した外部のコード
+build/
+
+# relay
+node_modules/
+.wrangler/
+.dev.vars
