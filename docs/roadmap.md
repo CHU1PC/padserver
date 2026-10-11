@@ -381,6 +381,7 @@ Issue は, 全部で199件です.
 
 Issue は, 1つが1つの責務だけを持ち, 1つの PR で終わる大きさに分けています (#66).
 目安は, 実装のファイルが1つか2つと, その試験です.
+GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の形) とは別のものです.
 
 担当の欄の意味は次の通りです. 型と port と仕様の文書は, 本体が書きます (#54).
 
@@ -393,250 +394,250 @@ Issue は, 1つが1つの責務だけを持ち, 1つの PR で終わる大きさ
 
 #### M0 開発基盤
 
-| ID | Issue | 依存 | 担当 |
-| --- | --- | --- | --- |
-| M0-1 | リポジトリの初期化. `.gitignore`, `LICENSE` (MIT), `README.md` の骨子を置く. `docs/` と調査メモを含めて, 最初の commit を main に push する | 無し | 本体 |
-| M0-2 | Swift の lint の設定. SwiftLint の厳しめの設定 (opt-in の規則を含む) と, swift-format の設定を置く | M0-1 | 実装者 |
-| M0-3 | Markdown と YAML の lint の設定. markdownlint-cli2 と yamllint の設定を置く | M0-1 | 実装者 |
-| M0-4 | shell と GitHub Actions の lint の設定. shellcheck, shfmt, actionlint, zizmor の設定を置く | M0-1 | 実装者 |
-| M0-5 | secret と綴りの検査の設定. gitleaks と typos の設定を置く | M0-1 | 実装者 |
-| M0-6 | 道具を入れる script. 開発に要る道具 (SwiftLint, Periphery, XcodeGen, pre-commit, 各 linter) を, 1つのコマンドで入れられるようにする | M0-1 | 実装者 |
-| M0-7 | pre-commit の設定. 全ての hook を1つの設定に束ねる. commit 時に動かすのは速い検査だけにする | M0-2, M0-3, M0-4, M0-5, M0-6 | 実装者 |
-| M0-8 | PadServerCore の骨組み. 4層の空の target と, 試験の target, 試験用の共有の target (PadTestSupport) を作る. Swift 6 の language mode と, 警告のエラー扱いを設定する. Hummingbird を PadInfrastructure の依存に宣言する | M0-1 | 実装者 |
-| M0-9 | アプリの殻. XcodeGen の定義と xcconfig と, 最小の SwiftUI のアプリを置く. Team ID と Bundle ID は `Config/Local.xcconfig` から読む | M0-8 | 実装者 |
-| M0-10 | CLI の殻. `padctl` の package を作る. PadServerCore の PadInterface に依存する. swift-argument-parser と TOML の parser を依存に宣言する | M0-8 | 実装者 |
-| M0-11 | CI: lint. pre-commit の全ての hook を回す workflow を置く. action は commit の hash で固定する | M0-7 | 実装者 |
-| M0-12 | CI: build と test. `swift test` (PadServerCore), `swift build` (cli), iOS Simulator 向けの `xcodebuild build` を回す workflow を置く | M0-9, M0-10 | 実装者 |
-| M0-13 | CI: Periphery. 未使用のコードを検出する workflow と, その設定を置く | M0-12 | 実装者 |
-| M0-14 | CI: gitleaks. 履歴の全体を調べる workflow を置く | M0-5 | 実装者 |
-| M0-15 | Dependabot の設定. GitHub Actions と Swift の依存の更新を受け取る | M0-11 | 実装者 |
-| M0-16 | PR の template. 対応する Issue, 検証の結果 (実行したコマンドと出力), reviewer の指摘を書く欄を置く | M0-1 | 実装者 |
-| M0-17 | main の保護. main への直接の push を禁じて, PR と CI (lint, build, Periphery, gitleaks) の成功を必須にする | M0-11, M0-12, M0-13, M0-14 | 本体, 所有者 |
-| M0-18 | 検証のコードを移す (001 から 005). 作業用の場所にある検証のコードと README を `spikes/` に移す. 個人的な情報 (端末の ID, IP, tailnet の名前, Team ID), token, ビルドの成果物, 取得した framework を除く. `spikes/` を lint と CI の対象から外す | M0-7 | 本体 |
-| M0-19 | 検証のコードを移す (006). tctiSH を使った検証の README と起動の script を移す. tctiSH に当てた変更は patch にして残す. tctiSH と QEMU のコード, 鍵, disk の image は入れない | M0-18 | 本体 |
+| ID | GitHub | Issue | 依存 | 担当 |
+| --- | --- | --- | --- | --- |
+| M0-1 | 1 | リポジトリの初期化. `.gitignore`, `LICENSE` (MIT), `README.md` の骨子を置く. `docs/` と調査メモを含めて, 最初の commit を main に push する | 無し | 本体 |
+| M0-2 | 2 | Swift の lint の設定. SwiftLint の厳しめの設定 (opt-in の規則を含む) と, swift-format の設定を置く | M0-1 | 実装者 |
+| M0-3 | 3 | Markdown と YAML の lint の設定. markdownlint-cli2 と yamllint の設定を置く | M0-1 | 実装者 |
+| M0-4 | 4 | shell と GitHub Actions の lint の設定. shellcheck, shfmt, actionlint, zizmor の設定を置く | M0-1 | 実装者 |
+| M0-5 | 5 | secret と綴りの検査の設定. gitleaks と typos の設定を置く | M0-1 | 実装者 |
+| M0-6 | 6 | 道具を入れる script. 開発に要る道具 (SwiftLint, Periphery, XcodeGen, pre-commit, 各 linter) を, 1つのコマンドで入れられるようにする | M0-1 | 実装者 |
+| M0-7 | 7 | pre-commit の設定. 全ての hook を1つの設定に束ねる. commit 時に動かすのは速い検査だけにする | M0-2, M0-3, M0-4, M0-5, M0-6 | 実装者 |
+| M0-8 | 8 | PadServerCore の骨組み. 4層の空の target と, 試験の target, 試験用の共有の target (PadTestSupport) を作る. Swift 6 の language mode と, 警告のエラー扱いを設定する. Hummingbird を PadInfrastructure の依存に宣言する | M0-1 | 実装者 |
+| M0-9 | 9 | アプリの殻. XcodeGen の定義と xcconfig と, 最小の SwiftUI のアプリを置く. Team ID と Bundle ID は `Config/Local.xcconfig` から読む | M0-8 | 実装者 |
+| M0-10 | 10 | CLI の殻. `padctl` の package を作る. PadServerCore の PadInterface に依存する. swift-argument-parser と TOML の parser を依存に宣言する | M0-8 | 実装者 |
+| M0-11 | 11 | CI: lint. pre-commit の全ての hook を回す workflow を置く. action は commit の hash で固定する | M0-7 | 実装者 |
+| M0-12 | 12 | CI: build と test. `swift test` (PadServerCore), `swift build` (cli), iOS Simulator 向けの `xcodebuild build` を回す workflow を置く | M0-9, M0-10 | 実装者 |
+| M0-13 | 13 | CI: Periphery. 未使用のコードを検出する workflow と, その設定を置く | M0-12 | 実装者 |
+| M0-14 | 14 | CI: gitleaks. 履歴の全体を調べる workflow を置く | M0-5 | 実装者 |
+| M0-15 | 15 | Dependabot の設定. GitHub Actions と Swift の依存の更新を受け取る | M0-11 | 実装者 |
+| M0-16 | 16 | PR の template. 対応する Issue, 検証の結果 (実行したコマンドと出力), reviewer の指摘を書く欄を置く | M0-1 | 実装者 |
+| M0-17 | 17 | main の保護. main への直接の push を禁じて, PR と CI (lint, build, Periphery, gitleaks) の成功を必須にする | M0-11, M0-12, M0-13, M0-14 | 本体, 所有者 |
+| M0-18 | 18 | 検証のコードを移す (001 から 005). 作業用の場所にある検証のコードと README を `spikes/` に移す. 個人的な情報 (端末の ID, IP, tailnet の名前, Team ID), token, ビルドの成果物, 取得した framework を除く. `spikes/` を lint と CI の対象から外す | M0-7 | 本体 |
+| M0-19 | 19 | 検証のコードを移す (006). tctiSH を使った検証の README と起動の script を移す. tctiSH に当てた変更は patch にして残す. tctiSH と QEMU のコード, 鍵, disk の image は入れない | M0-18 | 本体 |
 
 #### M1 実機での検証
 
 済んだ検証は 4.1 にあります. Issue にするのは, 残っている検証だけです. どの Issue も, 結果を `spikes/` の README と decisions.md に書いて終わります.
 
-| ID | Issue | 依存 | 担当 |
-| --- | --- | --- | --- |
-| M1-1 | guest の kernel を自分でビルドする (V17). tctiSH の kernel の config とビルドの手順を調べて, 何も変えずにビルドし, Mac の QEMU で起動する. ビルドは Linux の機械で行う | 無し | 本体 |
-| M1-2 | kernel にネットワークの機能を足す (V17). netfilter, bridge, veth を有効にして, Docker を既定のネットワークのまま起動する | M1-1 | 本体 |
-| M1-3 | guest の起動の処理を直す (V17). root を chroot で切り替える処理をやめて, `docker exec` と, Docker の既定の置き場が使えるようにする | M1-1 | 本体 |
-| M1-4 | docker compose を動かす (V17). compose を guest に入れて, FastAPI と Postgres の2つの service の構成を動かす. compose の CLI を container として動かす形も試す | M1-2, M1-3 | 本体 |
-| M1-5 | 作り直した guest を本番機で動かす (V17). 作り直した kernel と initrd を検証用のアプリに入れて, 本番機で M1-4 と同じ確認をする | M1-4 | 本体, 実機 |
-| M1-6 | image を送って読み込む: Mac (V18). Mac で `--platform linux/amd64` を付けてビルドした image を書き出して, Mac の QEMU の guest の Docker に流し込む | 無し | 本体 |
-| M1-7 | image を送って読み込む: 本番機 (V18). 同じことを, 本番機に対して tailnet 越しに行う | M1-6 | 本体, 実機 |
-| M1-8 | Kikitoru を guest で動かす: Mac (V21). Kikitoru の backend と worker の image を linux/amd64 でビルドして, Mac の QEMU の guest で, Postgres と migrate と一緒に起動する. 外のサービスの鍵は見本の値にする | M1-6 | 本体 |
-| M1-9 | Kikitoru を guest で動かす: 本番機 (V21). 同じ構成を本番機で動かして測る | M1-7, M1-8 | 本体, 実機 |
-| M1-10 | 丸1日以上動かし続ける (V16). container を3つ動かしたまま, 本番機で丸1日以上置く. 1分ごとに応答を記録して, メモリと発熱を見る | 無し | 実機 |
-| M1-11 | 背景と前面の行き来 (V19). アクセスガイドの有り無しで, 背景に回す, 画面をロックする, 通知を受ける, の3つを試す. guest の時計のずれも見る | 無し | 実機 |
-| M1-12 | guest のメモリの上限 (V20). guest のメモリを 2GB, 3GB, 4GB にして起動し, container を増やしてアプリが落ちないかを見る | 無し | 実機 |
-| M1-13 | arm64 の guest を試す (V22). tctiSH の QEMU が, arm64 の guest を JIT 無しで動かせるかを調べる. 動くなら, Mac の QEMU で arm64 の Alpine と Docker を動かして, x86_64 と速さを比べる | 無し | 本体 |
-| M1-14 | relay: 大きい応答を運ぶ (V12). 応答の本文を小分けにして WebSocket で運ぶ取り決めを, 最小の形で作る. 数百 MB の download と, Range の要求を通す | 無し | 本体, 実機 |
-| M1-15 | relay: 大きい要求を運ぶ (V12). upload の向きを確かめる. Cloudflare が受け付ける要求の本文の上限を実測する | M1-14 | 本体, 実機 |
-| M1-16 | relay: 少しずつ出る応答を運ぶ (V12). 少しずつ出る応答 (Server-Sent Events) が, 途中で溜められずに届くかを確かめる | M1-14 | 本体, 実機 |
-| M1-17 | relay: 繋ぎ直し (V13). 回線を切る, アプリを背景に回す, relay を配備し直す, の3つで, 自動で繋ぎ直せるかを見る | 無し | 本体, 実機 |
-| M1-18 | 署名の失効をまたぐ (V7). 無料の Apple ID の署名が失効する時刻をまたいで, アプリを動かし続ける | 無し | 実機 |
+| ID | GitHub | Issue | 依存 | 担当 |
+| --- | --- | --- | --- | --- |
+| M1-1 | 20 | guest の kernel を自分でビルドする (V17). tctiSH の kernel の config とビルドの手順を調べて, 何も変えずにビルドし, Mac の QEMU で起動する. ビルドは Linux の機械で行う | 無し | 本体 |
+| M1-2 | 21 | kernel にネットワークの機能を足す (V17). netfilter, bridge, veth を有効にして, Docker を既定のネットワークのまま起動する | M1-1 | 本体 |
+| M1-3 | 22 | guest の起動の処理を直す (V17). root を chroot で切り替える処理をやめて, `docker exec` と, Docker の既定の置き場が使えるようにする | M1-1 | 本体 |
+| M1-4 | 23 | docker compose を動かす (V17). compose を guest に入れて, FastAPI と Postgres の2つの service の構成を動かす. compose の CLI を container として動かす形も試す | M1-2, M1-3 | 本体 |
+| M1-5 | 24 | 作り直した guest を本番機で動かす (V17). 作り直した kernel と initrd を検証用のアプリに入れて, 本番機で M1-4 と同じ確認をする | M1-4 | 本体, 実機 |
+| M1-6 | 25 | image を送って読み込む: Mac (V18). Mac で `--platform linux/amd64` を付けてビルドした image を書き出して, Mac の QEMU の guest の Docker に流し込む | 無し | 本体 |
+| M1-7 | 26 | image を送って読み込む: 本番機 (V18). 同じことを, 本番機に対して tailnet 越しに行う | M1-6 | 本体, 実機 |
+| M1-8 | 27 | Kikitoru を guest で動かす: Mac (V21). Kikitoru の backend と worker の image を linux/amd64 でビルドして, Mac の QEMU の guest で, Postgres と migrate と一緒に起動する. 外のサービスの鍵は見本の値にする | M1-6 | 本体 |
+| M1-9 | 28 | Kikitoru を guest で動かす: 本番機 (V21). 同じ構成を本番機で動かして測る | M1-7, M1-8 | 本体, 実機 |
+| M1-10 | 29 | 丸1日以上動かし続ける (V16). container を3つ動かしたまま, 本番機で丸1日以上置く. 1分ごとに応答を記録して, メモリと発熱を見る | 無し | 実機 |
+| M1-11 | 30 | 背景と前面の行き来 (V19). アクセスガイドの有り無しで, 背景に回す, 画面をロックする, 通知を受ける, の3つを試す. guest の時計のずれも見る | 無し | 実機 |
+| M1-12 | 31 | guest のメモリの上限 (V20). guest のメモリを 2GB, 3GB, 4GB にして起動し, container を増やしてアプリが落ちないかを見る | 無し | 実機 |
+| M1-13 | 32 | arm64 の guest を試す (V22). tctiSH の QEMU が, arm64 の guest を JIT 無しで動かせるかを調べる. 動くなら, Mac の QEMU で arm64 の Alpine と Docker を動かして, x86_64 と速さを比べる | 無し | 本体 |
+| M1-14 | 33 | relay: 大きい応答を運ぶ (V12). 応答の本文を小分けにして WebSocket で運ぶ取り決めを, 最小の形で作る. 数百 MB の download と, Range の要求を通す | 無し | 本体, 実機 |
+| M1-15 | 34 | relay: 大きい要求を運ぶ (V12). upload の向きを確かめる. Cloudflare が受け付ける要求の本文の上限を実測する | M1-14 | 本体, 実機 |
+| M1-16 | 35 | relay: 少しずつ出る応答を運ぶ (V12). 少しずつ出る応答 (Server-Sent Events) が, 途中で溜められずに届くかを確かめる | M1-14 | 本体, 実機 |
+| M1-17 | 36 | relay: 繋ぎ直し (V13). 回線を切る, アプリを背景に回す, relay を配備し直す, の3つで, 自動で繋ぎ直せるかを見る | 無し | 本体, 実機 |
+| M1-18 | 37 | 署名の失効をまたぐ (V7). 無料の Apple ID の署名が失効する時刻をまたいで, アプリを動かし続ける | 無し | 実機 |
 
 #### M2 土台
 
-| ID | Issue | 依存 | 担当 |
-| --- | --- | --- | --- |
-| M2-1 | 型: プロジェクト. プロジェクト, 名前 (使える文字の検証), 種類 (静的サイトか compose か) の型を書く | M0-8 | 本体 |
-| M2-2 | 型: release. release, その ID, 状態 (準備中, 有効, 退役) の型を書く | M2-1 | 本体 |
-| M2-3 | 型: 経路. 経路 (host とパスの prefix) と, 向き先 (静的サイトか, container の service と port か) の型を書く. host とパスの正規化を含む | M2-1 | 本体 |
-| M2-4 | 型: 要求と応答. 配信の入口, relay, container への転送で共有する, 要求と応答の head の形と, 本文の stream の抽象を書く | M0-8 | 本体 |
-| M2-5 | 型: 共有リンク. 共有リンクと, 期限の判定を書く | M0-8 | 本体 |
-| M2-6 | 型: 管理の認証. 管理の token, 接続元の住所, tailnet の範囲 (100.64.0.0/10 と fd7a:115c:a1e0::/48) の判定を書く | M0-8 | 本体 |
-| M2-7 | 型: ログ. ログの1件 (時刻, 出所, level, 本文) の型を書く | M0-8 | 本体 |
-| M2-8 | 型: 設定ファイル. `padserver.toml` を表す型と, 検証の規則を書く. 静的サイトの分だけを扱う | M2-1, M2-3 | 本体 |
-| M2-9 | port: 保存. プロジェクトの一覧, release, ファイルの中身 (blob) を保存する protocol を書く | M2-2, M2-3 | 本体 |
-| M2-10 | port: secret と token. secret と token を保存する protocol を書く | M2-6 | 本体 |
-| M2-11 | port: ログと時計. ログの bus, 時計, ID の生成の protocol を書く | M2-7 | 本体 |
-| M2-12 | 管理 API の仕様. endpoint の一覧, 認証の header, エラーの形, 版の付け方を文書にする. 範囲は, 配備, 状態, 開始と停止, ログ | M2-8 | 本体 |
-| M2-13 | 通信の型. 管理 API の入出力の型を書く. 配備, 状態, 開始と停止, ログの1件, エラー. JSON の形を試験で固定する | M2-12 | 本体 |
-| M2-14 | 試験用の実装. port の in-memory の実装 (保存, secret, ログ, 時計) を, 試験から共有できる target に置く | M2-9, M2-10, M2-11 | 実装者 |
-| M2-15 | use case: 配備の差分. 送る側が出したファイルの一覧 (パスと hash) から, iPad に無いものを答える | M2-9, M2-14 | 実装者 |
-| M2-16 | use case: 配備の確定. 揃ったファイルから release を作って, 有効な release を切り替える. 足りないファイルがあれば, 切り替えない | M2-9, M2-14 | 実装者 |
-| M2-17 | use case: 古い release の掃除. 直近の3つを残して, 古い release と, どの release からも参照されない blob を消す | M2-16 | 実装者 |
-| M2-18 | use case: 経路の解決. host とパスから, プロジェクトと向き先を引く. サブドメインとパスの両方に対応する. 長い prefix を優先する | M2-3, M2-9, M2-14 | 実装者 |
-| M2-19 | use case: 管理の認可. token を定数時間で照合して, 接続元が tailnet の IP かを確かめる. 両方が通ったときだけ許す | M2-6, M2-10, M2-14 | 実装者 |
-| M2-20 | use case: token の発行. 推測できない token を作って保存する. 作り直すと, 古い token は無効になる | M2-10, M2-14 | 実装者 |
-| M2-21 | use case: プロジェクトの一覧と状態. プロジェクトごとに, 種類, 有効な release, 動いているかを返す | M2-9, M2-14 | 実装者 |
-| M2-22 | use case: プロジェクトの開始と停止. プロジェクトを止めると, その経路は解決されなくなる. 始めると戻る | M2-9, M2-14 | 実装者 |
-| M2-23 | 保存: プロジェクトの一覧. プロジェクトの一覧を JSON のファイルに持つ. 書き換えは, 一時ファイルと rename で原子的に行う | M2-9 | 実装者 |
-| M2-24 | 保存: blob. ファイルの中身を, hash の名前で持つ. 同じ中身は1つだけ持つ. 受け取りは streaming で書いて, hash が合わなければ捨てる | M2-9 | 実装者 |
-| M2-25 | 保存: release. release の manifest (パスと hash の対応) を持つ. 有効な release の切り替えを原子的に行う | M2-9 | 実装者 |
-| M2-26 | 保存: Keychain. token と secret を Keychain に持つ実装を書く | M2-10 | 実装者 |
-| M2-27 | ログの bus. 複数の購読者にログを流す. 直近の1,000件を保持して, 後から繋いだ購読者に渡す | M2-11 | 実装者 |
-| M2-28 | 配信の入口. Hummingbird で loopback だけに待ち受けて, 経路の解決を呼んで振り分ける. 当たらなければ 404, 停止中は 503 を返す | M2-4, M2-18 | 実装者 |
-| M2-29 | 静的ファイルの応答. 有効な release のファイルを返す. Content-Type, ETag, If-None-Match, index.html に対応する. 置き場の外に出るパスを拒む | M2-25, M2-28 | 実装者 |
-| M2-30 | Range の応答. Range の要求に 206 と 416 を返す. 複数の範囲は扱わない | M2-29 | 実装者 |
-| M2-31 | 要求の記録. 配信の入口が, 要求ごとに, 時刻, host, パス, status, かかった時間をログの bus に流す | M2-27, M2-28 | 実装者 |
-| M2-32 | 管理用の待ち受け. 配信とは別の port で待ち受けて, 接続元の IP を取り出して要求に付ける | M2-6 | 実装者 |
-| M2-33 | 認証の middleware. token の header を読んで, 管理の認可の use case を呼ぶ. 通らなければ 401 か 403 を返す | M2-19, M2-32 | 実装者 |
-| M2-34 | エラーの応答. use case のエラーを, 仕様のエラーの形に変える | M2-13, M2-32 | 実装者 |
-| M2-35 | 管理 API: 配備の問い合わせと確定. 配備の差分を答える endpoint と, 配備を確定する endpoint を書く | M2-13, M2-15, M2-16, M2-33 | 実装者 |
-| M2-36 | 管理 API: ファイルの受け取り. 送られた本文を, streaming のまま blob の保存に流す. 大きさの上限を設ける | M2-13, M2-24, M2-33 | 実装者 |
-| M2-37 | 管理 API: 状態, 開始, 停止. プロジェクトの一覧と状態, 開始, 停止の endpoint を書く | M2-13, M2-21, M2-22, M2-33 | 実装者 |
-| M2-38 | 管理 API: ログの streaming. 直近のログを返した後, 繋いだまま新しいログを流す | M2-13, M2-27, M2-33 | 実装者 |
-| M2-39 | CLI: 接続先と token. `padctl login` を書く. 接続先を設定のファイルに, token を Mac の Keychain に保存する | M0-10 | 実装者 |
-| M2-40 | CLI: 管理 API の client. 認証の header を付けて管理 API を呼ぶ. エラーを読める文に変える. streaming の応答を受け取れる | M2-13, M2-39 | 実装者 |
-| M2-41 | CLI: `padctl status`. プロジェクトの一覧と状態を表示する | M2-37, M2-40 | 実装者 |
-| M2-42 | CLI: 設定ファイルの読み取り. `padserver.toml` を読んで, 設定の型にする. 誤りは, 行の番号と一緒に示す | M0-10, M2-8 | 実装者 |
-| M2-43 | CLI: `padctl deploy` (静的サイト). フォルダを走査して hash を計算し, 足りないファイルだけを送って, 配備を確定する | M2-35, M2-36, M2-40, M2-42 | 実装者 |
-| M2-44 | CLI: `padctl start` と `padctl stop`. プロジェクトを始める, 止める | M2-37, M2-40 | 実装者 |
-| M2-45 | CLI: `padctl logs`. ログを追尾して表示する. Ctrl-C で止まる | M2-38, M2-40 | 実装者 |
-| M2-46 | CLI: `padctl reinstall`. `xcodegen`, `xcodebuild`, `devicectl` を呼んで, ビルドして iPad へ入れ直す. 端末の ID は設定から読む | M0-9, M2-39 | 実装者 |
-| M2-47 | App: 組み立て. 実装を選んで use case に渡し, 配信と管理の2つの待ち受けを起動する | M2-23, M2-24, M2-25, M2-26, M2-29, M2-31, M2-33, M2-34, M2-35, M2-36, M2-37, M2-38 | 実装者 |
-| M2-48 | App: lifecycle. 前面に戻ったときに, 待ち受けを確かめて再開する. 自動ロックを止める | M2-47 | 実装者 |
-| M2-49 | App: 初回の設定の画面. token の表示と作り直し, 管理の接続先の表示を行う画面を書く | M2-20, M2-47 | 実装者 |
-| M2-50 | dashboard: プロジェクトの一覧. プロジェクトの一覧と状態を出す画面と, 画面用の変換を書く | M2-21, M2-47 | 実装者 |
-| M2-51 | dashboard: 要求の流れ. 直近の要求を, 新しい順に出す画面を書く | M2-31, M2-47 | 実装者 |
-| M2-52 | dashboard: ログ. ログを追尾して出す画面を書く | M2-27, M2-47 | 実装者 |
-| M2-53 | 見本の静的サイト. 通しの確認と手順書で使う, 最小の静的サイトを置く | M2-8 | 実装者 |
-| M2-54 | 通しの確認: 静的サイト. Mac から見本の静的サイトを配備して, tailnet 経由で表示する. token の無い要求が拒まれることも確かめる. `padctl reinstall` で入れ直せることも確かめる | M2-43, M2-46, M2-48, M2-49, M2-53 | 実機 |
+| ID | GitHub | Issue | 依存 | 担当 |
+| --- | --- | --- | --- | --- |
+| M2-1 | 38 | 型: プロジェクト. プロジェクト, 名前 (使える文字の検証), 種類 (静的サイトか compose か) の型を書く | M0-8 | 本体 |
+| M2-2 | 39 | 型: release. release, その ID, 状態 (準備中, 有効, 退役) の型を書く | M2-1 | 本体 |
+| M2-3 | 40 | 型: 経路. 経路 (host とパスの prefix) と, 向き先 (静的サイトか, container の service と port か) の型を書く. host とパスの正規化を含む | M2-1 | 本体 |
+| M2-4 | 41 | 型: 要求と応答. 配信の入口, relay, container への転送で共有する, 要求と応答の head の形と, 本文の stream の抽象を書く | M0-8 | 本体 |
+| M2-5 | 42 | 型: 共有リンク. 共有リンクと, 期限の判定を書く | M0-8 | 本体 |
+| M2-6 | 43 | 型: 管理の認証. 管理の token, 接続元の住所, tailnet の範囲 (100.64.0.0/10 と fd7a:115c:a1e0::/48) の判定を書く | M0-8 | 本体 |
+| M2-7 | 44 | 型: ログ. ログの1件 (時刻, 出所, level, 本文) の型を書く | M0-8 | 本体 |
+| M2-8 | 45 | 型: 設定ファイル. `padserver.toml` を表す型と, 検証の規則を書く. 静的サイトの分だけを扱う | M2-1, M2-3 | 本体 |
+| M2-9 | 46 | port: 保存. プロジェクトの一覧, release, ファイルの中身 (blob) を保存する protocol を書く | M2-2, M2-3 | 本体 |
+| M2-10 | 47 | port: secret と token. secret と token を保存する protocol を書く | M2-6 | 本体 |
+| M2-11 | 48 | port: ログと時計. ログの bus, 時計, ID の生成の protocol を書く | M2-7 | 本体 |
+| M2-12 | 49 | 管理 API の仕様. endpoint の一覧, 認証の header, エラーの形, 版の付け方を文書にする. 範囲は, 配備, 状態, 開始と停止, ログ | M2-8 | 本体 |
+| M2-13 | 50 | 通信の型. 管理 API の入出力の型を書く. 配備, 状態, 開始と停止, ログの1件, エラー. JSON の形を試験で固定する | M2-12 | 本体 |
+| M2-14 | 51 | 試験用の実装. port の in-memory の実装 (保存, secret, ログ, 時計) を, 試験から共有できる target に置く | M2-9, M2-10, M2-11 | 実装者 |
+| M2-15 | 52 | use case: 配備の差分. 送る側が出したファイルの一覧 (パスと hash) から, iPad に無いものを答える | M2-9, M2-14 | 実装者 |
+| M2-16 | 53 | use case: 配備の確定. 揃ったファイルから release を作って, 有効な release を切り替える. 足りないファイルがあれば, 切り替えない | M2-9, M2-14 | 実装者 |
+| M2-17 | 54 | use case: 古い release の掃除. 直近の3つを残して, 古い release と, どの release からも参照されない blob を消す | M2-16 | 実装者 |
+| M2-18 | 55 | use case: 経路の解決. host とパスから, プロジェクトと向き先を引く. サブドメインとパスの両方に対応する. 長い prefix を優先する | M2-3, M2-9, M2-14 | 実装者 |
+| M2-19 | 56 | use case: 管理の認可. token を定数時間で照合して, 接続元が tailnet の IP かを確かめる. 両方が通ったときだけ許す | M2-6, M2-10, M2-14 | 実装者 |
+| M2-20 | 57 | use case: token の発行. 推測できない token を作って保存する. 作り直すと, 古い token は無効になる | M2-10, M2-14 | 実装者 |
+| M2-21 | 58 | use case: プロジェクトの一覧と状態. プロジェクトごとに, 種類, 有効な release, 動いているかを返す | M2-9, M2-14 | 実装者 |
+| M2-22 | 59 | use case: プロジェクトの開始と停止. プロジェクトを止めると, その経路は解決されなくなる. 始めると戻る | M2-9, M2-14 | 実装者 |
+| M2-23 | 60 | 保存: プロジェクトの一覧. プロジェクトの一覧を JSON のファイルに持つ. 書き換えは, 一時ファイルと rename で原子的に行う | M2-9 | 実装者 |
+| M2-24 | 61 | 保存: blob. ファイルの中身を, hash の名前で持つ. 同じ中身は1つだけ持つ. 受け取りは streaming で書いて, hash が合わなければ捨てる | M2-9 | 実装者 |
+| M2-25 | 62 | 保存: release. release の manifest (パスと hash の対応) を持つ. 有効な release の切り替えを原子的に行う | M2-9 | 実装者 |
+| M2-26 | 63 | 保存: Keychain. token と secret を Keychain に持つ実装を書く | M2-10 | 実装者 |
+| M2-27 | 64 | ログの bus. 複数の購読者にログを流す. 直近の1,000件を保持して, 後から繋いだ購読者に渡す | M2-11 | 実装者 |
+| M2-28 | 65 | 配信の入口. Hummingbird で loopback だけに待ち受けて, 経路の解決を呼んで振り分ける. 当たらなければ 404, 停止中は 503 を返す | M2-4, M2-18 | 実装者 |
+| M2-29 | 66 | 静的ファイルの応答. 有効な release のファイルを返す. Content-Type, ETag, If-None-Match, index.html に対応する. 置き場の外に出るパスを拒む | M2-25, M2-28 | 実装者 |
+| M2-30 | 67 | Range の応答. Range の要求に 206 と 416 を返す. 複数の範囲は扱わない | M2-29 | 実装者 |
+| M2-31 | 68 | 要求の記録. 配信の入口が, 要求ごとに, 時刻, host, パス, status, かかった時間をログの bus に流す | M2-27, M2-28 | 実装者 |
+| M2-32 | 69 | 管理用の待ち受け. 配信とは別の port で待ち受けて, 接続元の IP を取り出して要求に付ける | M2-6 | 実装者 |
+| M2-33 | 70 | 認証の middleware. token の header を読んで, 管理の認可の use case を呼ぶ. 通らなければ 401 か 403 を返す | M2-19, M2-32 | 実装者 |
+| M2-34 | 71 | エラーの応答. use case のエラーを, 仕様のエラーの形に変える | M2-13, M2-32 | 実装者 |
+| M2-35 | 72 | 管理 API: 配備の問い合わせと確定. 配備の差分を答える endpoint と, 配備を確定する endpoint を書く | M2-13, M2-15, M2-16, M2-33 | 実装者 |
+| M2-36 | 73 | 管理 API: ファイルの受け取り. 送られた本文を, streaming のまま blob の保存に流す. 大きさの上限を設ける | M2-13, M2-24, M2-33 | 実装者 |
+| M2-37 | 74 | 管理 API: 状態, 開始, 停止. プロジェクトの一覧と状態, 開始, 停止の endpoint を書く | M2-13, M2-21, M2-22, M2-33 | 実装者 |
+| M2-38 | 75 | 管理 API: ログの streaming. 直近のログを返した後, 繋いだまま新しいログを流す | M2-13, M2-27, M2-33 | 実装者 |
+| M2-39 | 76 | CLI: 接続先と token. `padctl login` を書く. 接続先を設定のファイルに, token を Mac の Keychain に保存する | M0-10 | 実装者 |
+| M2-40 | 77 | CLI: 管理 API の client. 認証の header を付けて管理 API を呼ぶ. エラーを読める文に変える. streaming の応答を受け取れる | M2-13, M2-39 | 実装者 |
+| M2-41 | 78 | CLI: `padctl status`. プロジェクトの一覧と状態を表示する | M2-37, M2-40 | 実装者 |
+| M2-42 | 79 | CLI: 設定ファイルの読み取り. `padserver.toml` を読んで, 設定の型にする. 誤りは, 行の番号と一緒に示す | M0-10, M2-8 | 実装者 |
+| M2-43 | 80 | CLI: `padctl deploy` (静的サイト). フォルダを走査して hash を計算し, 足りないファイルだけを送って, 配備を確定する | M2-35, M2-36, M2-40, M2-42 | 実装者 |
+| M2-44 | 81 | CLI: `padctl start` と `padctl stop`. プロジェクトを始める, 止める | M2-37, M2-40 | 実装者 |
+| M2-45 | 82 | CLI: `padctl logs`. ログを追尾して表示する. Ctrl-C で止まる | M2-38, M2-40 | 実装者 |
+| M2-46 | 83 | CLI: `padctl reinstall`. `xcodegen`, `xcodebuild`, `devicectl` を呼んで, ビルドして iPad へ入れ直す. 端末の ID は設定から読む | M0-9, M2-39 | 実装者 |
+| M2-47 | 84 | App: 組み立て. 実装を選んで use case に渡し, 配信と管理の2つの待ち受けを起動する | M2-23, M2-24, M2-25, M2-26, M2-29, M2-31, M2-33, M2-34, M2-35, M2-36, M2-37, M2-38 | 実装者 |
+| M2-48 | 85 | App: lifecycle. 前面に戻ったときに, 待ち受けを確かめて再開する. 自動ロックを止める | M2-47 | 実装者 |
+| M2-49 | 86 | App: 初回の設定の画面. token の表示と作り直し, 管理の接続先の表示を行う画面を書く | M2-20, M2-47 | 実装者 |
+| M2-50 | 87 | dashboard: プロジェクトの一覧. プロジェクトの一覧と状態を出す画面と, 画面用の変換を書く | M2-21, M2-47 | 実装者 |
+| M2-51 | 88 | dashboard: 要求の流れ. 直近の要求を, 新しい順に出す画面を書く | M2-31, M2-47 | 実装者 |
+| M2-52 | 89 | dashboard: ログ. ログを追尾して出す画面を書く | M2-27, M2-47 | 実装者 |
+| M2-53 | 90 | 見本の静的サイト. 通しの確認と手順書で使う, 最小の静的サイトを置く | M2-8 | 実装者 |
+| M2-54 | 91 | 通しの確認: 静的サイト. Mac から見本の静的サイトを配備して, tailnet 経由で表示する. token の無い要求が拒まれることも確かめる. `padctl reinstall` で入れ直せることも確かめる | M2-43, M2-46, M2-48, M2-49, M2-53 | 実機 |
 
 #### M3 公開
 
-| ID | Issue | 依存 | 担当 |
-| --- | --- | --- | --- |
-| M3-1 | relay の取り決め. アプリと relay のやり取りを文書にする. frame の形, 要求と応答の小分け, 流量の制御, 取り消し, 接続の認証, 元のホスト名の受け渡し. 試験用の byte 列の見本も作る | M1-14, M1-15, M1-16, M1-17 | 本体 |
-| M3-2 | 取り決めの frame: Swift. frame の型と, encode と decode を書く | M3-1 | 実装者 |
-| M3-3 | relay の骨組み. wrangler の設定, TypeScript の設定, 試験の土台を置く. パッケージの管理は bun で行う | M0-1 | 実装者 |
-| M3-4 | 取り決めの frame: TypeScript. frame の型と, encode と decode を書く | M3-1, M3-3 | 実装者 |
-| M3-5 | relay: iPad からの接続を受ける. Durable Object が WebSocket を受けて, token で認証する. hibernation を使う. 同時に繋げるのは1本だけにする | M3-4 | 実装者 |
-| M3-6 | relay: 公開の要求を運ぶ. Worker が要求を Durable Object に渡して, 小分けの応答を stream で返す. 元のホスト名を伝える | M3-5 | 実装者 |
-| M3-7 | relay: 大きい本文と取り消し. 流量を制御する. 訪問者が接続を切ったら, iPad に取り消しを伝える | M3-6 | 実装者 |
-| M3-8 | relay: 繋がっていないとき. iPad が繋がっていないときは, 503 と Retry-After を返す. 応答が来ないときは timeout にする | M3-6 | 実装者 |
-| M3-9 | relay: 配備の script. token の secret を設定して, 使う人の Cloudflare のアカウントへ配備する. 無料プランの範囲で動く設定にする | M3-6 | 実装者 |
-| M3-10 | CI: relay の試験. relay の試験を回す job を足す | M0-12, M3-3 | 実装者 |
-| M3-11 | 型と port: relay の接続. relay の設定の型, 接続の状態の型, 接続の port を書く | M2-9, M3-1 | 本体 |
-| M3-12 | アプリ: relay への接続. WebSocket で relay に繋いで, token で認証する | M3-2, M3-11 | 実装者 |
-| M3-13 | アプリ: 繋ぎ直し. 切れたら, 間隔を広げながら繋ぎ直す. 前面に戻ったときにも確かめる. 定期的に ping を送る | M3-12 | 実装者 |
-| M3-14 | アプリ: 要求の受け渡し. relay から届いた要求を配信の入口へ渡して, 応答を小分けにして返す. 取り消しに従う | M2-28, M3-12 | 実装者 |
-| M3-15 | relay の設定の保存. relay の URL と token を保存する use case を書く. token は Keychain に持つ | M2-14, M2-26, M3-11 | 実装者 |
-| M3-16 | App: relay を登録する画面. URL と token を入力する画面と, 接続の状態の表示を書く. 組み立てに relay を足す | M2-49, M3-13, M3-14, M3-15 | 実装者 |
-| M3-17 | 元のホスト名での経路の解決. relay が伝えた元のホスト名を, relay 経由の要求のときだけ信じて, サブドメインの経路を解決する | M2-18, M3-14 | 実装者 |
-| M3-18 | 公開と管理の分離の試験. relay から届いた要求が, 管理 API のどの endpoint にも届かないことを, 試験で固定する | M2-33, M3-14 | 実装者 |
-| M3-19 | ドメインの扱いを決める. お名前.com のドメインのネームサーバーを Cloudflare に向けるか, 別のドメインを使うかを決める. 今の DNS の設定への影響を, 本体が先に調べる | 無し | 所有者, 本体 |
-| M3-20 | 手順書: ドメインの割り当て. ドメインを Cloudflare の zone にして, relay に割り当てる手順を書く | M3-9, M3-19 | 本体 |
-| M3-21 | 通しの確認: 公開. 独自ドメインの URL を, tailnet の外から開く. 管理 API が外から届かないことも確かめる | M2-54, M3-9, M3-16, M3-17, M3-18, M3-20 | 実機 |
+| ID | GitHub | Issue | 依存 | 担当 |
+| --- | --- | --- | --- | --- |
+| M3-1 | 92 | relay の取り決め. アプリと relay のやり取りを文書にする. frame の形, 要求と応答の小分け, 流量の制御, 取り消し, 接続の認証, 元のホスト名の受け渡し. 試験用の byte 列の見本も作る | M1-14, M1-15, M1-16, M1-17 | 本体 |
+| M3-2 | 93 | 取り決めの frame: Swift. frame の型と, encode と decode を書く | M3-1 | 実装者 |
+| M3-3 | 94 | relay の骨組み. wrangler の設定, TypeScript の設定, 試験の土台を置く. パッケージの管理は bun で行う | M0-1 | 実装者 |
+| M3-4 | 95 | 取り決めの frame: TypeScript. frame の型と, encode と decode を書く | M3-1, M3-3 | 実装者 |
+| M3-5 | 96 | relay: iPad からの接続を受ける. Durable Object が WebSocket を受けて, token で認証する. hibernation を使う. 同時に繋げるのは1本だけにする | M3-4 | 実装者 |
+| M3-6 | 97 | relay: 公開の要求を運ぶ. Worker が要求を Durable Object に渡して, 小分けの応答を stream で返す. 元のホスト名を伝える | M3-5 | 実装者 |
+| M3-7 | 98 | relay: 大きい本文と取り消し. 流量を制御する. 訪問者が接続を切ったら, iPad に取り消しを伝える | M3-6 | 実装者 |
+| M3-8 | 99 | relay: 繋がっていないとき. iPad が繋がっていないときは, 503 と Retry-After を返す. 応答が来ないときは timeout にする | M3-6 | 実装者 |
+| M3-9 | 100 | relay: 配備の script. token の secret を設定して, 使う人の Cloudflare のアカウントへ配備する. 無料プランの範囲で動く設定にする | M3-6 | 実装者 |
+| M3-10 | 101 | CI: relay の試験. relay の試験を回す job を足す | M0-12, M3-3 | 実装者 |
+| M3-11 | 102 | 型と port: relay の接続. relay の設定の型, 接続の状態の型, 接続の port を書く | M2-9, M3-1 | 本体 |
+| M3-12 | 103 | アプリ: relay への接続. WebSocket で relay に繋いで, token で認証する | M3-2, M3-11 | 実装者 |
+| M3-13 | 104 | アプリ: 繋ぎ直し. 切れたら, 間隔を広げながら繋ぎ直す. 前面に戻ったときにも確かめる. 定期的に ping を送る | M3-12 | 実装者 |
+| M3-14 | 105 | アプリ: 要求の受け渡し. relay から届いた要求を配信の入口へ渡して, 応答を小分けにして返す. 取り消しに従う | M2-28, M3-12 | 実装者 |
+| M3-15 | 106 | relay の設定の保存. relay の URL と token を保存する use case を書く. token は Keychain に持つ | M2-14, M2-26, M3-11 | 実装者 |
+| M3-16 | 107 | App: relay を登録する画面. URL と token を入力する画面と, 接続の状態の表示を書く. 組み立てに relay を足す | M2-49, M3-13, M3-14, M3-15 | 実装者 |
+| M3-17 | 108 | 元のホスト名での経路の解決. relay が伝えた元のホスト名を, relay 経由の要求のときだけ信じて, サブドメインの経路を解決する | M2-18, M3-14 | 実装者 |
+| M3-18 | 109 | 公開と管理の分離の試験. relay から届いた要求が, 管理 API のどの endpoint にも届かないことを, 試験で固定する | M2-33, M3-14 | 実装者 |
+| M3-19 | 110 | ドメインの扱いを決める. お名前.com のドメインのネームサーバーを Cloudflare に向けるか, 別のドメインを使うかを決める. 今の DNS の設定への影響を, 本体が先に調べる | 無し | 所有者, 本体 |
+| M3-20 | 111 | 手順書: ドメインの割り当て. ドメインを Cloudflare の zone にして, relay に割り当てる手順を書く | M3-9, M3-19 | 本体 |
+| M3-21 | 112 | 通しの確認: 公開. 独自ドメインの URL を, tailnet の外から開く. 管理 API が外から届かないことも確かめる | M2-54, M3-9, M3-16, M3-17, M3-18, M3-20 | 実機 |
 
 #### M4 Linux と Docker
 
 guest の作り方 (M4-10 から M4-12) は, M1-1 から M1-5 の結果で形が変わります.
 
-| ID | Issue | 依存 | 担当 |
-| --- | --- | --- | --- |
-| M4-1 | QEMU を取得する script. tctiSH と QEMU の fork を, commit を固定して取得する. 取得先は git に入れない | M0-1 | 実装者 |
-| M4-2 | QEMU に当てる変更の管理. 検証で当てた変更 (無料の Apple ID で使えない権限を外す, ビルドの flag を足す) を patch にして, 取得の後に当てる | M0-19, M4-1 | 実装者 |
-| M4-3 | QEMU を iPad 用にビルドする script. nix を使ってビルドする. 成果物は `build/` に置いて, git に入れない | M4-2 | 実装者 |
-| M4-4 | QEMU を Mac 用にビルドする script. 開発と試験のために, 同じ QEMU を Mac で動かせるようにする | M4-2 | 実装者 |
-| M4-5 | PadGuest の骨組み. QEMU を包む package を作る. QEMU の binary が無くても, ビルドと試験が通る形にする | M0-8 | 実装者 |
-| M4-6 | 型と port: guest. guest の状態 (停止, 起動中, 準備完了, 失敗) の型と, guest を操作する port を書く | M2-9 | 本体 |
-| M4-7 | QEMU の起動の引数. メモリ, CPU, kernel, initrd, disk, network の設定から, QEMU の引数を組み立てる | M4-5 | 実装者 |
-| M4-8 | QEMU の読み込みと起動. QEMU を library として読み込んで, 専用の thread で起動する | M4-3, M4-4, M4-7 | 実装者 |
-| M4-9 | QEMU の monitor の client. QEMU の monitor に繋いで, 状態の取得, 停止, port の転送の追加と削除を行う | M4-5 | 実装者 |
-| M4-10 | guest の kernel を作る script. M1-2 で決まった構成で, kernel をビルドする | M0-1, M1-2 | 実装者 |
-| M4-11 | guest の rootfs を作る script. Alpine Linux に Docker と compose を入れた rootfs と, M1-3 で決まった起動の処理を作る | M1-3, M1-4 | 実装者 |
-| M4-12 | guest: Docker の自動起動. guest の起動時に Docker を立ち上げて, API の口を認証付きで開ける | M4-11 | 実装者 |
-| M4-13 | guest の成果物の同梱. kernel と initrd を, アプリの resource に入れる | M0-9, M4-10, M4-11 | 実装者 |
-| M4-14 | guest の disk. 初回に空の disk を作る. 置き場は, バックアップの対象から外す. 大きさは設定で決める | M4-5 | 実装者 |
-| M4-15 | 端末ごとの鍵. Docker の API の認証に使う鍵を端末ごとに作って, Keychain に持つ. guest には起動のたびに渡す | M2-26, M4-8 | 実装者 |
-| M4-16 | guest の起動と停止. guest を操作する port の実装を書く. Docker の API が応答するまで待つ. 時間内に応答しなければ, 失敗にする | M4-6, M4-8, M4-9, M4-12, M4-14 | 実装者 |
-| M4-17 | Docker の client: 接続. 転送した port 経由で, 認証を付けて Docker の API に繋ぐ. 版の取得と ping を行う | M4-15 | 実装者 |
-| M4-18 | Docker の client: container. container の一覧, 作成, 開始, 停止, 削除, 終了待ちを行う | M4-17 | 実装者 |
-| M4-19 | Docker の client: image. image の一覧, 取得, 読み込み (stream), 削除を行う | M4-17 | 実装者 |
-| M4-20 | Docker の client: ログ. container のログを追尾する. stdout と stderr を分ける | M4-17 | 実装者 |
-| M4-21 | Docker の client: ファイルの送り込み. container の中へ, ファイルの束 (tar) を送る | M4-18 | 実装者 |
-| M4-22 | port の転送. guest の port を, アプリの中の loopback の空いた port に出す. 外すこともできる | M4-6, M4-9 | 実装者 |
-| M4-23 | App: guest の組み立て. 組み立てに guest を足して, アプリの起動時に guest を起動する. 失敗は dashboard に出す | M2-47, M4-16 | 実装者 |
-| M4-24 | dashboard: Linux と Docker. guest の状態と, メモリと disk の使用を出す画面を書く | M2-50, M4-16 | 実装者 |
-| M4-25 | 状態に guest を足す. 状態の API と `padctl status` に, guest と Docker の状態を足す | M2-37, M2-41, M4-16 | 実装者 |
-| M4-26 | PadGuest の結合試験. Mac の QEMU で guest を起動して, nginx の container を動かし, 転送した port から 200 が返ることを試験にする | M4-4, M4-16, M4-18, M4-19, M4-22 | 実装者 |
-| M4-27 | 通しの確認: Linux と Docker. 本番機でアプリを起動すると, Linux と Docker が立ち上がって, dashboard に準備完了と出る. 結合試験と同じ確認を, 本番機で行う | M4-13, M4-23, M4-24, M4-26 | 実機 |
+| ID | GitHub | Issue | 依存 | 担当 |
+| --- | --- | --- | --- | --- |
+| M4-1 | 113 | QEMU を取得する script. tctiSH と QEMU の fork を, commit を固定して取得する. 取得先は git に入れない | M0-1 | 実装者 |
+| M4-2 | 114 | QEMU に当てる変更の管理. 検証で当てた変更 (無料の Apple ID で使えない権限を外す, ビルドの flag を足す) を patch にして, 取得の後に当てる | M0-19, M4-1 | 実装者 |
+| M4-3 | 115 | QEMU を iPad 用にビルドする script. nix を使ってビルドする. 成果物は `build/` に置いて, git に入れない | M4-2 | 実装者 |
+| M4-4 | 116 | QEMU を Mac 用にビルドする script. 開発と試験のために, 同じ QEMU を Mac で動かせるようにする | M4-2 | 実装者 |
+| M4-5 | 117 | PadGuest の骨組み. QEMU を包む package を作る. QEMU の binary が無くても, ビルドと試験が通る形にする | M0-8 | 実装者 |
+| M4-6 | 118 | 型と port: guest. guest の状態 (停止, 起動中, 準備完了, 失敗) の型と, guest を操作する port を書く | M2-9 | 本体 |
+| M4-7 | 119 | QEMU の起動の引数. メモリ, CPU, kernel, initrd, disk, network の設定から, QEMU の引数を組み立てる | M4-5 | 実装者 |
+| M4-8 | 120 | QEMU の読み込みと起動. QEMU を library として読み込んで, 専用の thread で起動する | M4-3, M4-4, M4-7 | 実装者 |
+| M4-9 | 121 | QEMU の monitor の client. QEMU の monitor に繋いで, 状態の取得, 停止, port の転送の追加と削除を行う | M4-5 | 実装者 |
+| M4-10 | 122 | guest の kernel を作る script. M1-2 で決まった構成で, kernel をビルドする | M0-1, M1-2 | 実装者 |
+| M4-11 | 123 | guest の rootfs を作る script. Alpine Linux に Docker と compose を入れた rootfs と, M1-3 で決まった起動の処理を作る | M1-3, M1-4 | 実装者 |
+| M4-12 | 124 | guest: Docker の自動起動. guest の起動時に Docker を立ち上げて, API の口を認証付きで開ける | M4-11 | 実装者 |
+| M4-13 | 125 | guest の成果物の同梱. kernel と initrd を, アプリの resource に入れる | M0-9, M4-10, M4-11 | 実装者 |
+| M4-14 | 126 | guest の disk. 初回に空の disk を作る. 置き場は, バックアップの対象から外す. 大きさは設定で決める | M4-5 | 実装者 |
+| M4-15 | 127 | 端末ごとの鍵. Docker の API の認証に使う鍵を端末ごとに作って, Keychain に持つ. guest には起動のたびに渡す | M2-26, M4-8 | 実装者 |
+| M4-16 | 128 | guest の起動と停止. guest を操作する port の実装を書く. Docker の API が応答するまで待つ. 時間内に応答しなければ, 失敗にする | M4-6, M4-8, M4-9, M4-12, M4-14 | 実装者 |
+| M4-17 | 129 | Docker の client: 接続. 転送した port 経由で, 認証を付けて Docker の API に繋ぐ. 版の取得と ping を行う | M4-15 | 実装者 |
+| M4-18 | 130 | Docker の client: container. container の一覧, 作成, 開始, 停止, 削除, 終了待ちを行う | M4-17 | 実装者 |
+| M4-19 | 131 | Docker の client: image. image の一覧, 取得, 読み込み (stream), 削除を行う | M4-17 | 実装者 |
+| M4-20 | 132 | Docker の client: ログ. container のログを追尾する. stdout と stderr を分ける | M4-17 | 実装者 |
+| M4-21 | 133 | Docker の client: ファイルの送り込み. container の中へ, ファイルの束 (tar) を送る | M4-18 | 実装者 |
+| M4-22 | 134 | port の転送. guest の port を, アプリの中の loopback の空いた port に出す. 外すこともできる | M4-6, M4-9 | 実装者 |
+| M4-23 | 135 | App: guest の組み立て. 組み立てに guest を足して, アプリの起動時に guest を起動する. 失敗は dashboard に出す | M2-47, M4-16 | 実装者 |
+| M4-24 | 136 | dashboard: Linux と Docker. guest の状態と, メモリと disk の使用を出す画面を書く | M2-50, M4-16 | 実装者 |
+| M4-25 | 137 | 状態に guest を足す. 状態の API と `padctl status` に, guest と Docker の状態を足す | M2-37, M2-41, M4-16 | 実装者 |
+| M4-26 | 138 | PadGuest の結合試験. Mac の QEMU で guest を起動して, nginx の container を動かし, 転送した port から 200 が返ることを試験にする | M4-4, M4-16, M4-18, M4-19, M4-22 | 実装者 |
+| M4-27 | 139 | 通しの確認: Linux と Docker. 本番機でアプリを起動すると, Linux と Docker が立ち上がって, dashboard に準備完了と出る. 結合試験と同じ確認を, 本番機で行う | M4-13, M4-23, M4-24, M4-26 | 実機 |
 
 #### M5 container の配備
 
 M5-1 で配備の形を決めます. 下の分け方は, 今の見込み (compose の CLI を guest の中で動かす. 経路は上書き用の compose で出す) で書いています. M5-1 の結果で, 書き直すことがあります.
 
-| ID | Issue | 依存 | 担当 |
-| --- | --- | --- | --- |
-| M5-1 | 配備の形を決める. compose の動かし方, 経路の出し方, 環境変数と secret の渡し方, image の送り方, 対応する compose の機能の範囲を文書にする | M1-5, M1-7 | 本体 |
-| M5-2 | 型: compose のプロジェクト. 設定ファイルの compose の分 (compose のファイルの名前, 経路の service と port) と, image の参照の型を書く | M2-8, M5-1 | 本体 |
-| M5-3 | port: compose と image. compose を動かす port と, image を扱う port を書く | M4-6, M5-2 | 本体 |
-| M5-4 | 管理 API の仕様と通信の型: container. image の一覧と送信, compose の配備, service ごとの状態を, 仕様と型に足す | M2-13, M5-1 | 本体 |
-| M5-5 | CLI: compose の設定の検証. 経路に書いた service が, compose のファイルにあるかを確かめる | M2-42, M5-2 | 実装者 |
-| M5-6 | CLI: image の洗い出し. `docker compose config` を呼んで, 使う image と, ビルドが要る service を取り出す | M5-5 | 実装者 |
-| M5-7 | CLI: image のビルドと書き出し. linux/amd64 でビルドして, 送れる形に書き出す | M5-6 | 実装者 |
-| M5-8 | 管理 API: image の一覧. iPad にある image の ID の一覧を返す | M2-33, M4-19, M5-3, M5-4 | 実装者 |
-| M5-9 | 管理 API: image の受け取り. 送られた本文を, streaming のまま Docker の読み込みに流す | M2-33, M4-19, M5-3, M5-4 | 実装者 |
-| M5-10 | CLI: image の送信. iPad に無い image だけを送る. 進み具合を表示する | M2-40, M5-7, M5-8, M5-9 | 実装者 |
-| M5-11 | 上書き用の compose の生成. 経路に書いた service の port を guest の port に出す, 上書き用の compose を作る. 元の compose のファイルは変えない | M5-2 | 実装者 |
-| M5-12 | compose の実行. compose のファイルを guest に置いて, compose を動かす (起動, 停止, 削除, 状態の取得) | M4-18, M4-21, M5-3 | 実装者 |
-| M5-13 | use case: container の配備. ファイルを置いて, 上書き用の compose を作り, 起動して, 経路を登録する. 起動に失敗したら, 前の構成に戻す | M2-16, M5-11, M5-12 | 実装者 |
-| M5-14 | use case: container の開始, 停止, 状態. プロジェクトを始める, 止める. service ごとの状態を返す | M2-22, M5-12 | 実装者 |
-| M5-15 | 管理 API: container の配備. compose のプロジェクトを配備する endpoint を書く | M2-33, M5-4, M5-13 | 実装者 |
-| M5-16 | CLI: `padctl deploy` (compose). 設定の種類が compose のとき, image を送ってから配備を確定する | M5-10, M5-15 | 実装者 |
-| M5-17 | container への転送. 配信の入口から, 転送した loopback の port へ, 要求を streaming のまま流す. 転送用の header を付ける | M2-28, M4-22 | 実装者 |
-| M5-18 | 経路の登録と解除. 配備, 開始, 停止に合わせて, port の転送と経路の表を更新する | M5-13, M5-14, M5-17 | 実装者 |
-| M5-19 | use case: 環境変数と secret. プロジェクトごとに, 値の設定, 名前の一覧, 削除を行う. 一覧は値を返さない | M2-10, M2-14 | 実装者 |
-| M5-20 | 管理 API: 環境変数と secret. 設定, 一覧, 削除の endpoint を書く | M2-33, M5-4, M5-19 | 実装者 |
-| M5-21 | CLI: `padctl secret`. `set`, `list`, `rm` を書く. 値は標準入力からも読める | M2-40, M5-20 | 実装者 |
-| M5-22 | secret を container に渡す. 配備のときに, 環境変数のファイルを作って compose に渡す. guest の disk に残さない | M5-12, M5-19 | 実装者 |
-| M5-23 | container のログ. container のログを, プロジェクトと service の名前を付けて, ログの bus に流す | M2-27, M4-20, M5-14 | 実装者 |
-| M5-24 | CLI: `padctl logs` の絞り込み. プロジェクトと service で絞る | M2-45, M5-23 | 実装者 |
-| M5-25 | 再起動への備え. 動かしていたプロジェクトを保存する. アプリの起動時に, guest の準備完了を待って戻す | M4-16, M5-14 | 実装者 |
-| M5-26 | image の掃除. 配備の後, どのプロジェクトも使っていない image を消す | M4-19, M5-13 | 実装者 |
-| M5-27 | dashboard: container. service ごとの状態を出す画面を書く | M2-50, M5-14 | 実装者 |
-| M5-28 | 見本の compose. 通しの確認と手順書で使う, FastAPI と Postgres の構成を置く | M5-2 | 実装者 |
-| M5-29 | 通しの確認: container. 見本の compose を配備して, 独自ドメインから開く. Postgres の port が, 外からも tailnet からも届かないことを確かめる. アプリを起動し直した後に, 元に戻ることも確かめる | M3-21, M4-27, M5-16, M5-18, M5-22, M5-23, M5-25, M5-28 | 実機 |
+| ID | GitHub | Issue | 依存 | 担当 |
+| --- | --- | --- | --- | --- |
+| M5-1 | 140 | 配備の形を決める. compose の動かし方, 経路の出し方, 環境変数と secret の渡し方, image の送り方, 対応する compose の機能の範囲を文書にする | M1-5, M1-7 | 本体 |
+| M5-2 | 141 | 型: compose のプロジェクト. 設定ファイルの compose の分 (compose のファイルの名前, 経路の service と port) と, image の参照の型を書く | M2-8, M5-1 | 本体 |
+| M5-3 | 142 | port: compose と image. compose を動かす port と, image を扱う port を書く | M4-6, M5-2 | 本体 |
+| M5-4 | 143 | 管理 API の仕様と通信の型: container. image の一覧と送信, compose の配備, service ごとの状態を, 仕様と型に足す | M2-13, M5-1 | 本体 |
+| M5-5 | 144 | CLI: compose の設定の検証. 経路に書いた service が, compose のファイルにあるかを確かめる | M2-42, M5-2 | 実装者 |
+| M5-6 | 145 | CLI: image の洗い出し. `docker compose config` を呼んで, 使う image と, ビルドが要る service を取り出す | M5-5 | 実装者 |
+| M5-7 | 146 | CLI: image のビルドと書き出し. linux/amd64 でビルドして, 送れる形に書き出す | M5-6 | 実装者 |
+| M5-8 | 147 | 管理 API: image の一覧. iPad にある image の ID の一覧を返す | M2-33, M4-19, M5-3, M5-4 | 実装者 |
+| M5-9 | 148 | 管理 API: image の受け取り. 送られた本文を, streaming のまま Docker の読み込みに流す | M2-33, M4-19, M5-3, M5-4 | 実装者 |
+| M5-10 | 149 | CLI: image の送信. iPad に無い image だけを送る. 進み具合を表示する | M2-40, M5-7, M5-8, M5-9 | 実装者 |
+| M5-11 | 150 | 上書き用の compose の生成. 経路に書いた service の port を guest の port に出す, 上書き用の compose を作る. 元の compose のファイルは変えない | M5-2 | 実装者 |
+| M5-12 | 151 | compose の実行. compose のファイルを guest に置いて, compose を動かす (起動, 停止, 削除, 状態の取得) | M4-18, M4-21, M5-3 | 実装者 |
+| M5-13 | 152 | use case: container の配備. ファイルを置いて, 上書き用の compose を作り, 起動して, 経路を登録する. 起動に失敗したら, 前の構成に戻す | M2-16, M5-11, M5-12 | 実装者 |
+| M5-14 | 153 | use case: container の開始, 停止, 状態. プロジェクトを始める, 止める. service ごとの状態を返す | M2-22, M5-12 | 実装者 |
+| M5-15 | 154 | 管理 API: container の配備. compose のプロジェクトを配備する endpoint を書く | M2-33, M5-4, M5-13 | 実装者 |
+| M5-16 | 155 | CLI: `padctl deploy` (compose). 設定の種類が compose のとき, image を送ってから配備を確定する | M5-10, M5-15 | 実装者 |
+| M5-17 | 156 | container への転送. 配信の入口から, 転送した loopback の port へ, 要求を streaming のまま流す. 転送用の header を付ける | M2-28, M4-22 | 実装者 |
+| M5-18 | 157 | 経路の登録と解除. 配備, 開始, 停止に合わせて, port の転送と経路の表を更新する | M5-13, M5-14, M5-17 | 実装者 |
+| M5-19 | 158 | use case: 環境変数と secret. プロジェクトごとに, 値の設定, 名前の一覧, 削除を行う. 一覧は値を返さない | M2-10, M2-14 | 実装者 |
+| M5-20 | 159 | 管理 API: 環境変数と secret. 設定, 一覧, 削除の endpoint を書く | M2-33, M5-4, M5-19 | 実装者 |
+| M5-21 | 160 | CLI: `padctl secret`. `set`, `list`, `rm` を書く. 値は標準入力からも読める | M2-40, M5-20 | 実装者 |
+| M5-22 | 161 | secret を container に渡す. 配備のときに, 環境変数のファイルを作って compose に渡す. guest の disk に残さない | M5-12, M5-19 | 実装者 |
+| M5-23 | 162 | container のログ. container のログを, プロジェクトと service の名前を付けて, ログの bus に流す | M2-27, M4-20, M5-14 | 実装者 |
+| M5-24 | 163 | CLI: `padctl logs` の絞り込み. プロジェクトと service で絞る | M2-45, M5-23 | 実装者 |
+| M5-25 | 164 | 再起動への備え. 動かしていたプロジェクトを保存する. アプリの起動時に, guest の準備完了を待って戻す | M4-16, M5-14 | 実装者 |
+| M5-26 | 165 | image の掃除. 配備の後, どのプロジェクトも使っていない image を消す | M4-19, M5-13 | 実装者 |
+| M5-27 | 166 | dashboard: container. service ごとの状態を出す画面を書く | M2-50, M5-14 | 実装者 |
+| M5-28 | 167 | 見本の compose. 通しの確認と手順書で使う, FastAPI と Postgres の構成を置く | M5-2 | 実装者 |
+| M5-29 | 168 | 通しの確認: container. 見本の compose を配備して, 独自ドメインから開く. Postgres の port が, 外からも tailnet からも届かないことを確かめる. アプリを起動し直した後に, 元に戻ることも確かめる | M3-21, M4-27, M5-16, M5-18, M5-22, M5-23, M5-25, M5-28 | 実機 |
 
 #### M6 Kikitoru
 
 Kikitoru の側の変更は, Kikitoru のリポジトリの別の branch で行います. M6-1 の結果で, 書き直すことがあります.
 
-| ID | Issue | 依存 | 担当 |
-| --- | --- | --- | --- |
-| M6-1 | Kikitoru の差分を調べる. Kikitoru を iPad で動かすために要る変更を調べて, 文書にする. image の platform, 環境変数, OAuth の戻り先, 音声の大きさ, frontend が呼ぶ API の向き先, 少しずつ出る応答を使うか, 外のサービスへの接続 | M1-9, M5-1 | 本体 |
-| M6-2 | 大きい音声の upload の経路を決める. relay を通せる大きさ (M1-15 の結果) を見て, 音声を relay 経由で受けるか, 保存先へ直接送る形に変えるかを決める | M1-15, M6-1 | 所有者, 本体 |
-| M6-3 | Kikitoru: backend 用の設定. Kikitoru のリポジトリの別の branch に, compose 用の `padserver.toml` を置く | M5-2, M6-1 | 本体 |
-| M6-4 | Kikitoru: frontend 用の設定. API の向き先を独自ドメインにしたビルドの設定と, 静的サイト用の `padserver.toml` を置く | M6-1 | 本体 |
-| M6-5 | upload の経路の実装. M6-2 で決めた形を実装する | M6-2 | 本体 |
-| M6-6 | OAuth の戻り先の登録. Google の設定に, 独自ドメインの戻り先を足す | M3-21, M6-1 | 所有者 |
-| M6-7 | secret の登録. Kikitoru が使う環境変数と secret を, `padctl secret set` で iPad に登録する | M5-21, M6-1 | 所有者 |
-| M6-8 | frontend の配備. Kikitoru の frontend を, 静的サイトとして配備する | M3-21, M6-4 | 実機 |
-| M6-9 | compose の配備. Postgres, migrate, backend, worker の構成を配備する | M5-29, M6-3, M6-7 | 実機 |
-| M6-10 | 通しの確認: Kikitoru. 独自ドメインでログインして, 音声を1本送り, 議事録ができることを確かめる | M6-5, M6-6, M6-8, M6-9 | 実機 |
-| M6-11 | 結果の記録. かかった時間, メモリ, つまずいた点を文書に足す | M6-10 | 本体 |
+| ID | GitHub | Issue | 依存 | 担当 |
+| --- | --- | --- | --- | --- |
+| M6-1 | 169 | Kikitoru の差分を調べる. Kikitoru を iPad で動かすために要る変更を調べて, 文書にする. image の platform, 環境変数, OAuth の戻り先, 音声の大きさ, frontend が呼ぶ API の向き先, 少しずつ出る応答を使うか, 外のサービスへの接続 | M1-9, M5-1 | 本体 |
+| M6-2 | 170 | 大きい音声の upload の経路を決める. relay を通せる大きさ (M1-15 の結果) を見て, 音声を relay 経由で受けるか, 保存先へ直接送る形に変えるかを決める | M1-15, M6-1 | 所有者, 本体 |
+| M6-3 | 171 | Kikitoru: backend 用の設定. Kikitoru のリポジトリの別の branch に, compose 用の `padserver.toml` を置く | M5-2, M6-1 | 本体 |
+| M6-4 | 172 | Kikitoru: frontend 用の設定. API の向き先を独自ドメインにしたビルドの設定と, 静的サイト用の `padserver.toml` を置く | M6-1 | 本体 |
+| M6-5 | 173 | upload の経路の実装. M6-2 で決めた形を実装する | M6-2 | 本体 |
+| M6-6 | 174 | OAuth の戻り先の登録. Google の設定に, 独自ドメインの戻り先を足す | M3-21, M6-1 | 所有者 |
+| M6-7 | 175 | secret の登録. Kikitoru が使う環境変数と secret を, `padctl secret set` で iPad に登録する | M5-21, M6-1 | 所有者 |
+| M6-8 | 176 | frontend の配備. Kikitoru の frontend を, 静的サイトとして配備する | M3-21, M6-4 | 実機 |
+| M6-9 | 177 | compose の配備. Postgres, migrate, backend, worker の構成を配備する | M5-29, M6-3, M6-7 | 実機 |
+| M6-10 | 178 | 通しの確認: Kikitoru. 独自ドメインでログインして, 音声を1本送り, 議事録ができることを確かめる | M6-5, M6-6, M6-8, M6-9 | 実機 |
+| M6-11 | 179 | 結果の記録. かかった時間, メモリ, つまずいた点を文書に足す | M6-10 | 本体 |
 
 #### M7 仕上げ
 
-| ID | Issue | 依存 | 担当 |
-| --- | --- | --- | --- |
-| M7-1 | 型と port: ファイル置き場. 置いたファイルの型と, ファイルと共有リンクを保存する port を書く | M2-5, M2-9 | 本体 |
-| M7-2 | 管理 API の仕様と通信の型: ファイル置き場. ファイルの送信, 取得, 一覧, 削除と, 共有リンクの発行, 一覧, 失効を, 仕様と型に足す | M2-13 | 本体 |
-| M7-3 | use case: ファイルの保存と取得. 名前を検証して保存する. 取得は stream で返す | M2-14, M7-1 | 実装者 |
-| M7-4 | use case: ファイルの一覧と削除. 削除すると, そのファイルの共有リンクも失効する | M2-14, M7-1 | 実装者 |
-| M7-5 | 保存: ファイル置き場. ファイルを置き場の下に持つ. 置き場の外に出る名前を拒む | M7-1 | 実装者 |
-| M7-6 | 管理 API: ファイルの送信と取得. streaming で受け取り, streaming で返す | M2-33, M7-2, M7-3, M7-5 | 実装者 |
-| M7-7 | 管理 API: ファイルの一覧と削除. 一覧と削除の endpoint を書く | M2-33, M7-2, M7-4, M7-5 | 実装者 |
-| M7-8 | CLI: `padctl files`. `put`, `get`, `ls`, `rm` を書く | M2-40, M7-6, M7-7 | 実装者 |
-| M7-9 | use case: 共有リンクの発行と失効. ファイルごとに, 推測できない URL を期限付きで発行する. 失効させられる | M2-14, M7-1 | 実装者 |
-| M7-10 | 保存: 共有リンク. 共有リンクを保存する. URL の秘密の部分は, hash にして持つ | M7-1 | 実装者 |
-| M7-11 | 配信: 共有リンクでの読み取り. 公開の経路で, リンクの URL からファイルを返す. 期限切れと失効は 404 にする. Range に対応する | M2-30, M7-9, M7-10 | 実装者 |
-| M7-12 | 管理 API と CLI: 共有リンク. 発行, 一覧, 失効の endpoint と, `padctl share` を書く | M2-33, M2-40, M7-2, M7-9, M7-10 | 実装者 |
-| M7-13 | 通しの確認: ファイル置き場. Mac からファイルを送って, 共有リンクを独自ドメインから開く. 失効させた後は開けないことを確かめる | M3-21, M7-8, M7-11, M7-12 | 実機 |
-| M7-14 | README. 何ができるか, 構成の図, 必要なもの, 制約 (速さ, 前面への固定, 7日の署名) を書く | M5-29 | 本体 |
-| M7-15 | ビルドの手順. nix の導入, QEMU と guest のビルド, Xcode の設定, iPad へ入れるまでを書く | M4-27 | 本体 |
-| M7-16 | 使い方. `padctl` の全てのコマンドと, `padserver.toml` の書き方を書く | M5-29, M7-8, M7-12 | 本体 |
-| M7-17 | 運用の手順書. アクセスガイド, 充電の上限, 入れ直し, 画面の明るさ, 発熱への備えを書く | M1-10, M1-18, M2-54 | 本体 |
-| M7-18 | Tailscale のアクセス制御の手順. 管理の port へ繋げる端末を, 自分のものだけに絞る設定を書く | M2-54 | 本体 |
-| M7-19 | 第三者のコードの一覧. QEMU (GPLv2) を各自がビルドして組み込むことと, 使っている第三者のコードとライセンスを書く | M4-3 | 本体 |
-| M7-20 | まっさらな状態からのビルドの確認. 手順書だけを見て, 取得からビルド, iPad へ入れるまでを通す | M7-15 | 実機 |
+| ID | GitHub | Issue | 依存 | 担当 |
+| --- | --- | --- | --- | --- |
+| M7-1 | 180 | 型と port: ファイル置き場. 置いたファイルの型と, ファイルと共有リンクを保存する port を書く | M2-5, M2-9 | 本体 |
+| M7-2 | 181 | 管理 API の仕様と通信の型: ファイル置き場. ファイルの送信, 取得, 一覧, 削除と, 共有リンクの発行, 一覧, 失効を, 仕様と型に足す | M2-13 | 本体 |
+| M7-3 | 182 | use case: ファイルの保存と取得. 名前を検証して保存する. 取得は stream で返す | M2-14, M7-1 | 実装者 |
+| M7-4 | 183 | use case: ファイルの一覧と削除. 削除すると, そのファイルの共有リンクも失効する | M2-14, M7-1 | 実装者 |
+| M7-5 | 184 | 保存: ファイル置き場. ファイルを置き場の下に持つ. 置き場の外に出る名前を拒む | M7-1 | 実装者 |
+| M7-6 | 185 | 管理 API: ファイルの送信と取得. streaming で受け取り, streaming で返す | M2-33, M7-2, M7-3, M7-5 | 実装者 |
+| M7-7 | 186 | 管理 API: ファイルの一覧と削除. 一覧と削除の endpoint を書く | M2-33, M7-2, M7-4, M7-5 | 実装者 |
+| M7-8 | 187 | CLI: `padctl files`. `put`, `get`, `ls`, `rm` を書く | M2-40, M7-6, M7-7 | 実装者 |
+| M7-9 | 188 | use case: 共有リンクの発行と失効. ファイルごとに, 推測できない URL を期限付きで発行する. 失効させられる | M2-14, M7-1 | 実装者 |
+| M7-10 | 189 | 保存: 共有リンク. 共有リンクを保存する. URL の秘密の部分は, hash にして持つ | M7-1 | 実装者 |
+| M7-11 | 190 | 配信: 共有リンクでの読み取り. 公開の経路で, リンクの URL からファイルを返す. 期限切れと失効は 404 にする. Range に対応する | M2-30, M7-9, M7-10 | 実装者 |
+| M7-12 | 191 | 管理 API と CLI: 共有リンク. 発行, 一覧, 失効の endpoint と, `padctl share` を書く | M2-33, M2-40, M7-2, M7-9, M7-10 | 実装者 |
+| M7-13 | 192 | 通しの確認: ファイル置き場. Mac からファイルを送って, 共有リンクを独自ドメインから開く. 失効させた後は開けないことを確かめる | M3-21, M7-8, M7-11, M7-12 | 実機 |
+| M7-14 | 193 | README. 何ができるか, 構成の図, 必要なもの, 制約 (速さ, 前面への固定, 7日の署名) を書く | M5-29 | 本体 |
+| M7-15 | 194 | ビルドの手順. nix の導入, QEMU と guest のビルド, Xcode の設定, iPad へ入れるまでを書く | M4-27 | 本体 |
+| M7-16 | 195 | 使い方. `padctl` の全てのコマンドと, `padserver.toml` の書き方を書く | M5-29, M7-8, M7-12 | 本体 |
+| M7-17 | 196 | 運用の手順書. アクセスガイド, 充電の上限, 入れ直し, 画面の明るさ, 発熱への備えを書く | M1-10, M1-18, M2-54 | 本体 |
+| M7-18 | 197 | Tailscale のアクセス制御の手順. 管理の port へ繋げる端末を, 自分のものだけに絞る設定を書く | M2-54 | 本体 |
+| M7-19 | 198 | 第三者のコードの一覧. QEMU (GPLv2) を各自がビルドして組み込むことと, 使っている第三者のコードとライセンスを書く | M4-3 | 本体 |
+| M7-20 | 199 | まっさらな状態からのビルドの確認. 手順書だけを見て, 取得からビルド, iPad へ入れるまでを通す | M7-15 | 実機 |
 
 ### 6.4 Issue の進め方
 
