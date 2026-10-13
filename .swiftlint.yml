@@ -57,7 +57,8 @@ line_length:
   error: 120
 
 file_header:
-  forbidden_pattern: '.+'
+  # SwiftPM は先頭にこの行を必要とするため, その行だけを許す.
+  forbidden_pattern: '^(?!// swift-tools-version:).+'
 
 no_magic_numbers:
   severity: error
