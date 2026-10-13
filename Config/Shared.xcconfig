@@ -1,0 +1,17 @@
+PRODUCT_BUNDLE_IDENTIFIER = com.example.padserver
+DEVELOPMENT_TEAM =
+// 警告をエラーにして, 見落としを防ぐ.
+SWIFT_TREAT_WARNINGS_AS_ERRORS = YES
+SWIFT_VERSION = 6.0
+// iPad だけを対象にする.
+TARGETED_DEVICE_FAMILY = 2
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_KEY_CFBundleDisplayName = PadServer
+// 起動画面を Xcode に生成させる.
+INFOPLIST_KEY_UILaunchScreen_Generation = YES
+INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+CODE_SIGN_STYLE = Automatic
+#include? "Local.xcconfig"

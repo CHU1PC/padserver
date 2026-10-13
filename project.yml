@@ -1,0 +1,34 @@
+name: PadServer
+options:
+  deploymentTarget:
+    iOS: "26.0"
+packages:
+  PadServerCore:
+    path: Packages/PadServerCore
+targets:
+  PadServer:
+    type: application
+    platform: iOS
+    sources:
+      - App
+    configFiles:
+      Debug: Config/Shared.xcconfig
+      Release: Config/Shared.xcconfig
+    dependencies:
+      - package: PadServerCore
+        product: PadDomain
+      - package: PadServerCore
+        product: PadApplication
+      - package: PadServerCore
+        product: PadInterface
+      - package: PadServerCore
+        product: PadInfrastructure
+schemes:
+  PadServer:
+    build:
+      targets:
+        PadServer: all
+    run:
+      config: Debug
+    archive:
+      config: Release
