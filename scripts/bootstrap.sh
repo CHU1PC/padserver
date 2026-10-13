@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ "$(uname -s)" != "Darwin" ]]; then
+os_name="$(uname -s)"
+if [[ "$os_name" != "Darwin" ]]; then
   printf 'Error: bootstrap.sh requires macOS.\n' >&2
   exit 1
 fi
