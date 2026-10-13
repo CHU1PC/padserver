@@ -358,7 +358,7 @@ feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に決
 
 | 段階 | 作るもの | 終わりの確認 | Issue の数 |
 | --- | --- | --- | --- |
-| M0 開発基盤 | lint, pre-commit, GitHub Actions, 4層の空の骨組み, 開発の規則の文書 | 空の骨組みが, 手元の hook と CI の両方を通る | 20 |
+| M0 開発基盤 | lint, pre-commit, GitHub Actions, 4層の空の骨組み, 開発の規則の文書 | 空の骨組みが, 手元の hook と CI の両方を通る | 21 |
 | M1 実機での検証 | 4章の前提を確かめる最小のコード | それぞれの結果を decisions.md に書く. 外れたものは決定を見直す | 18 |
 | M2 土台 | 型と protocol, 保存, 配信と管理の2つの入口, 静的サイトの配信, 管理 API, CLI の基本, dashboard | Mac から静的サイトを配備して, tailnet 経由で表示できる | 54 |
 | M3 公開 | relay (Cloudflare の Worker と Durable Object), アプリからの接続, 独自ドメインの割り当て | 独自ドメインの URL を tailnet の外から開ける. 管理 API は外から届かない | 21 |
@@ -367,7 +367,7 @@ feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に決
 | M6 Kikitoru | Kikitoru の frontend と, compose の構成の配備 | 独自ドメインでログインして, 音声を1本送り, 議事録ができる | 11 |
 | M7 仕上げ | ファイル置き場, 共有リンク, 手順書 | 手順書だけを見て, まっさらな状態からビルドできる | 20 |
 
-Issue は, 全部で200件です.
+Issue は, 全部で201件です.
 
 ### 6.2 段階の依存
 
@@ -424,6 +424,7 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 | M0-18 | 18 | 検証のコードを移す (001 から 005). 作業用の場所にある検証のコードと README を `spikes/` に移す. 個人的な情報 (端末の ID, IP, tailnet の名前, Team ID), token, ビルドの成果物, 取得した framework を除く. `spikes/` を lint と CI の対象から外す | M0-7 | 本体 |
 | M0-19 | 19 | 検証のコードを移す (006). tctiSH を使った検証の README と起動の script を移す. tctiSH に当てた変更は patch にして残す. tctiSH と QEMU のコード, 鍵, disk の image は入れない | M0-18 | 本体 |
 | M0-20 | 200 | 開発の規則の文書. PR の規則 (`docs/pull-requests.md`) と, 実装の規則 (`docs/implementation-rules.md`) を置く. 2つの規則と, 実装とレビューの担い手の変更を, 決定の記録と roadmap に反映する | M0-1 | 本体 |
+| M0-21 | 209 | swift-distributed-tracing の固定を外す. M0-8 で入れた swift-distributed-tracing の版の固定 (1.6.0 未満) を外す. 上流の Hummingbird の issue 922 が直って, 修正を含む版が出てから行う. 固定の行が出す SwiftPM の warning (`dependency 'swift-distributed-tracing' is not used by any target`) も, これで消える | M0-8 | 実装者 |
 
 #### M1 実機での検証
 
