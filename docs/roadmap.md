@@ -7,11 +7,13 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 | --- | --- |
 | この文書 | 全体像, 決定の要約, 計画表 |
 | [decisions.md](decisions.md) | 決定を決めた順に並べた記録. 選ばなかった案も全て載せています |
+| [pull-requests.md](pull-requests.md) | PR の規則. 誰がどう作って, どう merge するか |
+| [implementation-rules.md](implementation-rules.md) | 実装の規則. コードを書くときに守ること |
 | [ipad-server-feasibility.md](../ipad-server-feasibility.md) | iPadOS の制約についての調査メモ. container が動くと分かる前に書いたものです |
 
 本文に出てくる `#42` のような番号は, decisions.md の決定の番号です.
-決定は70件あります. このうち11件は, 実機での検証の結果を受けて, 後の決定で置き換えました. 対応は 3.9 にあります.
-3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く57件を載せています. その2件の中身は, 上の表の通りです.
+決定は75件あります. このうち12件は, 後の決定で置き換えました. 対応は 3.9 にあります.
+3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く61件を載せています. その2件の中身は, 上の表の通りです.
 
 この文書では, 確かさを3つの言葉で書き分けます.
 
@@ -262,21 +264,25 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 | #50 | GitHub Actions では, lint, build と test, Periphery, gitleaks の4つの job を回す. Dependabot で, 依存の更新を受け取る | QEMU のビルドは時間がかかり, nix も要るので, CI では行いません | Dependabot は入れない, QEMU のビルドも CI で回す |
 | #51 | main への直接の push を禁じて, PR と CI の成功を必須にする | 最初の commit だけは, 保護を掛ける前に直接 push します | PR だけ必須にする, 保護しない |
 | #31 | 作業は細かい Issue に分けて, GitHub Issues に置く | public なので, 個人的な情報は書きません | Linear, Markdown |
-| #32 | 実装は, Sonnet の implementer を Issue ごとの worktree に並列に立てる | 本体 (この会話の Claude) が指示文を書き, 成果物を検証します | luna のワーカー, 所有者がセッションを開く |
+| #73 | 実装もレビューも, Codex (gpt-6-luna) のワーカーが行う. Issue ごとの worktree に並列に立てる | 本体 (この会話の Claude) が指示文を書き, 成果物を検証します. レビューは Issue ごとに1回です | Sonnet の implementer と reviewer, 所有者がセッションを開く |
 | #33 | 依存が解けた Issue は, 全て同時に走らせる | 実機での確認は1本ずつです | 3本まで, 2本まで |
 | #34 | Issue ごとに PR を作り, 所有者が merge する | 無し | 本体が merge する, PR を作らない |
+| #71 | PR の作り方は, [pull-requests.md](pull-requests.md) の通りにする | 本文には, 変更ごとに「何を変えたか」と「何のための変更か」を書きます. 画面のある実装と, 動かして見せられる実装は, スクリーンショットを載せます. merge は rebase and merge です | 本文に署名を付ける, 変えたファイルを並べるだけにする |
+| #72 | コードの書き方は, [implementation-rules.md](implementation-rules.md) の通りにする | 型, 設計, エラーと並行処理, 試験, コメントの決まりです. 試験は Swift Testing で, 実装より先に書きます | 無し |
 | #55 | feature branch への commit, push, PR の作成は, 本体が行う | main への merge は, 所有者が行います (#34) | commit のたびに確認する, PR の作成も所有者が行う |
+| #74 | push と PR の作成は, 本体が成果物を確かめてから行う. 所有者の確認は待たない | 実装者と reviewer は, commit も push もしません. push の前の検査 (lint, 試験, secret, 個人的な情報) を本体に残します | Codex のワーカーが PR まで作る, 所有者が push する |
 | #54 | PadDomain の型, PadApplication の port, 通信の型は, 本体が書く | 全ての Issue がこの形に依存するためです | 実装者に任せる |
 | #53 | 検証に使ったコードは, `spikes/` に README と一緒に残す | lint と CI の対象から外します. 取得した tctiSH と QEMU のコード, ビルドの成果物, 鍵と token, 端末の ID は入れません | README だけ残す, リポジトリに入れない |
 | #66 | Issue は, 全ての段階を, 1つが1つの責務になるまで細かく分ける | container の部分 (M4 から M6) は, 検証の結果で書き直すことがあります | 近い段階だけ細かく分ける, 粗い一覧のままにする |
 | #67 | Issue のタイトルと本文は, 日本語で書く | コマンドとファイルの名前は, 英語のままです | タイトルだけ英語にする, 全部英語にする |
 | #68 | 段階と Issue の分け方は, 6章の通りにする. Issue は GitHub に作る | 8つの段階と199件の Issue を, 2026-10-11 に承認しました | 近い段階だけ先に作る, 一覧を直してから作る |
+| #75 | 規則の文書は, Issue を1件足して (M0-20), PR で main に入れる | Issue は200件になりました | main に直接入れる, PR の template と同じ PR に入れる |
 | #69 | 公開する文書と Issue では, 個人の名前を書かずに「所有者」と書く | #31 の「個人的な情報は書かない」に合わせます | 名前をそのまま書く |
 | #70 | commit の名義は, 普段の git の設定のままにする | 名義のメールアドレスは, 公開の履歴に残ります. 一度は GitHub の noreply のアドレスを選びましたが, push の前に取り消しました | GitHub の noreply のアドレスを使う |
 
 ### 3.9 置き換えた決定
 
-実機での検証の結果を受けて, 後の決定で置き換えたものです. 元の中身は decisions.md に残しています.
+後の決定で置き換えたものです. #32 の他は, 実機での検証の結果を受けて置き換えました. 元の中身は decisions.md に残しています.
 
 | 元の決定 | 中身 | 置き換えた決定 | 理由 |
 | --- | --- | --- | --- |
@@ -284,6 +290,7 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 | #24 | 管理の認証で, Tailscale 上の身元も確かめる | #43 | 公開が relay になり, libtailscale を組み込む理由が無くなった |
 | #6, #7, #14, #15, #16, #17, #44 | 4つのランタイム (JavaScriptCore, Python, WebAssembly, Node.js) と, その作り方 | #48 | container が本番機で動いたので, 動かす方法を container に絞った |
 | #45, #46 | DB は対象外にする. Kikitoru は到達点に入れない | #49 | Postgres が container で動いたので, Kikitoru を compose のまま動かすことを到達点にした |
+| #32 | 実装は, Sonnet の implementer を Issue ごとの worktree に並列に立てる | #73 | 所有者の判断で, 実装もレビューも Codex のワーカーに変えた |
 
 ## 4. 実機で確かめること
 
@@ -331,6 +338,7 @@ V17 と V18 は, container の配備の形を決める前提です. これも先
 ## 5. まだ決めていないこと
 
 2026-10-11 に, 提案のうち16件を1つずつ確認して, 決定 #50 から #65 にしました.
+feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に決めました (#74).
 残っているのは, 検証の結果を待ってから決めるものです.
 
 | 番号 | 項目 | 今の考え | 決める時期 |
@@ -340,17 +348,17 @@ V17 と V18 は, container の配備の形を決める前提です. これも先
 | U19 | compose の動かし方と, 対応する機能の範囲 | compose の CLI を guest の中で動かして, 経路は上書き用の compose で出す見込みです | M5-1 |
 | U20 | guest を arm64 に切り替えるか | x86_64 で作ります (#61). arm64 が動いて, 速さが同じくらいなら, 切り替える案があります | V22 の結果が出た後 |
 | U21 | relay の取り決めの細目 | 本文を小分けにして, WebSocket で運ぶ形です | M3-1 |
-| U22 | feature branch の push と PR の作成を, 誰が行うか | #55 では「本体が行う」と決めました. 一方で, 所有者の普段の決まりは「push と PR の作成は本人が行う」です. 2つが食い違っています | 最初の PR を作る前 |
 
 ## 6. 計画表
 
 段階の分け方と Issue の一覧は, 2026-10-11 に承認されました (#68). Issue は GitHub に作ってあります.
+2026-10-13 に, 開発の規則の文書を入れる Issue を1件足しました (#75).
 
 ### 6.1 段階の一覧
 
 | 段階 | 作るもの | 終わりの確認 | Issue の数 |
 | --- | --- | --- | --- |
-| M0 開発基盤 | lint, pre-commit, GitHub Actions, 4層の空の骨組み | 空の骨組みが, 手元の hook と CI の両方を通る | 19 |
+| M0 開発基盤 | lint, pre-commit, GitHub Actions, 4層の空の骨組み, 開発の規則の文書 | 空の骨組みが, 手元の hook と CI の両方を通る | 21 |
 | M1 実機での検証 | 4章の前提を確かめる最小のコード | それぞれの結果を decisions.md に書く. 外れたものは決定を見直す | 18 |
 | M2 土台 | 型と protocol, 保存, 配信と管理の2つの入口, 静的サイトの配信, 管理 API, CLI の基本, dashboard | Mac から静的サイトを配備して, tailnet 経由で表示できる | 54 |
 | M3 公開 | relay (Cloudflare の Worker と Durable Object), アプリからの接続, 独自ドメインの割り当て | 独自ドメインの URL を tailnet の外から開ける. 管理 API は外から届かない | 21 |
@@ -359,7 +367,7 @@ V17 と V18 は, container の配備の形を決める前提です. これも先
 | M6 Kikitoru | Kikitoru の frontend と, compose の構成の配備 | 独自ドメインでログインして, 音声を1本送り, 議事録ができる | 11 |
 | M7 仕上げ | ファイル置き場, 共有リンク, 手順書 | 手順書だけを見て, まっさらな状態からビルドできる | 20 |
 
-Issue は, 全部で199件です.
+Issue は, 全部で201件です.
 
 ### 6.2 段階の依存
 
@@ -387,7 +395,7 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 
 | 担当 | 意味 |
 | --- | --- |
-| 実装者 | Sonnet の implementer が worktree で実装する |
+| 実装者 | Codex (gpt-6-luna) のワーカーが worktree で実装する |
 | 本体 | この会話の Claude が直接行う |
 | 実機 | 本体と所有者が, iPad を使って確かめる |
 | 所有者 | 所有者の操作か判断が要る |
@@ -411,10 +419,12 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 | M0-13 | 13 | CI: Periphery. 未使用のコードを検出する workflow と, その設定を置く | M0-12 | 実装者 |
 | M0-14 | 14 | CI: gitleaks. 履歴の全体を調べる workflow を置く | M0-5 | 実装者 |
 | M0-15 | 15 | Dependabot の設定. GitHub Actions と Swift の依存の更新を受け取る | M0-11 | 実装者 |
-| M0-16 | 16 | PR の template. 対応する Issue, 検証の結果 (実行したコマンドと出力), reviewer の指摘を書く欄を置く | M0-1 | 実装者 |
+| M0-16 | 16 | PR の template. `docs/pull-requests.md` の6章の形に合わせて, 対応する Issue, 実装内容, 変更点, API の変更, 画面と動作, 検証, レビューの指摘を書く欄を置く | M0-1 | 実装者 |
 | M0-17 | 17 | main の保護. main への直接の push を禁じて, PR と CI (lint, build, Periphery, gitleaks) の成功を必須にする | M0-11, M0-12, M0-13, M0-14 | 本体, 所有者 |
 | M0-18 | 18 | 検証のコードを移す (001 から 005). 作業用の場所にある検証のコードと README を `spikes/` に移す. 個人的な情報 (端末の ID, IP, tailnet の名前, Team ID), token, ビルドの成果物, 取得した framework を除く. `spikes/` を lint と CI の対象から外す | M0-7 | 本体 |
 | M0-19 | 19 | 検証のコードを移す (006). tctiSH を使った検証の README と起動の script を移す. tctiSH に当てた変更は patch にして残す. tctiSH と QEMU のコード, 鍵, disk の image は入れない | M0-18 | 本体 |
+| M0-20 | 200 | 開発の規則の文書. PR の規則 (`docs/pull-requests.md`) と, 実装の規則 (`docs/implementation-rules.md`) を置く. 2つの規則と, 実装とレビューの担い手の変更を, 決定の記録と roadmap に反映する | M0-1 | 本体 |
+| M0-21 | 209 | swift-distributed-tracing の固定を外す. M0-8 で入れた swift-distributed-tracing の版の固定 (1.6.0 未満) を外す. 上流の Hummingbird の issue 922 が直って, 修正を含む版が出てから行う. 固定の行が出す SwiftPM の warning (`dependency 'swift-distributed-tracing' is not used by any target`) も, これで消える | M0-8 | 実装者 |
 
 #### M1 実機での検証
 
@@ -644,11 +654,15 @@ Kikitoru の側の変更は, Kikitoru のリポジトリの別の branch で行�
 1つの Issue は, 次の流れで進めます.
 
 1. 本体が, Issue の内容を指示文にする. 触ってよいファイルと, 実行して貼るべきコマンドの出力を書く.
-2. 実装者が, その Issue 専用の worktree で実装する. commit はしない.
-3. 本体が, 成果物を自分で動かして確かめる. 実装者の報告だけでは通さない.
-4. reviewer (Sonnet) が1回レビューする. 指摘は, 選別せずに全件を PR に載せる.
-5. 本体が commit して push し, PR を作る.
-6. 所有者が, 直す指摘を選ぶ. 直しが済んだら merge する.
+2. 実装者 (Codex のワーカー) が, その Issue 専用の worktree で実装する. commit はしない.
+3. 本体が, 成果物を自分で動かして確かめる. 実装者の報告だけでは通さない. 画面のある実装と, 動かして見せられる実装は, スクリーンショットを撮る.
+4. reviewer (Codex のワーカー) が1回レビューする. 指摘は, 選別せずに全件を PR に載せる.
+5. 本体が, 検査を通して commit して push し, PR を作る. 所有者の確認は待たない (#74).
+6. 所有者が, 直す指摘を選ぶ.
+7. 本体が, 選ばれた指摘を直して push する. 再レビューはしない.
+8. 所有者が merge する.
+
+PR の細かい決まりは [pull-requests.md](pull-requests.md) に, コードの書き方は [implementation-rules.md](implementation-rules.md) にあります.
 
 守ることは次の通りです.
 
@@ -671,10 +685,6 @@ Issue は, 次の形で GitHub に作ってあります. 済んだ検証は, Iss
 | 依存 | 本文に, 依存する Issue の番号を書く |
 
 ## 7. 着手までに要るもの
-
-所有者の判断が要るものです.
-
-- feature branch の push と PR の作成を, 誰が行うか (U22).
 
 所有者の操作が要るものです. その段階に入るときに, 手順を書きます.
 
