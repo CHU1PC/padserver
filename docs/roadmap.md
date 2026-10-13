@@ -12,8 +12,8 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 | [ipad-server-feasibility.md](../ipad-server-feasibility.md) | iPadOS の制約についての調査メモ. container が動くと分かる前に書いたものです |
 
 本文に出てくる `#42` のような番号は, decisions.md の決定の番号です.
-決定は77件あります. このうち14件は, 後の決定で置き換えました. 対応は 3.9 にあります.
-3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く61件を載せています. その2件の中身は, 上の表の通りです.
+決定は78件あります. このうち14件は, 後の決定で置き換えました. 対応は 3.9 にあります.
+3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く62件を載せています. その2件の中身は, 上の表の通りです.
 
 この文書では, 確かさを3つの言葉で書き分けます.
 
@@ -210,6 +210,7 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 | #43 | 管理の認証は, token と, 接続元が tailnet の IP かどうかの確認 | 繋げる端末を自分のものだけに絞るのは, Tailscale のアクセス制御で行います | libtailscale を残して身元も確かめる |
 | #8 | Mac からの操作は専用の CLI で行う | 無し | ブラウザの管理画面, iPad の画面で操作 |
 | #21 | CLI は Swift で書く | アプリと通信の型を共有します | TypeScript, Python, Rust, Go |
+| #78 | CLI が使う TOML の parser は TOMLDecoder | ライセンスは MIT です. Swift 6 でビルドできるかは, CLI の殻 (M0-10) で確かめます | swift-toml, TOMLKit |
 | #26 | CLI の機能は, 配備, 状態, 開始と停止, 入れ直し, token の設定, ログの追尾, ファイル置き場の操作, 依存の準備, 環境変数と secret | 「依存の準備」は, 組み込みのランタイムのための機能でした. #48 で要らなくなり, 代わりに image を送る機能が要ります (#59) | 無し |
 | #28 | ファイル置き場は, 期限付きの共有リンクで外に渡せる | 発行と失効は管理の口から行います. 公開の経路に載るのは, リンクでの読み取りだけです | tailnet の中だけ, フォルダ単位で公開 |
 
@@ -414,7 +415,7 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 | M0-7 | 7 | pre-commit の設定. 全ての hook を1つの設定に束ねる. commit 時に動かすのは速い検査だけにする | M0-2, M0-3, M0-4, M0-5, M0-6 | 実装者 |
 | M0-8 | 8 | PadServerCore の骨組み. 4層の空の target と, 試験の target, 試験用の共有の target (PadTestSupport) を作る. Swift 6 の language mode と, 警告のエラー扱いを設定する. Hummingbird を PadInfrastructure の依存に宣言する | M0-1 | 実装者 |
 | M0-9 | 9 | アプリの殻. XcodeGen の定義と xcconfig と, 最小の SwiftUI のアプリを置く. Team ID と Bundle ID は `Config/Local.xcconfig` から読む | M0-8 | 実装者 |
-| M0-10 | 10 | CLI の殻. `padctl` の package を作る. PadServerCore の PadInterface に依存する. swift-argument-parser と TOML の parser を依存に宣言する | M0-8 | 実装者 |
+| M0-10 | 10 | CLI の殻. `padctl` の package を作る. PadServerCore の PadInterface に依存する. swift-argument-parser と TOML の parser (TOMLDecoder) を依存に宣言する | M0-8 | 実装者 |
 | M0-11 | 11 | CI: lint. pre-commit の全ての hook を回す workflow を置く. action は commit の hash で固定する | M0-7 | 実装者 |
 | M0-12 | 12 | CI: build と test. `swift test` (PadServerCore), `swift build` (cli), iOS Simulator 向けの `xcodebuild build` を回す workflow を置く | M0-9, M0-10 | 実装者 |
 | M0-13 | 13 | CI: 未使用のコードの検出. 未使用のコードと import を検出する workflow を置く. SwiftLint の analyzer (`unused_declaration` と `unused_import`) を, xcodebuild のビルドの記録を渡して動かす | M0-12 | 実装者 |
