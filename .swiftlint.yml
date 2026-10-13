@@ -6,6 +6,10 @@ excluded:
   - '**/DerivedData/**'
   - '**/build/**'
 
+disabled_rules:
+  # 末尾のカンマは swift-format が決める. SwiftLint の規則は, 要素が1つで複数行にまたがる配列で swift-format と食い違う.
+  - trailing_comma
+
 opt_in_rules:
   - async_without_await
   - contains_over_filter_count
@@ -57,7 +61,8 @@ line_length:
   error: 120
 
 file_header:
-  forbidden_pattern: '.+'
+  # SwiftPM は先頭にこの行を必要とするため, その行だけを許す.
+  forbidden_pattern: '^(?!// swift-tools-version: ?\d+\.\d+(\.\d+)?$).+'
 
 no_magic_numbers:
   severity: error
