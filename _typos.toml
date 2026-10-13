@@ -1,0 +1,16 @@
+[default]
+locale = "en"
+
+[files]
+extend-exclude = [
+  "**/spikes/**",
+  "**/.build/**",
+  "**/node_modules/**",
+  "**/build/**",
+  "**/*.lock",
+  "**/*.lockb",
+  "**/*lock*.json",
+  "**/*lock*.yaml",
+  "**/*lock*.yml",
+  "**/Package.resolved",
+]
