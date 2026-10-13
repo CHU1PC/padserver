@@ -107,8 +107,13 @@ custom_rules:
   no_legacy_synchronization:
     name: Legacy Thread Synchronization Is Forbidden
     regex: '\b(?:DispatchQueue|DispatchSemaphore|Thread|NSLock|os_unfair_lock|OSAllocatedUnfairLock)\b'
-    match_kinds:
-      - identifier
+    excluded_match_kinds:
+      - comment
+      - comment.mark
+      - comment.url
+      - doccomment
+      - doccomment.field
+      - string
     excluded:
       - '.*Packages/PadGuest/.*'
     message: Use Swift concurrency instead of legacy thread synchronization.
