@@ -12,7 +12,7 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 | [ipad-server-feasibility.md](../ipad-server-feasibility.md) | iPadOS の制約についての調査メモ. container が動くと分かる前に書いたものです |
 
 本文に出てくる `#42` のような番号は, decisions.md の決定の番号です.
-決定は75件あります. このうち12件は, 後の決定で置き換えました. 対応は 3.9 にあります.
+決定は77件あります. このうち14件は, 後の決定で置き換えました. 対応は 3.9 にあります.
 3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く61件を載せています. その2件の中身は, 上の表の通りです.
 
 この文書では, 確かさを3つの言葉で書き分けます.
@@ -258,10 +258,10 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 | 番号 | 決めたこと | 補足 | 選ばなかった案 |
 | --- | --- | --- | --- |
 | #39 | 機能を作る前に, linter と pre-commit と GitHub Actions を入れる | 無し | 無し |
-| #35 | Swift の検査は4つ. SwiftLint (厳しめ), swift-format, Periphery (未使用コードの検出), 警告のエラー扱い | Swift 6 の language mode でビルドします | 無し |
+| #76 | Swift の検査は4つ. SwiftLint (厳しめ), swift-format, SwiftLint の analyzer (未使用のコードと import の検出), 警告のエラー扱い | Swift 6 の language mode でビルドします. analyzer はビルドの記録が要るので, CI で回します | Periphery を使い続ける, Periphery Pro, 有志の fork |
 | #36 | Swift 以外の検査は, Markdown と YAML, GitHub Actions と shell, secret の混入と綴り | 道具は markdownlint-cli2, yamllint, actionlint, zizmor, shellcheck, shfmt, gitleaks, typos です | Worker の TypeScript の検査 |
 | #37 | commit 時の検査は pre-commit で動かす | commit 時は速い検査だけ. ビルドと試験は CI です | lefthook, 素の git hook |
-| #50 | GitHub Actions では, lint, build と test, Periphery, gitleaks の4つの job を回す. Dependabot で, 依存の更新を受け取る | QEMU のビルドは時間がかかり, nix も要るので, CI では行いません | Dependabot は入れない, QEMU のビルドも CI で回す |
+| #77 | GitHub Actions では, lint, build と test, 未使用のコードの検出, gitleaks の4つの job を回す. Dependabot で, 依存の更新を受け取る | QEMU のビルドは時間がかかり, nix も要るので, CI では行いません | Dependabot は入れない, QEMU のビルドも CI で回す |
 | #51 | main への直接の push を禁じて, PR と CI の成功を必須にする | 最初の commit だけは, 保護を掛ける前に直接 push します | PR だけ必須にする, 保護しない |
 | #31 | 作業は細かい Issue に分けて, GitHub Issues に置く | public なので, 個人的な情報は書きません | Linear, Markdown |
 | #73 | 実装もレビューも, Codex (gpt-6-luna) のワーカーが行う. Issue ごとの worktree に並列に立てる | 本体 (この会話の Claude) が指示文を書き, 成果物を検証します. レビューは Issue ごとに1回です | Sonnet の implementer と reviewer, 所有者がセッションを開く |
@@ -282,7 +282,7 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 
 ### 3.9 置き換えた決定
 
-後の決定で置き換えたものです. #32 の他は, 実機での検証の結果を受けて置き換えました. 元の中身は decisions.md に残しています.
+後の決定で置き換えたものです. #32, #35, #50 の他は, 実機での検証の結果を受けて置き換えました. 元の中身は decisions.md に残しています.
 
 | 元の決定 | 中身 | 置き換えた決定 | 理由 |
 | --- | --- | --- | --- |
@@ -291,6 +291,7 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 | #6, #7, #14, #15, #16, #17, #44 | 4つのランタイム (JavaScriptCore, Python, WebAssembly, Node.js) と, その作り方 | #48 | container が本番機で動いたので, 動かす方法を container に絞った |
 | #45, #46 | DB は対象外にする. Kikitoru は到達点に入れない | #49 | Postgres が container で動いたので, Kikitoru を compose のまま動かすことを到達点にした |
 | #32 | 実装は, Sonnet の implementer を Issue ごとの worktree に並列に立てる | #73 | 所有者の判断で, 実装もレビューも Codex のワーカーに変えた |
+| #35, #50 | 未使用のコードの検出に Periphery を使い, CI の job にする | #76, #77 | Periphery の上流が archive されて, 商用の製品に移った. SwiftLint の analyzer に替えた |
 
 ## 4. 実機で確かめること
 
@@ -337,7 +338,7 @@ V17 と V18 は, container の配備の形を決める前提です. これも先
 
 ## 5. まだ決めていないこと
 
-2026-10-11 に, 提案のうち16件を1つずつ確認して, 決定 #50 から #65 にしました.
+2026-10-11 に, 提案のうち16件を1つずつ確認して, decisions.md の項目50から項目65にしました.
 feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に決めました (#74).
 残っているのは, 検証の結果を待ってから決めるものです.
 
@@ -409,18 +410,18 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 | M0-3 | 3 | Markdown と YAML の lint の設定. markdownlint-cli2 と yamllint の設定を置く | M0-1 | 実装者 |
 | M0-4 | 4 | shell と GitHub Actions の lint の設定. shellcheck, shfmt, actionlint, zizmor の設定を置く | M0-1 | 実装者 |
 | M0-5 | 5 | secret と綴りの検査の設定. gitleaks と typos の設定を置く | M0-1 | 実装者 |
-| M0-6 | 6 | 道具を入れる script. 開発に要る道具 (SwiftLint, Periphery, XcodeGen, pre-commit, 各 linter) を, 1つのコマンドで入れられるようにする | M0-1 | 実装者 |
+| M0-6 | 6 | 道具を入れる script. 開発に要る道具 (SwiftLint, XcodeGen, pre-commit, 各 linter) を, 1つのコマンドで入れられるようにする | M0-1 | 実装者 |
 | M0-7 | 7 | pre-commit の設定. 全ての hook を1つの設定に束ねる. commit 時に動かすのは速い検査だけにする | M0-2, M0-3, M0-4, M0-5, M0-6 | 実装者 |
 | M0-8 | 8 | PadServerCore の骨組み. 4層の空の target と, 試験の target, 試験用の共有の target (PadTestSupport) を作る. Swift 6 の language mode と, 警告のエラー扱いを設定する. Hummingbird を PadInfrastructure の依存に宣言する | M0-1 | 実装者 |
 | M0-9 | 9 | アプリの殻. XcodeGen の定義と xcconfig と, 最小の SwiftUI のアプリを置く. Team ID と Bundle ID は `Config/Local.xcconfig` から読む | M0-8 | 実装者 |
 | M0-10 | 10 | CLI の殻. `padctl` の package を作る. PadServerCore の PadInterface に依存する. swift-argument-parser と TOML の parser を依存に宣言する | M0-8 | 実装者 |
 | M0-11 | 11 | CI: lint. pre-commit の全ての hook を回す workflow を置く. action は commit の hash で固定する | M0-7 | 実装者 |
 | M0-12 | 12 | CI: build と test. `swift test` (PadServerCore), `swift build` (cli), iOS Simulator 向けの `xcodebuild build` を回す workflow を置く | M0-9, M0-10 | 実装者 |
-| M0-13 | 13 | CI: Periphery. 未使用のコードを検出する workflow と, その設定を置く | M0-12 | 実装者 |
+| M0-13 | 13 | CI: 未使用のコードの検出. 未使用のコードと import を検出する workflow を置く. SwiftLint の analyzer (`unused_declaration` と `unused_import`) を, xcodebuild のビルドの記録を渡して動かす | M0-12 | 実装者 |
 | M0-14 | 14 | CI: gitleaks. 履歴の全体を調べる workflow を置く | M0-5 | 実装者 |
 | M0-15 | 15 | Dependabot の設定. GitHub Actions と Swift の依存の更新を受け取る | M0-11 | 実装者 |
 | M0-16 | 16 | PR の template. `docs/pull-requests.md` の6章の形に合わせて, 対応する Issue, 実装内容, 変更点, API の変更, 画面と動作, 検証, レビューの指摘を書く欄を置く | M0-1 | 実装者 |
-| M0-17 | 17 | main の保護. main への直接の push を禁じて, PR と CI (lint, build, Periphery, gitleaks) の成功を必須にする | M0-11, M0-12, M0-13, M0-14 | 本体, 所有者 |
+| M0-17 | 17 | main の保護. main への直接の push を禁じて, PR と CI (lint, build, 未使用のコードの検出, gitleaks) の成功を必須にする | M0-11, M0-12, M0-13, M0-14 | 本体, 所有者 |
 | M0-18 | 18 | 検証のコードを移す (001 から 005). 作業用の場所にある検証のコードと README を `spikes/` に移す. 個人的な情報 (端末の ID, IP, tailnet の名前, Team ID), token, ビルドの成果物, 取得した framework を除く. `spikes/` を lint と CI の対象から外す | M0-7 | 本体 |
 | M0-19 | 19 | 検証のコードを移す (006). tctiSH を使った検証の README と起動の script を移す. tctiSH に当てた変更は patch にして残す. tctiSH と QEMU のコード, 鍵, disk の image は入れない | M0-18 | 本体 |
 | M0-20 | 200 | 開発の規則の文書. PR の規則 (`docs/pull-requests.md`) と, 実装の規則 (`docs/implementation-rules.md`) を置く. 2つの規則と, 実装とレビューの担い手の変更を, 決定の記録と roadmap に反映する | M0-1 | 本体 |
