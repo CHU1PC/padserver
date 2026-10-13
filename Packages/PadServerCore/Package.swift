@@ -19,9 +19,7 @@ let package = Package(
         .library(name: "PadTestSupport", targets: ["PadTestSupport"]),
     ],
     dependencies: [
-        // Hummingbird 2.27.1 は swift-distributed-tracing 1.6.0 でビルドできないため, issue 922 の修正後に削除する.
-        .package(url: "https://github.com/apple/swift-distributed-tracing.git", "1.3.0"..<"1.6.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0")
     ],
     targets: [
         .target(name: "PadDomain", swiftSettings: commonSwiftSettings),
