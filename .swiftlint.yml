@@ -1,0 +1,102 @@
+strict: true
+excluded:
+  - spikes/
+  - '**/Tests/**'
+  - '**/.build/**'
+  - '**/.swiftpm/**'
+  - '**/DerivedData/**'
+  - '**/build/**'
+
+opt_in_rules:
+  - async_without_await
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - empty_count
+  - empty_string
+  - explicit_init
+  - file_header
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - last_where
+  - no_empty_block
+  - no_magic_numbers
+  - redundant_nil_coalescing
+  - unhandled_throwing_task
+  - unavailable_function
+  - vertical_whitespace_between_cases
+
+analyzer_rules:
+  - unused_import
+
+large_tuple:
+  warning: 2
+  error: 3
+
+function_body_length:
+  warning: 30
+  error: 50
+
+nesting:
+  type_level:
+    warning: 1
+    error: 2
+  function_level:
+    warning: 1
+    error: 2
+  check_nesting_in_closures_and_statements: true
+  always_allow_one_type_in_functions: false
+
+cyclomatic_complexity:
+  warning: 8
+  error: 12
+  ignores_case_statements: false
+
+line_length:
+  warning: 120
+  error: 120
+
+file_header:
+  forbidden_pattern: '.+'
+
+no_magic_numbers:
+  severity: error
+  allowed_numbers: [0, 1, 100]
+  test_parent_classes: [QuickSpec, XCTestCase]
+
+custom_rules:
+  no_swiftlint_disable:
+    name: SwiftLint Disable Commands Are Forbidden
+    regex: '//\s*swiftlint\s*:\s*disable\b'
+    match_kinds:
+      - comment
+    message: SwiftLint disable commands are forbidden.
+    severity: error
+  no_type_erasure_to_any:
+    name: Any and AnyObject Types Are Forbidden
+    regex: '(?::|->|=|<|,|\[|\(|as)\s*(AnyObject|Any)\b'
+    capture_group: 1
+    message: Use a concrete or protocol type instead of Any or AnyObject.
+    severity: error
+  no_unsafe_sendable:
+    name: Unsafe Sendability Escape Hatches Are Forbidden
+    regex: '@unchecked\s+Sendable|nonisolated\s*\(\s*unsafe\s*\)'
+    message: Do not bypass Swift concurrency safety checks.
+    severity: error
+  no_try_optional:
+    name: Optional Error Suppression Is Forbidden
+    regex: '\btry\s*\?'
+    match_kinds:
+      - keyword
+    message: Handle the error or propagate it with throws.
+    severity: error
+  no_legacy_synchronization:
+    name: Legacy Thread Synchronization Is Forbidden
+    regex: '\b(?:DispatchQueue|DispatchSemaphore|Thread|NSLock|os_unfair_lock|OSAllocatedUnfairLock)\b'
+    match_kinds:
+      - identifier
+    excluded:
+      - '.*Packages/PadGuest/.*'
+    message: Use Swift concurrency instead of legacy thread synchronization.
+    severity: error
