@@ -1,5 +1,5 @@
 {
-  "originHash" : "ffa7b08575f02650a10acc691d1192ad970e1aceba9622234c1ce069c8aa86e8",
+  "originHash" : "90be5581108a99d1a5195979444c7ade027e66f0c898a6c229d37162aaa0cab3",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/hummingbird-project/hummingbird.git",
       "state" : {
-        "revision" : "f2a7f918ac422cbac049c4b5169c59b9d5a778a1",
-        "version" : "2.27.1"
+        "revision" : "e12178302dacb8226fc78157f89078a59c75dd98",
+        "version" : "2.28.0"
       }
     },
     {
@@ -96,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-distributed-tracing.git",
       "state" : {
-        "revision" : "cc504a45f6ce73ce6067837d7ac19fa67b229a56",
-        "version" : "1.5.0"
+        "revision" : "c64975080075bff170b728704a7e151f15f541c0",
+        "version" : "1.7.0"
       }
     },
     {
@@ -195,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-service-context.git",
       "state" : {
-        "revision" : "d0997351b0c7779017f88e7a93bc30a1878d7f29",
-        "version" : "1.3.0"
+        "revision" : "014d2485dc62d6258521db1adcf12baceb2c136a",
+        "version" : "1.5.0"
       }
     },
     {
