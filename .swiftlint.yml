@@ -118,3 +118,27 @@ custom_rules:
       - '.*Packages/PadGuest/.*'
     message: Use Swift concurrency instead of legacy thread synchronization.
     severity: error
+  no_static_var:
+    name: Stored Static Variables Are Forbidden
+    regex: '\bstatic\s+var\s+\w+\s*(?::[^{=\n]+)?(?:=|$)'
+    excluded_match_kinds:
+      - comment
+      - comment.mark
+      - comment.url
+      - doccomment
+      - doccomment.field
+      - string
+    message: Do not keep mutable global state. Pass the value through an initializer.
+    severity: error
+  no_shared_singleton:
+    name: Shared Singletons Are Forbidden
+    regex: '\bstatic\s+(?:let|var)\s+shared\b'
+    excluded_match_kinds:
+      - comment
+      - comment.mark
+      - comment.url
+      - doccomment
+      - doccomment.field
+      - string
+    message: Do not create a shared singleton. Pass the instance through an initializer.
+    severity: error
