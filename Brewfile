@@ -1,7 +1,6 @@
 brew "actionlint"
 brew "gitleaks"
 brew "markdownlint-cli2"
-brew "periphery"
 brew "pre-commit"
 brew "shellcheck"
 brew "shfmt"

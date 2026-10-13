@@ -52,7 +52,6 @@ done << 'TOOLS'
 actionlint actionlint -version
 gitleaks gitleaks version
 markdownlint-cli2 markdownlint-cli2 --version
-periphery periphery version
 pre-commit pre-commit --version
 shellcheck shellcheck --version
 shfmt shfmt --version
