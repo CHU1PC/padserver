@@ -12,8 +12,8 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 | [ipad-server-feasibility.md](../ipad-server-feasibility.md) | iPadOS の制約についての調査メモ. container が動くと分かる前に書いたものです |
 
 本文に出てくる `#42` のような番号は, decisions.md の決定の番号です.
-決定は79件あります. このうち15件は, 後の決定で置き換えました. 対応は 3.9 にあります.
-3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く62件を載せています. その2件の中身は, 上の表の通りです.
+決定は81件あります. このうち15件は, 後の決定で置き換えました. 対応は 3.9 にあります.
+3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く64件を載せています. その2件の中身は, 上の表の通りです.
 
 この文書では, 確かさを3つの言葉で書き分けます.
 
@@ -239,6 +239,7 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 | 番号 | 決めたこと | 補足 | 選ばなかった案 |
 | --- | --- | --- | --- |
 | #18 | HTTP サーバーは Hummingbird 2 | container の port への転送を, streaming のまま書けます. TLS は Cloudflare が終えるので, アプリでは扱いません | FlyingFox, SwiftNIO で自作 |
+| #80 | swift-distributed-tracing を, 1.6.0 未満に固定する | Hummingbird 2.27.1 が, 1.6.0 と一緒にはビルドできなかったためです. 上流は Hummingbird 2.28.0 で直したので, M0-21 で外します | 受け入れずに, 上流の修正を待つ |
 | #38 | クリーンアーキテクチャの4層を, SwiftPM の target で分ける | 2.3 の通りです | 3層, フォルダだけで分ける |
 | #19 | プロジェクトは XcodeGen で生成し, 中身はローカルの Swift package に置く | 生成した xcodeproj は git に入れません | 素の xcodeproj, Tuist |
 | #52 | QEMU を包むコードは, 別の package (PadGuest) に出す | QEMU の binary が無い Mac や CI でも, 他の部分の `swift test` が回ります | PadInfrastructure の中に置く |
@@ -260,6 +261,7 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 | --- | --- | --- | --- |
 | #39 | 機能を作る前に, linter と pre-commit と GitHub Actions を入れる | 無し | 無し |
 | #76 | Swift の検査は4つ. SwiftLint (厳しめ), swift-format, SwiftLint の analyzer (未使用のコードと import の検出), 警告のエラー扱い | Swift 6 の language mode でビルドします. analyzer はビルドの記録が要るので, CI で回します | Periphery を使い続ける, Periphery Pro, 有志の fork |
+| #81 | 配列の末尾のカンマは, swift-format に合わせる. SwiftLint の `trailing_comma` は止める | 2つの道具の指示が逆で, 両方を通るファイルが書けなかったためです | SwiftLint に合わせる |
 | #36 | Swift 以外の検査は, Markdown と YAML, GitHub Actions と shell, secret の混入と綴り | 道具は markdownlint-cli2, yamllint, actionlint, zizmor, shellcheck, shfmt, gitleaks, typos です | Worker の TypeScript の検査 |
 | #37 | commit 時の検査は pre-commit で動かす | commit 時は速い検査だけ. ビルドと試験は CI です | lefthook, 素の git hook |
 | #77 | GitHub Actions では, lint, build と test, 未使用のコードの検出, gitleaks の4つの job を回す. Dependabot で, 依存の更新を受け取る | QEMU のビルドは時間がかかり, nix も要るので, CI では行いません | Dependabot は入れない, QEMU のビルドも CI で回す |
