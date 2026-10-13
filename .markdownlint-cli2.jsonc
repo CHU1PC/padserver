@@ -1,0 +1,13 @@
+{
+  "globs": ["**/*.md"],
+  "ignores": [
+    "spikes/**",
+    "**/node_modules/**",
+    "**/.build/**",
+    "build/**"
+  ],
+  "config": {
+    "default": true,
+    "MD013": false
+  }
+}

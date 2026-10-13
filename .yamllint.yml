@@ -1,0 +1,17 @@
+extends: default
+ignore: |
+  spikes/
+  node_modules/
+  .build/
+  build/
+rules:
+  comments:
+    require-starting-space: true
+  document-start: disable
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  line-length:
+    max: 120
+  truthy:
+    check-keys: false
