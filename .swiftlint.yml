@@ -61,7 +61,7 @@ file_header:
 
 no_magic_numbers:
   severity: error
-  allowed_numbers: [0, 1, 100]
+  # 0, 1, 100 は SwiftLint が常に許す. allowed_numbers は足すだけで, 減らせない.
   test_parent_classes: [QuickSpec, XCTestCase]
 
 custom_rules:
