@@ -76,11 +76,25 @@ custom_rules:
     name: Any and AnyObject Types Are Forbidden
     regex: '(?::|->|=|<|,|\[|\(|as)\s*(AnyObject|Any)\b'
     capture_group: 1
+    excluded_match_kinds:
+      - comment
+      - comment.mark
+      - comment.url
+      - doccomment
+      - doccomment.field
+      - string
     message: Use a concrete or protocol type instead of Any or AnyObject.
     severity: error
   no_unsafe_sendable:
     name: Unsafe Sendability Escape Hatches Are Forbidden
     regex: '@unchecked\s+Sendable|nonisolated\s*\(\s*unsafe\s*\)'
+    excluded_match_kinds:
+      - comment
+      - comment.mark
+      - comment.url
+      - doccomment
+      - doccomment.field
+      - string
     message: Do not bypass Swift concurrency safety checks.
     severity: error
   no_try_optional:
