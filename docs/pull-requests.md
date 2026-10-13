@@ -132,6 +132,8 @@ API を足したときと, 変えたときだけ書く.
 ## 8. merge
 
 - merge するのは, 所有者だけです.
-- 方法は rebase and merge にします. PR の commit がそのまま main に並び, merge 用の commit ができません.
-- GitHub の設定で, merge の方法を rebase だけにして, merge 後の branch を自動で消すようにします. main の保護 (M0-17) と一緒に設定します.
+- 方法は merge commit にします. GitHub の画面では「Create a merge commit」です.
+- PR の commit は, 番号を変えずに main に入ります. PR ごとに, merge 用の commit が1つできます.
+- merge 用の commit のメッセージは, GitHub が付けたままにします. 5章の形には合わせません.
+- GitHub の設定で, merge の方法を merge commit だけにして, merge 後の branch を自動で消すようにします. main の保護 (M0-17) と一緒に設定します.
 - 他の PR が先に入って衝突したら, 本体は自分で直さずに, 所有者に知らせます. 直し方は, その場で決めます.
