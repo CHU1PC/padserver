@@ -1,7 +1,6 @@
 strict: true
 excluded:
   - spikes/
-  - '**/Tests/**'
   - '**/.build/**'
   - '**/.swiftpm/**'
   - '**/DerivedData/**'
