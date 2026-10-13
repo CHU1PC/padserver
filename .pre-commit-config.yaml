@@ -1,0 +1,63 @@
+exclude: ^spikes/
+
+repos:
+  - repo: local
+    hooks:
+      # ファイル名を渡すと .swiftlint.yml の excluded が効かないため, --force-exclude を付ける.
+      - id: swiftlint
+        name: SwiftLint
+        entry: swiftlint lint --strict --quiet --force-exclude
+        language: system
+        types: [swift]
+      - id: swift-format
+        name: Swift format
+        entry: swift format lint --strict
+        language: system
+        types: [swift]
+      # markdownlint-cli2 の globs に全 Markdown を任せるため.
+      - id: markdownlint
+        name: Markdown lint
+        entry: markdownlint-cli2
+        language: system
+        pass_filenames: false
+        types: [markdown]
+      - id: yamllint
+        name: YAML lint
+        entry: yamllint --strict -c .yamllint.yml
+        language: system
+        types: [yaml]
+      - id: shellcheck
+        name: ShellCheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+      - id: shfmt
+        name: Shell format
+        entry: shfmt -d
+        language: system
+        types: [shell]
+      - id: actionlint
+        name: GitHub Actions lint
+        entry: actionlint
+        language: system
+        files: ^\.github/workflows/
+        types: [yaml]
+      - id: zizmor
+        name: zizmor audit
+        entry: zizmor --offline --config .github/zizmor.yml
+        language: system
+        files: ^\.github/workflows/
+        types: [yaml]
+      # 作業ツリー全体を毎回走査するためファイル名を渡さない.
+      - id: gitleaks
+        name: Gitleaks
+        entry: gitleaks dir --no-banner --redact .
+        language: system
+        pass_filenames: false
+        always_run: true
+      # ファイル名を渡すと _typos.toml の除外が効かないため, --force-exclude を付ける.
+      - id: typos
+        name: Typos
+        entry: typos --force-exclude
+        language: system
+        types: [text]
