@@ -429,7 +429,7 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 | M0-19 | 19 | 検証のコードを移す (006). tctiSH を使った検証の README と起動の script を移す. tctiSH に当てた変更は patch にして残す. tctiSH と QEMU のコード, 鍵, disk の image は入れない | M0-18 | 本体 |
 | M0-20 | 200 | 開発の規則の文書. PR の規則 (`docs/pull-requests.md`) と, 実装の規則 (`docs/implementation-rules.md`) を置く. 2つの規則と, 実装とレビューの担い手の変更を, 決定の記録と roadmap に反映する | M0-1 | 本体 |
 | M0-21 | 209 | swift-distributed-tracing の固定を外す. M0-8 で入れた swift-distributed-tracing の版の固定 (1.6.0 未満) を外す. 上流の Hummingbird の issue 922 が直って, 修正を含む版が出てから行う. 固定の行が出す SwiftPM の warning (`dependency 'swift-distributed-tracing' is not used by any target`) も, これで消える | M0-8 | 実装者 |
-| M0-22 | 210 | Swift の lint の食い違いを直す. SwiftLint と swift-format を, 同じファイルが両方を通れるように揃える. 複数行の配列の末尾のカンマは swift-format に合わせて, SwiftLint の `trailing_comma` を必須にする. `file_header` は, SwiftPM に要る `// swift-tools-version:` の行だけを許す. `Packages/PadServerCore/Package.swift` を swift-format で整形する | M0-2, M0-8 | 実装者 |
+| M0-22 | 210 | Swift の lint の食い違いを直す. SwiftLint と swift-format を, 同じファイルが両方を通れるように揃える. 複数行の配列の末尾のカンマは swift-format に任せて, SwiftLint の `trailing_comma` を止める. `file_header` は, SwiftPM に要る `// swift-tools-version:` の行だけを許す. `Packages/PadServerCore/Package.swift` を swift-format で整形する | M0-2, M0-8 | 実装者 |
 | M0-23 | 211 | 決定の記録の更新 (未使用のコードの検出, merge の方法, TOML の parser). 所有者が 2026-10-13 と 2026-10-14 に決めた3つを, 決定の記録と roadmap と PR の規則に反映する. 未使用のコードの検出を, Periphery から SwiftLint の analyzer に替える. merge の方法を, rebase and merge から merge commit に替える. `padctl` の TOML の parser を TOMLDecoder にする. M0-22 とこの Issue を, roadmap の一覧に足す | M0-20 | 本体 |
 
 #### M1 実機での検証
