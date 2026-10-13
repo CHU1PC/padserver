@@ -356,12 +356,13 @@ feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に決
 
 段階の分け方と Issue の一覧は, 2026-10-11 に承認されました (#68). Issue は GitHub に作ってあります.
 2026-10-13 に, 開発の規則の文書を入れる Issue を1件足しました (#75).
+その後に, 依存の固定を外す Issue (M0-21), Swift の lint の食い違いを直す Issue (M0-22), 決定の記録を更新する Issue (M0-23) を足しました.
 
 ### 6.1 段階の一覧
 
 | 段階 | 作るもの | 終わりの確認 | Issue の数 |
 | --- | --- | --- | --- |
-| M0 開発基盤 | lint, pre-commit, GitHub Actions, 4層の空の骨組み, 開発の規則の文書 | 空の骨組みが, 手元の hook と CI の両方を通る | 21 |
+| M0 開発基盤 | lint, pre-commit, GitHub Actions, 4層の空の骨組み, 開発の規則の文書 | 空の骨組みが, 手元の hook と CI の両方を通る | 23 |
 | M1 実機での検証 | 4章の前提を確かめる最小のコード | それぞれの結果を decisions.md に書く. 外れたものは決定を見直す | 18 |
 | M2 土台 | 型と protocol, 保存, 配信と管理の2つの入口, 静的サイトの配信, 管理 API, CLI の基本, dashboard | Mac から静的サイトを配備して, tailnet 経由で表示できる | 54 |
 | M3 公開 | relay (Cloudflare の Worker と Durable Object), アプリからの接続, 独自ドメインの割り当て | 独自ドメインの URL を tailnet の外から開ける. 管理 API は外から届かない | 21 |
@@ -370,7 +371,7 @@ feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に決
 | M6 Kikitoru | Kikitoru の frontend と, compose の構成の配備 | 独自ドメインでログインして, 音声を1本送り, 議事録ができる | 11 |
 | M7 仕上げ | ファイル置き場, 共有リンク, 手順書 | 手順書だけを見て, まっさらな状態からビルドできる | 20 |
 
-Issue は, 全部で201件です.
+Issue は, 全部で203件です.
 
 ### 6.2 段階の依存
 
@@ -413,7 +414,7 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 | M0-4 | 4 | shell と GitHub Actions の lint の設定. shellcheck, shfmt, actionlint, zizmor の設定を置く | M0-1 | 実装者 |
 | M0-5 | 5 | secret と綴りの検査の設定. gitleaks と typos の設定を置く | M0-1 | 実装者 |
 | M0-6 | 6 | 道具を入れる script. 開発に要る道具 (SwiftLint, XcodeGen, pre-commit, 各 linter) を, 1つのコマンドで入れられるようにする | M0-1 | 実装者 |
-| M0-7 | 7 | pre-commit の設定. 全ての hook を1つの設定に束ねる. commit 時に動かすのは速い検査だけにする | M0-2, M0-3, M0-4, M0-5, M0-6 | 実装者 |
+| M0-7 | 7 | pre-commit の設定. 全ての hook を1つの設定に束ねる. commit 時に動かすのは速い検査だけにする | M0-2, M0-3, M0-4, M0-5, M0-6, M0-22 | 実装者 |
 | M0-8 | 8 | PadServerCore の骨組み. 4層の空の target と, 試験の target, 試験用の共有の target (PadTestSupport) を作る. Swift 6 の language mode と, 警告のエラー扱いを設定する. Hummingbird を PadInfrastructure の依存に宣言する | M0-1 | 実装者 |
 | M0-9 | 9 | アプリの殻. XcodeGen の定義と xcconfig と, 最小の SwiftUI のアプリを置く. Team ID と Bundle ID は `Config/Local.xcconfig` から読む | M0-8 | 実装者 |
 | M0-10 | 10 | CLI の殻. `padctl` の package を作る. PadServerCore の PadInterface に依存する. swift-argument-parser と TOML の parser (TOMLDecoder) を依存に宣言する | M0-8 | 実装者 |
@@ -428,6 +429,8 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 | M0-19 | 19 | 検証のコードを移す (006). tctiSH を使った検証の README と起動の script を移す. tctiSH に当てた変更は patch にして残す. tctiSH と QEMU のコード, 鍵, disk の image は入れない | M0-18 | 本体 |
 | M0-20 | 200 | 開発の規則の文書. PR の規則 (`docs/pull-requests.md`) と, 実装の規則 (`docs/implementation-rules.md`) を置く. 2つの規則と, 実装とレビューの担い手の変更を, 決定の記録と roadmap に反映する | M0-1 | 本体 |
 | M0-21 | 209 | swift-distributed-tracing の固定を外す. M0-8 で入れた swift-distributed-tracing の版の固定 (1.6.0 未満) を外す. 上流の Hummingbird の issue 922 が直って, 修正を含む版が出てから行う. 固定の行が出す SwiftPM の warning (`dependency 'swift-distributed-tracing' is not used by any target`) も, これで消える | M0-8 | 実装者 |
+| M0-22 | 210 | Swift の lint の食い違いを直す. SwiftLint と swift-format を, 同じファイルが両方を通れるように揃える. 複数行の配列の末尾のカンマは swift-format に合わせて, SwiftLint の `trailing_comma` を必須にする. `file_header` は, SwiftPM に要る `// swift-tools-version:` の行だけを許す. `Packages/PadServerCore/Package.swift` を swift-format で整形する | M0-2, M0-8 | 実装者 |
+| M0-23 | 211 | 決定の記録の更新 (未使用のコードの検出, merge の方法, TOML の parser). 所有者が 2026-10-13 と 2026-10-14 に決めた3つを, 決定の記録と roadmap と PR の規則に反映する. 未使用のコードの検出を, Periphery から SwiftLint の analyzer に替える. merge の方法を, rebase and merge から merge commit に替える. `padctl` の TOML の parser を TOMLDecoder にする. M0-22 とこの Issue を, roadmap の一覧に足す | M0-20 | 本体 |
 
 #### M1 実機での検証
 
