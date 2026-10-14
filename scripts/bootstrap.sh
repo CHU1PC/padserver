@@ -55,7 +55,6 @@ markdownlint-cli2 markdownlint-cli2 --version
 pre-commit pre-commit --version
 shellcheck shellcheck --version
 shfmt shfmt --version
-swift-format swift-format --version
 swiftlint swiftlint version
 typos-cli typos --version
 xcodegen xcodegen --version
@@ -63,4 +62,21 @@ yamllint yamllint --version
 zizmor zizmor --version
 TOOLS
 
-exit "$failed"
+if ! command -v swift > /dev/null 2>&1; then
+  printf 'Error: swift format is unavailable in the Xcode toolchain.\n' >&2
+  failed=1
+elif ! version_output=$(swift format --version 2>&1); then
+  printf 'Error: swift format is unavailable in the Xcode toolchain.\n' >&2
+  failed=1
+elif [[ -z "$version_output" ]]; then
+  printf 'Error: could not read the swift-format version.\n' >&2
+  failed=1
+else
+  printf 'swift-format %s\n' "$version_output"
+fi
+
+if [[ "$failed" -ne 0 ]]; then
+  exit "$failed"
+fi
+
+pre-commit install
