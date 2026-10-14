@@ -35,6 +35,6 @@ func projectNameRejectsInvalidValues(value: String) {
 }
 
 @Test func projectKindJSONValuesAreStable() throws {
-    #expect(String(decoding: try JSONEncoder().encode(ProjectKind.staticSite), as: UTF8.self) == "\"staticSite\"")
-    #expect(String(decoding: try JSONEncoder().encode(ProjectKind.compose), as: UTF8.self) == "\"compose\"")
+    #expect(try JSONEncoder().encode(ProjectKind.staticSite) == Data("\"staticSite\"".utf8))
+    #expect(try JSONEncoder().encode(ProjectKind.compose) == Data("\"compose\"".utf8))
 }
