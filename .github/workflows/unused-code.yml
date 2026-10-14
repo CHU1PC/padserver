@@ -1,0 +1,54 @@
+name: unused-code
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: unused-code-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unused-code:
+    name: Unused code
+    runs-on: macos-26
+    # 依存のコンパイルが長引いても, runner を長時間占有しないため.
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install tools
+        run: brew bundle --file Brewfile
+      - name: Show toolchain versions
+        run: |
+          swiftlint version
+          xcodegen --version
+          swift --version
+          xcodebuild -version
+      - name: Generate project and build with compiler log
+        run: |
+          xcodegen generate
+          set -o pipefail
+          xcodebuild -project PadServer.xcodeproj -scheme PadServer \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO build | tee "$RUNNER_TEMP/xcodebuild.log"
+          xcodebuild -project PadServer.xcodeproj -scheme PadTestSupport \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO build | tee -a "$RUNNER_TEMP/xcodebuild.log"
+      - name: Analyze unused declarations and imports
+        run: |
+          swiftlint analyze --strict \
+            --only-rule unused_declaration \
+            --only-rule unused_import \
+            --compiler-log-path "$RUNNER_TEMP/xcodebuild.log"
