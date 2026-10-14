@@ -12,8 +12,8 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 | [ipad-server-feasibility.md](../ipad-server-feasibility.md) | iPadOS の制約についての調査メモ. container が動くと分かる前に書いたものです |
 
 本文に出てくる `#42` のような番号は, decisions.md の決定の番号です.
-決定は81件あります. このうち15件は, 後の決定で置き換えました. 対応は 3.9 にあります.
-3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く64件を載せています. その2件の中身は, 上の表の通りです.
+決定は82件あります. このうち15件は, 後の決定で置き換えました. 対応は 3.9 にあります.
+3章には, 今有効な決定のうち, 文書の置き場所についての2件 (#10 と #40) を除く65件を載せています. その2件の中身は, 上の表の通りです.
 
 この文書では, 確かさを3つの言葉で書き分けます.
 
@@ -274,6 +274,7 @@ QEMU のコードは, リポジトリに入れません (#47). 使う人がビ�
 | #72 | コードの書き方は, [implementation-rules.md](implementation-rules.md) の通りにする | 型, 設計, エラーと並行処理, 試験, コメントの決まりです. 試験は Swift Testing で, 実装より先に書きます | 無し |
 | #55 | feature branch への commit, push, PR の作成は, 本体が行う | main への merge は, 所有者が行います (#34) | commit のたびに確認する, PR の作成も所有者が行う |
 | #74 | push と PR の作成は, 本体が成果物を確かめてから行う. 所有者の確認は待たない | 実装者と reviewer は, commit も push もしません. push の前の検査 (lint, 試験, secret, 個人的な情報) を本体に残します | Codex のワーカーが PR まで作る, 所有者が push する |
+| #82 | reviewer の指摘は, 所有者に聞かずに本体が直してから PR を出す. 本体は, ビルドや動作を自分で確かめ直さない | 所有者の操作は merge だけになります. push の前の検査は, 本体に残します | 指摘を選ぶ手間だけを無くす, 本体の検証だけを無くす |
 | #54 | PadDomain の型, PadApplication の port, 通信の型は, 本体が書く | 全ての Issue がこの形に依存するためです | 実装者に任せる |
 | #53 | 検証に使ったコードは, `spikes/` に README と一緒に残す | lint と CI の対象から外します. 取得した tctiSH と QEMU のコード, ビルドの成果物, 鍵と token, 端末の ID は入れません | README だけ残す, リポジトリに入れない |
 | #66 | Issue は, 全ての段階を, 1つが1つの責務になるまで細かく分ける | container の部分 (M4 から M6) は, 検証の結果で書き直すことがあります | 近い段階だけ細かく分ける, 粗い一覧のままにする |
@@ -359,12 +360,13 @@ feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に決
 段階の分け方と Issue の一覧は, 2026-10-11 に承認されました (#68). Issue は GitHub に作ってあります.
 2026-10-13 に, 開発の規則の文書を入れる Issue を1件足しました (#75).
 その後に, 依存の固定を外す Issue (M0-21), Swift の lint の食い違いを直す Issue (M0-22), 決定の記録を更新する Issue (M0-23) を足しました.
+2026-10-14 に, PR の規則を書き直す Issue (M0-24) と, 道具の導入を手直しする Issue (M0-25) を足しました.
 
 ### 6.1 段階の一覧
 
 | 段階 | 作るもの | 終わりの確認 | Issue の数 |
 | --- | --- | --- | --- |
-| M0 開発基盤 | lint, pre-commit, GitHub Actions, 4層の空の骨組み, 開発の規則の文書 | 空の骨組みが, 手元の hook と CI の両方を通る | 23 |
+| M0 開発基盤 | lint, pre-commit, GitHub Actions, 4層の空の骨組み, 開発の規則の文書 | 空の骨組みが, 手元の hook と CI の両方を通る | 25 |
 | M1 実機での検証 | 4章の前提を確かめる最小のコード | それぞれの結果を decisions.md に書く. 外れたものは決定を見直す | 18 |
 | M2 土台 | 型と protocol, 保存, 配信と管理の2つの入口, 静的サイトの配信, 管理 API, CLI の基本, dashboard | Mac から静的サイトを配備して, tailnet 経由で表示できる | 54 |
 | M3 公開 | relay (Cloudflare の Worker と Durable Object), アプリからの接続, 独自ドメインの割り当て | 独自ドメインの URL を tailnet の外から開ける. 管理 API は外から届かない | 21 |
@@ -373,7 +375,7 @@ feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に決
 | M6 Kikitoru | Kikitoru の frontend と, compose の構成の配備 | 独自ドメインでログインして, 音声を1本送り, 議事録ができる | 11 |
 | M7 仕上げ | ファイル置き場, 共有リンク, 手順書 | 手順書だけを見て, まっさらな状態からビルドできる | 20 |
 
-Issue は, 全部で203件です.
+Issue は, 全部で205件です.
 
 ### 6.2 段階の依存
 
@@ -433,6 +435,8 @@ GitHub の欄は, GitHub の Issue の番号です. 決定の番号 (`#42` の�
 | M0-21 | 209 | swift-distributed-tracing の固定を外す. M0-8 で入れた swift-distributed-tracing の版の固定 (1.6.0 未満) を外す. 上流の Hummingbird の issue 922 が直って, 修正を含む版が出てから行う. 固定の行が出す SwiftPM の warning (`dependency 'swift-distributed-tracing' is not used by any target`) も, これで消える | M0-8 | 実装者 |
 | M0-22 | 210 | Swift の lint の食い違いを直す. SwiftLint と swift-format を, 同じファイルが両方を通れるように揃える. 複数行の配列の末尾のカンマは swift-format に任せて, SwiftLint の `trailing_comma` を止める. `file_header` は, SwiftPM に要る `// swift-tools-version:` の行だけを許す. `Packages/PadServerCore/Package.swift` を swift-format で整形する | M0-2, M0-8 | 実装者 |
 | M0-23 | 211 | 決定の記録の更新 (未使用のコードの検出, merge の方法, TOML の parser). 所有者が 2026-10-13 と 2026-10-14 に決めた3つを, 決定の記録と roadmap と PR の規則に反映する. 未使用のコードの検出を, Periphery から SwiftLint の analyzer に替える. merge の方法を, rebase and merge から merge commit に替える. `padctl` の TOML の parser を TOMLDecoder にする. M0-22 とこの Issue を, roadmap の一覧に足す | M0-20 | 本体 |
+| M0-24 | 219 | PR の規則を, Codex のレビューに任せる流れに書き直す. 所有者が 2026-10-14 に決めた流れを, PR の規則と決定の記録と roadmap に反映する. reviewer の指摘は, 所有者に聞かずに本体が直してから PR を出す. 本体が自分でビルドや動作を確かめ直す手順は省く. push の前の検査は残す. M0-24 と M0-25 を, roadmap の一覧に足す | M0-23 | 本体 |
+| M0-25 | 220 | 道具の導入の手直し (hook の有効化と swift-format). `scripts/bootstrap.sh` で `pre-commit install` を実行して, clone した直後から hook が動くようにする. README に手順を1行書く. Brewfile から, hook が使っていない Homebrew の `swift-format` を外す | M0-6, M0-7 | 実装者 |
 
 #### M1 実機での検証
 
@@ -663,12 +667,10 @@ Kikitoru の側の変更は, Kikitoru のリポジトリの別の branch で行�
 
 1. 本体が, Issue の内容を指示文にする. 触ってよいファイルと, 実行して貼るべきコマンドの出力を書く.
 2. 実装者 (Codex のワーカー) が, その Issue 専用の worktree で実装する. commit はしない.
-3. 本体が, 成果物を自分で動かして確かめる. 実装者の報告だけでは通さない. 画面のある実装と, 動かして見せられる実装は, スクリーンショットを撮る.
-4. reviewer (Codex のワーカー) が1回レビューする. 指摘は, 選別せずに全件を PR に載せる.
+3. reviewer (Codex のワーカー) が1回レビューする. 終わりの確認のコマンドを, 自分で実行し直す.
+4. 本体が, reviewer の指摘を直す. 所有者には聞かない (#82). 再レビューはしない. 指摘は, 選別せずに全件を PR に載せる.
 5. 本体が, 検査を通して commit して push し, PR を作る. 所有者の確認は待たない (#74).
-6. 所有者が, 直す指摘を選ぶ.
-7. 本体が, 選ばれた指摘を直して push する. 再レビューはしない.
-8. 所有者が merge する.
+6. 所有者が merge する.
 
 PR の細かい決まりは [pull-requests.md](pull-requests.md) に, コードの書き方は [implementation-rules.md](implementation-rules.md) にあります.
 

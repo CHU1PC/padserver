@@ -89,6 +89,7 @@ iPad をローカルサーバーにするアプリについて, 決めたこと�
 | 79 | PR の規則 (項目71を置き換える) | [pull-requests.md](pull-requests.md) の通りにする. merge の方法は, merge commit にする | 最初の8件の PR は, merge commit で main に入りました. その後に, 規則の方を合わせると決めました. PR の commit は, 番号を変えずに main に入ります. PR の表に書いた commit の番号を, main でそのまま辿れます. PR ごとに, merge 用の commit が1つできます. 他の決まりは, 項目71のままです | rebase and merge に戻して GitHub の設定で固定する, 設定は main の保護 (M0-17) まで待って手で rebase and merge を選ぶ, 本文とコメントに署名を付ける, 変えたファイルを並べるだけにする | 2026-10-14 |
 | 80 | swift-distributed-tracing の版の固定 | PadServerCore の `Package.swift` で, swift-distributed-tracing を 1.6.0 未満に固定する. 固定を外す時期を追う Issue を1件足す (M0-21) | Hummingbird 2.27.1 が, swift-distributed-tracing 1.6.0 と一緒にはビルドできなかったためです. この行は, 骨組みの Issue (M0-8) には無い変更でした. 上流は, 2026-10-13 に出た Hummingbird 2.28.0 で直しました. 固定は M0-21 で外します | 受け入れずに, 上流の修正を待つ | 2026-10-13 |
 | 81 | 配列の末尾のカンマ | swift-format に合わせる. SwiftLint の `trailing_comma` は止めて, swift-format だけが決める | 2つの道具の指示が逆で, 両方を通るファイルが書けなかったためです. swift-format は, 要素が複数あって複数行にまたがる配列の最後に, カンマを付けます. SwiftLint の側を「必須」にする案は, 要素が1つで複数行にまたがる配列で食い違うので, 規則を止めました (M0-22) | SwiftLint に合わせて, swift-format がカンマを付けない設定にする | 2026-10-14 |
+| 82 | レビューの指摘の扱いと, 本体の検証 | reviewer の指摘は, 所有者に聞かずに, 本体が直してから PR を出す. 本体は, ビルドや動作を自分で確かめ直さない. 成果物が動くことは, reviewer が確かめる | 所有者の判断です. PR のたびに直す指摘を選ぶのが, 手間だったためです. 所有者の操作は merge だけになります. push の前の検査 (lint, secret, 個人的な情報) は, 本体に残します (項目74). 並列に作った PR を重ねた状態の lint も, 本体が続けます. 直さなかった指摘は, 理由を付けて PR に残します | 指摘を選ぶ手間だけを無くす, 本体の検証だけを無くす | 2026-10-14 |
 
 ## 未決定
 
