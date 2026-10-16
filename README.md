@@ -48,6 +48,21 @@ secret と管理 token もメモリ内で扱い, 固定の時刻と ID を注入
 ✔ Test run with 79 tests in 2 suites passed after 0.006 seconds.
 ```
 
+## 配備の差分確認
+
+内部の `PlanDeployment` は, 送信予定のファイル一覧を保存済み blob と照合し, 未保存のファイル参照を返します.
+同じ hash は最初の参照だけを返し, 全て保存済みの場合や空入力では空の一覧を返します.
+
+`swift test --package-path Packages/PadServerCore` の出力から, 対象の試験を抜粋しています. 各試験の実行時間は省いています.
+
+```text
+✔ Test planDeploymentOmitsStoredBlobs() passed
+✔ Test planDeploymentReturnsEmptyWhenAllBlobsAreStored() passed
+✔ Test planDeploymentReturnsEmptyForNoFiles() passed
+✔ Test planDeploymentDeduplicatesByBlobAndPreservesFirstReferenceOrder() passed
+✔ Test run with 87 tests in 2 suites passed after 0.032 seconds.
+```
+
 ## 文書
 
 | 文書 | 内容 |
