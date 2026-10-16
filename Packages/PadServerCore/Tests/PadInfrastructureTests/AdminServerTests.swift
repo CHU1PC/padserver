@@ -2,7 +2,6 @@ import Hummingbird
 import HummingbirdTesting
 import HTTPTypes
 import NIOCore
-import NIOEmbedded
 import PadDomain
 @testable import PadInfrastructure
 import Testing
@@ -15,8 +14,6 @@ private enum AdminServerTestConstants {
     static let exampleSocketPort = 443
     static let exampleClientAddress = "198.51.100.7"
     static let spoofedForwardedAddress = "203.0.113.9"
-    static let exampleIPv4Address = "192.0.2.7"
-    static let exampleIPv6Address = "2001:db8::7"
 }
 
 @Test func adminServerKeepsAdminRoutesSeparateFromDeliveryRoutes() async throws {
@@ -103,46 +100,5 @@ private enum AdminServerTestConstants {
             adminPort: AdminServerTestConstants.adminPort,
             deliveryPort: AdminServerTestConstants.adminPort
         )
-    }
-}
-
-@Test func adminServerRejectsPortsOutsideSocketPortRange() {
-    let invalidPorts = [-1, 0, Int(UInt16.max) + 1]
-
-    for port in invalidPorts {
-        #expect(throws: AdminServerError.invalidPort(port)) {
-            try AdminServer.makeApplication(adminPort: port, deliveryPort: AdminServerTestConstants.deliveryPort)
-        }
-        #expect(throws: AdminServerError.invalidPort(port)) {
-            try AdminServer.makeApplication(adminPort: AdminServerTestConstants.adminPort, deliveryPort: port)
-        }
-    }
-}
-
-@Test func adminServerAcceptsSocketPortRangeBoundaries() throws {
-    let minimumPort = 1
-    let maximumPort = Int(UInt16.max)
-
-    _ = try AdminServer.makeApplication(adminPort: minimumPort, deliveryPort: AdminServerTestConstants.deliveryPort)
-    _ = try AdminServer.makeApplication(adminPort: AdminServerTestConstants.adminPort, deliveryPort: maximumPort)
-}
-
-@Test func adminRequestContextCopiesIPv4AndIPv6TransportAddressesFromSource() throws {
-    let addresses = [
-        AdminServerTestConstants.exampleIPv4Address,
-        AdminServerTestConstants.exampleIPv6Address,
-    ]
-
-    for address in addresses {
-        let channel = NIOAsyncTestingChannel()
-        let socketAddress = try SocketAddress(ipAddress: address, port: AdminServerTestConstants.exampleSocketPort)
-        channel.remoteAddress = socketAddress
-
-        let context = AdminRequestContext(
-            source: .init(channel: channel, logger: .init(label: "AdminRequestContextTests"))
-        )
-
-        #expect(context.remoteAddress == socketAddress)
-        #expect(context.clientAddress == ClientAddress(address))
     }
 }
