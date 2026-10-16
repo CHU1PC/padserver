@@ -20,3 +20,24 @@ clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツール�
 ## ライセンス
 
 MIT です. [LICENSE](LICENSE) にあります.
+
+## Keychain への保存
+
+内部部品の `KeychainSecretStore` が, 管理 token とプロジェクト別の secret を Mac と iOS の Keychain に保存します.
+通常の試験はメモリ内の代替実装を使い, 実 Keychain に触れません.
+
+Mac で実 Keychain を確認する結合試験は, 明示して実行します.
+この試験は一意な project 名の一時項目を作り, 保存, 取得, 更新, 一覧, 削除を確認して片付けます.
+既存の管理 token は使いません.
+
+```sh
+PADSERVER_KEYCHAIN_INTEGRATION=1 swift test --package-path Packages/PadServerCore --filter KeychainSecretStoreIntegrationTests
+```
+
+実際の実行結果です.
+
+```text
+✔ Test storesReadsUpdatesListsAndDeletesInRealKeychain() passed after 0.072 seconds.
+✔ Suite KeychainSecretStoreIntegrationTests passed after 0.072 seconds.
+✔ Test run with 1 test in 1 suite passed after 0.072 seconds.
+```
