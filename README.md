@@ -157,6 +157,23 @@ PADSERVER_KEYCHAIN_INTEGRATION=1 swift test --package-path Packages/PadServerCor
 ✔ Test run with 1 test in 1 suite passed after 0.072 seconds.
 ```
 
+## 古い release の掃除
+
+内部部品の `PruneReleases` は, プロジェクトごとに保存順で直近3つの release を残します.
+有効な release は, 直近3つより古くても必ず残します.
+残す release の manifest を全プロジェクトについて確認し, どこからも参照されない blob を削除します.
+別プロジェクトと共有する blob は残ります.
+
+`swift test --package-path Packages/PadServerCore` の実行結果から, 実行時間を省いて掲載します.
+
+```text
+✔ Test pruneReleasesKeepsLatestThreeForEachProjectInStorageOrder() passed
+✔ Test pruneReleasesAlwaysKeepsActiveReleaseOutsideLatestThree() passed
+✔ Test pruneReleasesRemovesOnlyBlobsUnreferencedByRetainedReleases() passed
+✔ Test pruneReleasesHandlesEmptyStorageAndFewerThanThreeReleases() passed
+✔ Test run with 101 tests in 2 suites passed
+```
+
 ## プロジェクト一覧の保存
 
 内部部品の `FileProjectRepository` は, プロジェクト一覧を JSON ファイルに保存して読み込みます.
