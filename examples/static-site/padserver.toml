@@ -1,0 +1,6 @@
+name = "static-site"
+root = "."
+
+[[routes]]
+host = "example.com"
+path_prefix = "/"
