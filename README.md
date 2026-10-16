@@ -26,6 +26,28 @@ CLI 内部の `ManifestLoader` が `padserver.toml` の内容を読み取り, �
 
 上記は試験出力から実行時間を省いたものです.
 
+## 共有の試験用 port
+
+`PadTestSupport` は, ProjectStorage と SecretStore のメモリ内実装を提供します.
+release の準備保存, 検証後の active 切替, project の run state と route の保持, blob の pull stream を試験から共有できます.
+secret と管理 token もメモリ内で扱い, 固定の時刻と ID を注入できます.
+同じ target の `InMemoryLogBus` は直近 1,000 件を再生し, 購読中の stream に新しいログを配信します.
+
+`swift test --package-path Packages/PadServerCore` で実行した共有 port の試験出力です.
+
+```text
+✔ Test sharedSecretStoreSupportsProjectSecretsAndAdminToken() passed after 0.003 seconds.
+✔ Test sharedReleaseActivationPreservesOtherProjectsActiveRelease() passed after 0.003 seconds.
+✔ Test sharedStorageKeepsProjectsAndRunStatesIndependent() passed after 0.003 seconds.
+✔ Test sharedSecretsWithTheSameNameStaySeparateAcrossProjects() passed after 0.003 seconds.
+✔ Test sharedProjectStorageStoresProjectsReleasesAndBlobStreams() passed after 0.003 seconds.
+✔ Test sharedBlobStreamKeepsIndependentPullCursors() passed after 0.003 seconds.
+✔ Test sharedProjectStorageActivatesReleasesOnlyAfterValidation() passed after 0.003 seconds.
+✔ Test sharedLogCancellationDoesNotStopOtherSubscribers() passed after 0.004 seconds.
+✔ Test sharedRuntimePortsProvideFixedValuesAndReplayThenDeliverLogs() passed after 0.005 seconds.
+✔ Test run with 79 tests in 2 suites passed after 0.006 seconds.
+```
+
 ## 文書
 
 | 文書 | 内容 |
