@@ -260,3 +260,19 @@ blob が欠けている場合や release の保存が失敗した場合は, そ�
 ✔ Test resolveRouteRejectsAmbiguousLongestPrefixWithoutBlockingMoreSpecificRoute() passed
 ✔ Test run with 102 tests in 2 suites passed
 ```
+
+### release と manifest のファイル保存
+
+`FileReleaseStore` は release と manifest を保存し、再起動後も読み出せます。
+同じプロジェクトの旧 active を retired にする変更と、新しい active への変更を、
+一つの JSON の原子的置換で保存します。保存に失敗した場合、旧 active が残ります。
+保存した順序を保ち、release の削除では対応する manifest も削除します。
+project と blob の存在確認は、ProjectStorage の組み立て側が担当します。
+
+確認には、一時ディレクトリでの保存と再読み込み、プロジェクト別の切り替え、
+保存エラー時の状態維持を含む試験を使います。
+
+```text
+$ swift test --package-path Packages/PadServerCore --filter fileReleaseStore
+✔ Test run with 6 tests in 0 suites passed after 0.017 seconds.
+```
