@@ -9,10 +9,6 @@ public actor InMemoryLogBus: LogBus {
     private var history: [LogEntry] = []
     private var subscribers: [UUID: AsyncStream<LogEntry>.Continuation] = [:]
 
-    var subscriberCount: Int {
-        subscribers.count
-    }
-
     public init() {
         // 引数がない初期化子を明示し、actorの生成形を公開します。
     }

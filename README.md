@@ -29,7 +29,7 @@ clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツール�
 ✔ Test replaysOnlyTheLatestThousandEntriesInPublishOrder() passed
 ✔ Test publishesEachEntryToMultipleSubscribers() passed
 ✔ Test slowSubscriberDropsOldBufferedEntriesWithoutBlockingAnotherSubscriber() passed
-✔ Test cancellationUnregistersTheSubscriber() passed
+✔ Test cancelledSubscriberDoesNotBlockOtherSubscribers() passed
 ✔ Test publishAtTheReplayBoundaryIsDeliveredExactlyOnceAndInOrder() passed
 ```
 

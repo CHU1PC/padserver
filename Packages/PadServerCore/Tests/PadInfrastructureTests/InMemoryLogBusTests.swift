@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import PadInfrastructure
+import PadInfrastructure
 import PadApplication
 import PadDomain
 
@@ -11,12 +11,6 @@ private let fixedTimestamp = Date(timeIntervalSince1970: 0)
 private let logCapacity = 1_000
 // 回帰時にstream待ちで試験が止まらないようにします。
 private let operationTimeout: Duration = .seconds(1)
-// onTerminationの解除Taskを最大1秒だけ待ちます。
-private let subscriberRemovalPollMilliseconds = 10
-private let subscriberRemovalPollInterval: Duration = .milliseconds(subscriberRemovalPollMilliseconds)
-// 100回の確認で、解除callbackを最大1秒待ちます。
-private let subscriberRemovalPollAttempts = 100
-
 private enum TimedResult<Value: Sendable>: Sendable {
     case value(Value)
     case ended
@@ -66,9 +60,10 @@ private enum TimedResult<Value: Sendable>: Sendable {
     #expect(await fastIterator.next()?.message == "entry-\(logCapacity)")
 }
 
-@Test func cancellationUnregistersTheSubscriber() async {
+@Test func cancelledSubscriberDoesNotBlockOtherSubscribers() async {
     let bus = InMemoryLogBus()
     let stream = await bus.subscribe()
+    let otherStream = await bus.subscribe()
     let consumer = Task {
         for await _ in stream {
             // 受信側はログを処理せず、キャンセルまで購読を維持します。
@@ -79,7 +74,8 @@ private enum TimedResult<Value: Sendable>: Sendable {
     consumer.cancel()
     await consumer.value
 
-    #expect(await eventuallyHasSubscriberCount(0, bus: bus))
+    await bus.publish(makeEntry(index: 9))
+    #expect(await nextValue(from: otherStream)?.message == "entry-9")
 }
 
 @Test func publishAtTheReplayBoundaryIsDeliveredExactlyOnceAndInOrder() async {
@@ -145,18 +141,6 @@ private func nextValue(from stream: AsyncStream<LogEntry>) async -> LogEntry? {
         guard case let .value(entry) = result else { return nil }
         return entry
     }
-}
-
-private func eventuallyHasSubscriberCount(_ expectedCount: Int, bus: InMemoryLogBus) async -> Bool {
-    for _ in 0..<subscriberRemovalPollAttempts {
-        if await bus.subscriberCount == expectedCount { return true }
-        do {
-            try await Task.sleep(for: subscriberRemovalPollInterval)
-        } catch {
-            return false
-        }
-    }
-    return false
 }
 
 private func makeEntry(index: Int) -> LogEntry {
