@@ -136,6 +136,20 @@ preparing と retired の release を有効な release として返さず, relea
 
 MIT です. [LICENSE](LICENSE) にあります.
 
+## プロジェクトの開始と停止
+
+内部部品の `SetProjectState` は, プロジェクトの開始状態と停止状態を保存します.
+停止すると `ResolveRoute` は配信先を返さず停止中として扱い, 再開すると元の経路が解決されます.
+保存先が返すエラーは呼び出し側へ伝え, 別のプロジェクトの状態を変更しません.
+
+`swift test --package-path Packages/PadServerCore` の実行結果から, 実行時間を省いて掲載します.
+
+```text
+✔ Test setProjectStateStopsRouteResolutionAndRestoresItOnStart() passed
+✔ Test setProjectStatePropagatesUnknownProjectFailureWithoutChangingOtherProjects() passed
+✔ Test run with 108 tests in 2 suites passed
+```
+
 ## Keychain への保存
 
 内部部品の `KeychainSecretStore` が, 管理 token とプロジェクト別の secret を Mac と iOS の Keychain に保存します.
