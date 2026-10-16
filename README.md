@@ -98,3 +98,19 @@ PADSERVER_KEYCHAIN_INTEGRATION=1 swift test --package-path Packages/PadServerCor
 ✔ Suite KeychainSecretStoreIntegrationTests passed after 0.072 seconds.
 ✔ Test run with 1 test in 1 suite passed after 0.072 seconds.
 ```
+
+## プロジェクト一覧の保存
+
+内部部品の `FileProjectRepository` は, プロジェクト一覧を JSON ファイルに保存して読み込みます.
+保存時は同じディレクトリの一時ファイルを完成させてから rename するため, 書き込みの途中や rename の失敗時にも, 保存済みの一覧を読み取れます.
+通常の試験は一時ディレクトリ内のファイルだけを使い, JSON の読み書きと, 書き込み中断および rename 失敗後に既存の一覧が保たれることを確認します.
+
+`swift test --package-path Packages/PadServerCore --filter FileProjectRepositoryTests` の実行結果です.
+
+```text
+✔ Test preservesExistingProjectsWhenRenameFails() passed
+✔ Test rejectsCorruptJSON() passed
+✔ Test preservesExistingProjectsWhenTemporaryWriteStopsEarly() passed
+✔ Test readsEmptyListWhenFileDoesNotExistAndPersistsProjects() passed
+✔ Test run with 4 tests in 0 suites passed after 0.010 seconds.
+```
