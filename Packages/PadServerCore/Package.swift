@@ -47,7 +47,13 @@ let package = Package(
             swiftSettings: commonSwiftSettings),
         .testTarget(
             name: "PadInfrastructureTests",
-            dependencies: ["PadInfrastructure", "PadApplication", "PadDomain", "PadTestSupport"],
+            dependencies: [
+                "PadInfrastructure",
+                "PadApplication",
+                "PadDomain",
+                "PadTestSupport",
+                .product(name: "HummingbirdTesting", package: "hummingbird"),
+            ],
             swiftSettings: commonSwiftSettings),
     ],
     swiftLanguageModes: [.v6]
