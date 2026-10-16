@@ -74,6 +74,7 @@ public protocol ProjectStorage: Sendable {
     func projectRunState(for project: ProjectName) async throws -> ProjectRunState?
     func saveProjectRunState(_ state: ProjectRunState, for project: ProjectName) async throws
     func listRoutes() async throws -> [Route]
+    /// release を保存した順（古い順）で返します。
     func listReleases() async throws -> [Release]
     func releaseManifest(for releaseID: ReleaseID) async throws -> ReleaseManifest
     /// preparing 状態の release だけを保存し、active への切替は activateRelease に委ねます。
