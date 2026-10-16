@@ -2,31 +2,15 @@ import Foundation
 import PadDomain
 
 public struct BlobHash: Hashable, Codable, Sendable {
-    public enum ValidationError: Error {
-        case invalidHash
-    }
-
     public let value: String
 
-    public init(_ value: String) throws {
-        guard !value.isEmpty,
-            value.allSatisfy({ character in
-                character.isASCII && (character.isLetter || character.isNumber || character == "-")
-            })
-        else {
-            throw ValidationError.invalidHash
-        }
-
+    public init(_ value: String) {
         self.value = value
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        do {
-            try self.init(container.decode(String.self))
-        } catch ValidationError.invalidHash {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid blob hash")
-        }
+        self.init(try container.decode(String.self))
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -36,72 +20,12 @@ public struct BlobHash: Hashable, Codable, Sendable {
 }
 
 public struct ReleaseManifestFile: Hashable, Codable, Sendable {
-    public enum ValidationError: Error {
-        case invalidPath
-    }
-
     public let path: String
     public let blob: BlobHash
 
-    public init(path: String, blob: BlobHash) throws {
-        guard Self.isSafeRelativePath(path) else {
-            throw ValidationError.invalidPath
-        }
+    public init(path: String, blob: BlobHash) {
         self.path = path
         self.blob = blob
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let path = try container.decode(String.self, forKey: .path)
-        let blob = try container.decode(BlobHash.self, forKey: .blob)
-        do {
-            try self.init(path: path, blob: blob)
-        } catch ValidationError.invalidPath {
-            throw DecodingError.dataCorruptedError(
-                forKey: .path,
-                in: container,
-                debugDescription: "Invalid manifest file path"
-            )
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(path, forKey: .path)
-        try container.encode(blob, forKey: .blob)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case path
-        case blob
-    }
-
-    private static let windowsDrivePrefixLength = 2
-
-    private static func isSafeRelativePath(_ path: String) -> Bool {
-        guard !path.isEmpty,
-            !path.hasPrefix("/"),
-            !path.contains("\\"),
-            !path.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
-        else {
-            return false
-        }
-
-        let components = path.split(separator: "/", omittingEmptySubsequences: false)
-        guard components.allSatisfy({ !$0.isEmpty && $0 != "." && $0 != ".." }) else {
-            return false
-        }
-
-        if let first = components.first, Self.isWindowsDrivePath(first) {
-            return false
-        }
-        return true
-    }
-
-    private static func isWindowsDrivePath(_ component: Substring) -> Bool {
-        component.count == Self.windowsDrivePrefixLength && component.last == ":"
-            && component.first?.isASCII == true && component.first?.isLetter == true
     }
 }
 

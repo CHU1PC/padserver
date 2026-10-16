@@ -12,8 +12,8 @@ import Testing
     let id = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000046"))
     let releaseID = ReleaseID(id)
     let release = Release(id: releaseID, project: name, state: .preparing)
-    let hash = try BlobHash("sha256-example")
-    let manifest = ReleaseManifest(files: [try ReleaseManifestFile(path: "index.html", blob: hash)])
+    let hash = BlobHash("sha256-example")
+    let manifest = ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: hash)])
     let storage: any ProjectStorage = InMemoryProjectStorage()
 
     try await storage.saveProject(project, routes: [route])
@@ -48,9 +48,9 @@ import Testing
     let name = try ProjectName("example")
     let id = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000046"))
     let releaseID = ReleaseID(id)
-    let hash = try BlobHash("sha256-example")
+    let hash = BlobHash("sha256-example")
     let release = Release(id: releaseID, project: name, state: .preparing)
-    let manifest = ReleaseManifest(files: [try ReleaseManifestFile(path: "index.html", blob: hash)])
+    let manifest = ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: hash)])
     let storage: any ProjectStorage = InMemoryProjectStorage()
 
     try await storage.saveRelease(release, manifest: manifest)
@@ -74,7 +74,7 @@ import Testing
 }
 
 @Test func storageContractReadsBlobOnDemandOneChunkAtATime() async throws {
-    let hash = try BlobHash("sha256-demand")
+    let hash = BlobHash("sha256-demand")
     let stream = DemandCountingBlobStream(chunks: [Data("first".utf8), Data("second".utf8)])
     let storage = InMemoryProjectStorage(blobStream: stream.bodyStream())
     let body = try #require(await storage.openBlob(hash))
@@ -96,8 +96,8 @@ import Testing
     let nextID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000047")))
     let otherID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000048")))
     let missingID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000049")))
-    let firstHash = try BlobHash("sha256-first")
-    let nextHash = try BlobHash("sha256-next")
+    let firstHash = BlobHash("sha256-first")
+    let nextHash = BlobHash("sha256-next")
     let storage: any ProjectStorage = InMemoryProjectStorage()
     try await savePreparingRelease(firstID, project: project, hash: firstHash, storage: storage)
     try await storage.saveBlob(firstHash, from: TestBodyStream(chunks: [Data("first".utf8)]))
@@ -114,7 +114,7 @@ import Testing
     #expect(try await releaseStates(storage) == [firstID: .retired, nextID: .active, otherID: .preparing])
 
     let incompleteID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000050")))
-    let incompleteHash = try BlobHash("sha256-incomplete")
+    let incompleteHash = BlobHash("sha256-incomplete")
     try await savePreparingRelease(incompleteID, project: project, hash: incompleteHash, storage: storage)
     await #expect(throws: (any Error).self) { try await storage.activateRelease(incompleteID, for: project) }
     #expect(try await releaseStates(storage)[firstID] == .retired)
@@ -128,34 +128,9 @@ private func assertSavingActiveReleaseFails(
 ) async throws {
     let id = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000051")))
     let release = Release(id: id, project: project, state: .active)
-    let manifest = ReleaseManifest(files: [try ReleaseManifestFile(path: "index.html", blob: hash)])
+    let manifest = ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: hash)])
     await #expect(throws: (any Error).self) { try await storage.saveRelease(release, manifest: manifest) }
     #expect(try await releaseStates(storage).values.filter { $0 == .active }.count == 1)
-}
-
-@Test(arguments: ["", "/etc/passwd", "../secret", "assets/../secret", "./index.html", "a\\b", "bad\u{0000}path"])
-func releaseManifestFileRejectsUnsafePaths(path: String) throws {
-    let hash = try BlobHash("sha256-path")
-    #expect(throws: ReleaseManifestFile.ValidationError.invalidPath) {
-        try ReleaseManifestFile(path: path, blob: hash)
-    }
-}
-
-@Test func releaseManifestFileChecksPathWhenDecoding() throws {
-    let invalidDocuments = ["\"/root\"", "\"../secret\"", "\"dir/../secret\"", "\"bad\\u0000path\""]
-    for document in invalidDocuments {
-        #expect(throws: DecodingError.self) {
-            try JSONDecoder().decode(
-                ReleaseManifestFile.self,
-                from: Data("{\"path\":\(document),\"blob\":\"sha256-path\"}".utf8)
-            )
-        }
-    }
-    let decoded = try JSONDecoder().decode(
-        ReleaseManifestFile.self,
-        from: Data("{\"path\":\"assets/index.html\",\"blob\":\"sha256-path\"}".utf8)
-    )
-    #expect(decoded.path == "assets/index.html")
 }
 
 private func savePreparingRelease(
@@ -165,7 +140,7 @@ private func savePreparingRelease(
     storage: any ProjectStorage
 ) async throws {
     let release = Release(id: id, project: project, state: .preparing)
-    let manifest = ReleaseManifest(files: [try ReleaseManifestFile(path: "index.html", blob: hash)])
+    let manifest = ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: hash)])
     try await storage.saveRelease(release, manifest: manifest)
 }
 
