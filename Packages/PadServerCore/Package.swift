@@ -19,7 +19,8 @@ let package = Package(
         .library(name: "PadTestSupport", targets: ["PadTestSupport"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0")
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.104.0"),
     ],
     targets: [
         .target(name: "PadDomain", swiftSettings: commonSwiftSettings),
@@ -47,7 +48,14 @@ let package = Package(
             swiftSettings: commonSwiftSettings),
         .testTarget(
             name: "PadInfrastructureTests",
-            dependencies: ["PadInfrastructure", "PadApplication", "PadDomain", "PadTestSupport"],
+            dependencies: [
+                "PadInfrastructure",
+                "PadApplication",
+                "PadDomain",
+                "PadTestSupport",
+                .product(name: "HummingbirdTesting", package: "hummingbird"),
+                .product(name: "NIOEmbedded", package: "swift-nio"),
+            ],
             swiftSettings: commonSwiftSettings),
     ],
     swiftLanguageModes: [.v6]
