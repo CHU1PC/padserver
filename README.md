@@ -7,6 +7,20 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 
 clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツールが入り, commit hook が有効になります.
 
+## 管理 token の発行
+
+内部部品の `IssueToken` は, システムの暗号的乱数から32バイトの管理 token を生成して保存します.
+再発行すると保存済みの token を置き換えるため, 古い token は照合先ではなくなります.
+通常の試験では生成値を固定し, 実 Keychain や乱数に依存せず保存と置換を確認します.
+
+`swift test --package-path Packages/PadServerCore` の実行結果から, 実行時間を省いて掲載します.
+
+```text
+✔ Test issueTokenSavesAndReturnsGeneratedToken() passed
+✔ Test issueTokenReplacesPreviouslyStoredToken() passed
+✔ Test run with 92 tests in 2 suites passed
+```
+
 ## 設定ファイルの読み取り
 
 CLI 内部の `ManifestLoader` が `padserver.toml` の内容を読み取り, 既存の `ProjectManifest` に変換します.
