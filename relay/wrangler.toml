@@ -1,0 +1,4 @@
+name = "padserver-relay"
+main = "src/index.ts"
+compatibility_date = "2026-10-16"
+workers_dev = false
