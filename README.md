@@ -187,3 +187,22 @@ blob が欠けている場合や release の保存が失敗した場合は, そ�
 ✔ Test commitDeploymentPropagatesReleaseSaveFailureWithoutChangingActiveRelease() passed
 ✔ Test run with 90 tests in 2 suites passed
 ```
+
+## 経路の解決
+
+内部部品の `ResolveRoute` は, host とパスからプロジェクトと配信先を返します.
+サブドメインとパスによる振り分けに対応し, 一致するパスの prefix が最も長い経路を選びます.
+停止中のプロジェクトと, 該当する経路が無い場合を区別します.
+停止した経路に一致した要求を, 短い prefix の別プロジェクトに振り替えません.
+同じ host で最長の prefix の経路が複数ある場合は, どれにも解決せず拒否します.
+
+`swift test --package-path Packages/PadServerCore` の実行結果から, 実行時間を省いて掲載します.
+
+```text
+✔ Test resolveRouteMatchesSubdomainAndPreservesTarget() passed
+✔ Test resolveRouteChoosesLongestPathPrefix() passed
+✔ Test resolveRouteDistinguishesStoppedProjectFromUnmatchedRoute() passed
+✔ Test resolveRouteReturnsNotFoundForUnmatchedPathAndEmptyRoutes() passed
+✔ Test resolveRouteRejectsAmbiguousLongestPrefixWithoutBlockingMoreSpecificRoute() passed
+✔ Test run with 102 tests in 2 suites passed
+```
