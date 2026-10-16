@@ -26,7 +26,7 @@ PadServer の PR を, 誰がどう作って, どう merge するかを決めた�
 | 3 | reviewer | 1回レビューする. 終わりの確認のコマンドを, 自分で実行し直す |
 | 4 | 本体 | reviewer の指摘を直す. 再レビューはしない. 画面のある実装と, 動かして見せられる実装は, このときにスクリーンショットを撮る |
 | 5 | 本体 | 4章の検査を通して, commit, push, PR の作成, スクリーンショットの投稿までを続けて行う. 所有者の確認は待たない |
-| 6 | 所有者 | merge する |
+| 6 | 所有者か merge 係 | merge する |
 
 - 実装者と reviewer は, commit も push もしません. commit, push, PR の作成は, 本体だけが行います.
 - 成果物が動くことは, reviewer が確かめます. 本体は, ビルドや動作を自分で確かめ直しません. 本体が行うのは, 4章の検査です.
@@ -131,7 +131,7 @@ API を足したときと, 変えたときだけ書く.
 
 ## 8. merge
 
-- merge するのは, 所有者だけです.
+- merge するのは, 所有者か, 所有者が指名した merge 係です. merge 係の手順は, [AGENTS.md](../AGENTS.md) の2章にあります.
 - 方法は merge commit にします. GitHub の画面では「Create a merge commit」です.
 - PR の commit は, 番号を変えずに main に入ります. PR ごとに, merge 用の commit が1つできます.
 - merge 用の commit のメッセージは, GitHub が付けたままにします. 5章の形には合わせません.
