@@ -116,6 +116,29 @@ preparing と retired の release を有効な release として返さず, relea
 ✔ Test run with 92 tests in 2 suites passed
 ```
 
+## blob の保存
+
+内部部品の `FileBlobStore` は, body を小分けに一時ファイルへ書き, CryptoKit の SHA-256 で照合します.
+hash は小文字16進64桁とし, 一致した内容だけを hash の名前で公開します.
+不一致や受信中断の一時データを破棄し, 同じ内容は1つだけ保存します.
+読み出しも小分けに行い, 繰り返し開いた stream はそれぞれ独立して読み進められます.
+hash 名のシンボリックリンクを拒否し, 最初の読み出し前にリンクへ差し替えられても追跡しません.
+
+`swift test --package-path Packages/PadServerCore --filter fileBlobStore` の実行結果から, 実行時間を省いて掲載します.
+
+```text
+✔ Test fileBlobStoreDiscardsMismatchedContentAndTemporaryFile() passed
+✔ Test fileBlobStoreRejectsHashNamedSymbolicLink() passed
+✔ Test fileBlobStoreWritesStreamingBodyUnderItsSHA256Name() passed
+✔ Test fileBlobStoreAcceptsEmptyBlobAndStreamsEndImmediately() passed
+✔ Test fileBlobStoreReadsLargeBlobInBoundedChunks() passed
+✔ Test fileBlobStoreDoesNotDuplicateExistingContent() passed
+✔ Test fileBlobStoreDiscardsInterruptedReceiveAndAllowsRetry() passed
+✔ Test fileBlobStoreRejectsLinkReplacementBeforeFirstPull() passed
+✔ Test fileBlobStoreOpensIndependentStreamsAndListsAndRemovesBlob() passed
+✔ Test run with 9 tests in 0 suites passed
+```
+
 ## ログの配信
 
 内部部品の `InMemoryLogBus` は, 複数の購読者にログを流します.
