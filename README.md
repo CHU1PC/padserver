@@ -300,3 +300,18 @@ swift run --package-path cli padctl login https://pad.example.com
 $ PADCTL_KEYCHAIN_INTEGRATION=1 swift test --package-path cli
 ✔ Test run with 19 tests in 0 suites passed after 0.079 seconds.
 ```
+
+### loopback の配信入口
+
+`ServingServer` は Hummingbird を `127.0.0.1` だけで待ち受けるよう構成します。
+要求の authority とパスを `ResolveRoute` に渡し、一致した経路と要求をハンドラーへ渡します。
+最長の経路が停止中なら 503 を返し、一致しない経路と曖昧な経路には 404 を返します。
+入口では本文を読み込みません。静的ファイルの応答と container への転送は、後続の実装で接続します。
+
+待ち受け設定と、ネットワークを使わない Hummingbird の試験で動作を確認しています。
+試験では、経路の境界、停止中の経路、authority の正規化、要求本文の受け渡しも確認します。
+
+```text
+$ swift test --package-path Packages/PadServerCore --filter servingServer
+✔ Test run with 7 tests in 0 suites passed after 0.006 seconds.
+```
