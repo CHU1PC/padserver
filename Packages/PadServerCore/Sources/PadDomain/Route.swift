@@ -5,6 +5,10 @@ public struct RouteHost: Hashable, Codable, Sendable {
         case invalidHost
     }
 
+    // DNS 名は 253 バイト、各ラベルは 63 バイトを上限にする。
+    private static let maximumHostLength = 253
+    private static let maximumLabelLength = 63
+
     public let value: String
 
     public init(_ value: String) throws {
@@ -15,9 +19,9 @@ public struct RouteHost: Hashable, Codable, Sendable {
 
         let labels = normalized.split(separator: ".", omittingEmptySubsequences: false)
         // 末尾のドットを除いた DNS 名は、区切りのドットを含めて最大 253 バイトにする。
-        guard !normalized.isEmpty, normalized.utf8.count <= 253,
+        guard !normalized.isEmpty, normalized.utf8.count <= Self.maximumHostLength,
             labels.allSatisfy({ label in
-                !label.isEmpty && label.utf8.count <= 63
+                !label.isEmpty && label.utf8.count <= Self.maximumLabelLength
                     && label.first.map(Self.isAlphanumeric) == true
                     && label.last.map(Self.isAlphanumeric) == true
                     && label.allSatisfy({ Self.isAlphanumeric($0) || $0 == "-" })
@@ -95,8 +99,10 @@ public struct ContainerRouteTarget: Hashable, Codable, Sendable {
 
     public init(service: String, port: UInt16) throws {
         guard !service.isEmpty,
-            service.allSatisfy({ ("a"..."z").contains($0) || ("A"..."Z").contains($0)
-                || ("0"..."9").contains($0) || $0 == "_" || $0 == "-" || $0 == "." })
+            service.allSatisfy({
+                ("a"..."z").contains($0) || ("A"..."Z").contains($0)
+                    || ("0"..."9").contains($0) || $0 == "_" || $0 == "-" || $0 == "."
+            })
         else {
             throw ValidationError.invalidService
         }
@@ -115,11 +121,13 @@ public struct ContainerRouteTarget: Hashable, Codable, Sendable {
         do {
             try self.init(service: service, port: port)
         } catch ValidationError.invalidService {
-            throw DecodingError.dataCorruptedError(forKey: .service, in: container,
-                                                   debugDescription: "Invalid container service")
+            throw DecodingError.dataCorruptedError(
+                forKey: .service, in: container,
+                debugDescription: "Invalid container service")
         } catch ValidationError.invalidPort {
-            throw DecodingError.dataCorruptedError(forKey: .port, in: container,
-                                                   debugDescription: "Invalid container port")
+            throw DecodingError.dataCorruptedError(
+                forKey: .port, in: container,
+                debugDescription: "Invalid container port")
         }
     }
 

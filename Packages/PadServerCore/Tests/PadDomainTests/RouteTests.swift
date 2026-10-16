@@ -76,8 +76,10 @@ func containerRouteTargetRejectsInvalidService(service: String) {
 }
 
 @Test func routeHostRespectsDNSLengthBoundary() throws {
-    let longestHost = [String(repeating: "a", count: 63), String(repeating: "b", count: 63),
-                       String(repeating: "c", count: 63), String(repeating: "d", count: 61)].joined(separator: ".")
+    let longestHost = [
+        String(repeating: "a", count: 63), String(repeating: "b", count: 63),
+        String(repeating: "c", count: 63), String(repeating: "d", count: 61),
+    ].joined(separator: ".")
     #expect(longestHost.utf8.count == 253)
     #expect(try RouteHost(longestHost).value == longestHost)
 
