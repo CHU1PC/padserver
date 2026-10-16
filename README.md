@@ -129,3 +129,18 @@ PADSERVER_KEYCHAIN_INTEGRATION=1 swift test --package-path Packages/PadServerCor
 ✔ Test readsEmptyListWhenFileDoesNotExistAndPersistsProjects() passed
 ✔ Test run with 4 tests in 0 suites passed after 0.010 seconds.
 ```
+
+## 配備の確定
+
+内部部品の `CommitDeployment` は, manifest にある全 blob を確認して release を保存し, active release を切り替えます.
+blob が欠けている場合や release の保存が失敗した場合は, それまでの active release を保ちます.
+成功時は新しい release が active になり, 以前の release は retired になります.
+
+`swift test --package-path Packages/PadServerCore` の実行結果から, 実行時間を省いて掲載します.
+
+```text
+✔ Test commitDeploymentActivatesNewReleaseAndRetiresOldRelease() passed
+✔ Test commitDeploymentRejectsMissingBlobWithoutChangingActiveRelease() passed
+✔ Test commitDeploymentPropagatesReleaseSaveFailureWithoutChangingActiveRelease() passed
+✔ Test run with 90 tests in 2 suites passed
+```
