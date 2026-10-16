@@ -22,7 +22,12 @@ let package = Package(
                 .product(name: "TOMLDecoder", package: "TOMLDecoder"),
             ],
             swiftSettings: [.treatAllWarnings(as: .error)]
-        )
+        ),
+        .testTarget(
+            name: "padctlTests",
+            dependencies: ["padctl"],
+            swiftSettings: [.treatAllWarnings(as: .error)]
+        ),
     ],
     swiftLanguageModes: [.v6],
 )
