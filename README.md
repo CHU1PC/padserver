@@ -73,6 +73,20 @@ secret と管理 token もメモリ内で扱い, 固定の時刻と ID を注入
 | [docs/pull-requests.md](docs/pull-requests.md) | PR の作り方と, merge の規則. 全ての PR で README を更新する |
 | [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) | merge 係の手順と, Codex との連絡の規則 (同じ内容) |
 
+## プロジェクトの一覧と状態
+
+内部部品の `ListProjects` は, プロジェクトごとに種類, 有効な release, 動いているかを返します.
+preparing と retired の release を有効な release として返さず, release が無い場合は `nil` を返します.
+静的サイトと container の種類を保ち, 開始状態と停止状態も区別します.
+
+`swift test --package-path Packages/PadServerCore` の実行結果から, 実行時間を省いて掲載します.
+
+```text
+✔ Test listProjectsReturnsEmptyListWhenNoProjectsExist() passed
+✔ Test listProjectsReturnsKindActiveReleaseAndRunningStatePerProject() passed
+✔ Test run with 92 tests in 2 suites passed
+```
+
 ## ログの配信
 
 内部部品の `InMemoryLogBus` は, 複数の購読者にログを流します.
