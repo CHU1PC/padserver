@@ -201,7 +201,7 @@ token の内容は `timingsafe_bcmp` で比較します。
 | [docs/roadmap.md](docs/roadmap.md) | 全体像, 決めたこと, 計画表 |
 | [docs/decisions.md](docs/decisions.md) | 決定を決めた順に並べた記録 |
 | [ipad-server-feasibility.md](ipad-server-feasibility.md) | iPadOS の制約についての調査メモ |
-| [docs/pull-requests.md](docs/pull-requests.md) | PR の作り方と, merge の規則. 全ての PR で README を更新する |
+| [docs/pull-requests.md](docs/pull-requests.md) | PR の作り方と, merge の規則. README は最後に1回だけ書く |
 | [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) | merge 係の手順と, Codex との連絡の規則 (同じ内容) |
 
 PadServer は任意のドメインを relay に割り当てる手順を提供します。どのドメインを使い、Cloudflare にどう向けるかは、利用者が決めます。特定のドメインの設定は製品の範囲外です。[決定記録](docs/decisions.md) と [計画](docs/roadmap.md) に同じ境界を記録しました。
