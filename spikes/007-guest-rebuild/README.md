@@ -60,3 +60,5 @@ Requesting system poweroff
 guest の起動の処理を直す Issue #22 の結果は [BOOT.md](BOOT.md) にあります。
 
 kernel にネットワークの機能を足す検証 (Issue #21) は [NETWORK.md](NETWORK.md) にあります。
+
+docker compose を動かす検証 (Issue #23) は [COMPOSE.md](COMPOSE.md) にあります。

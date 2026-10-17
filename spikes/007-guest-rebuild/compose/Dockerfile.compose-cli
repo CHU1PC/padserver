@@ -1,0 +1,4 @@
+FROM docker/compose-bin:latest AS bin
+FROM alpine:3.22
+COPY --from=bin /docker-compose /usr/local/bin/docker-compose
+ENTRYPOINT ["/usr/local/bin/docker-compose"]
