@@ -71,6 +71,8 @@ public struct BlobBodyStream: HTTPBodyStream {
 public protocol ProjectStorage: Sendable {
     func listProjects() async throws -> [Project]
     func saveProject(_ project: Project, routes: [Route]) async throws
+    /// host と prefix の重複検査と保存を原子的に行い、拒否時は既存の登録を変えません。
+    func registerProject(_ project: Project, routes: [Route]) async throws
     func projectRunState(for project: ProjectName) async throws -> ProjectRunState?
     func saveProjectRunState(_ state: ProjectRunState, for project: ProjectName) async throws
     func listRoutes() async throws -> [Route]
