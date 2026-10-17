@@ -1,0 +1,25 @@
+#!/usr/bin/expect -f
+# usage: run.exp a64|x64 logfile
+set arch [lindex $argv 0]
+set logf [lindex $argv 1]
+set timeout 3600
+set W $env(SPIKE_DIR)
+set repo "http://dl-cdn.alpinelinux.org/alpine/v3.24/main,http://dl-cdn.alpinelinux.org/alpine/v3.24/community"
+set common "-m 2G -smp 4 -nographic -accel tcg -netdev user,id=n0,hostfwd=tcp:127.0.0.1:15022-:22 -monitor tcp:127.0.0.1:15045,server,nowait"
+if {$arch eq "a64"} {
+  set cmd "$W/build-aarch64/qemu-system-aarch64 -M virt -cpu cortex-a72 $common -device virtio-net-pci,netdev=n0 -kernel $W/img/a64/boot/vmlinuz-virt -initrd $W/img/a64/boot/initramfs-virt -append \"console=ttyAMA0 ip=dhcp alpine_repo=$repo modloop=http://10.0.2.2:18080/a64/boot/modloop-virt\""
+} else {
+  set cmd "$W/qemu-system-x86_64-tcti -L $W/qemu-src/pc-bios -M pc -cpu qemu64 $common -device virtio-net-pci,netdev=n0 -kernel $W/img/x64/boot/vmlinuz-virt -initrd $W/img/x64/boot/initramfs-virt -append \"console=ttyS0 ip=dhcp alpine_repo=$repo modloop=http://10.0.2.2:18080/x64/boot/modloop-virt\""
+}
+log_file -a $logf
+set t0 [clock seconds]
+eval spawn $cmd
+expect "login:"
+puts "\nEXP_BOOT_SECONDS [expr {[clock seconds]-$t0}]"
+send "root\r"
+expect "# "
+send "wget -q -O /guest.sh http://10.0.2.2:18080/guest.sh && sh /guest.sh; echo FINISHED_MARK\r"
+expect -re "\r\nFINISHED_MARK\r\n"
+puts "\nEXP_TOTAL_SECONDS [expr {[clock seconds]-$t0}]"
+send "poweroff\r"
+expect eof
