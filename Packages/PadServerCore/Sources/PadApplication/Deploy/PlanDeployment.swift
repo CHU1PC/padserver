@@ -1,4 +1,4 @@
-public struct PlanDeployment {
+public struct PlanDeployment: Sendable {
     private let storage: any ProjectStorage
 
     public init(storage: any ProjectStorage) {
