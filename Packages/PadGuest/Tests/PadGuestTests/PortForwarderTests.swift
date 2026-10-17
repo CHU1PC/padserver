@@ -10,7 +10,7 @@ func portForwarderOpensAndClosesLoopbackForward() async throws {
         .init(command: "info usernet", response: usernet),
         .init(command: "hostfwd_remove net0 tcp:127.0.0.1:49152", response: "host forwarding rule removed\r\n"),
     ])
-    let running = Task.detached { server.run() }
+    let running = server.start()
     let forwarder = PortForwarder(monitor: QEMUMonitor(port: server.port), allocatePort: { 49152 })
 
     let hostPort = try forwarder.open(guestPort: 80)
@@ -25,7 +25,7 @@ func portForwarderPropagatesMonitorFailure() async throws {
     let server = try FakeHMPServer(exchanges: [
         .init(command: "hostfwd_add net0 tcp:127.0.0.1:49152-:80", response: "invalid format\r\n")
     ])
-    let running = Task.detached { server.run() }
+    let running = server.start()
     let forwarder = PortForwarder(monitor: QEMUMonitor(port: server.port), allocatePort: { 49152 })
 
     #expect(throws: QEMUMonitor.MonitorError.commandFailed("invalid format\r\n(qemu) ")) {

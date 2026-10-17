@@ -14,7 +14,7 @@ func qemuMonitorSendsHMPCommandsToLoopback() async throws {
         .init(command: "hostfwd_remove net0 tcp:127.0.0.1:8080", response: "host forwarding rule removed\r\n"),
         .init(command: "quit", response: "", closesConnection: true),
     ])
-    let running = Task.detached { server.run() }
+    let running = server.start()
     let monitor = QEMUMonitor(port: server.port)
 
     #expect(try monitor.status() == .running)
@@ -32,7 +32,7 @@ func qemuMonitorRejectsUninstalledPortForward() async throws {
         .init(command: "hostfwd_add net0 tcp:127.0.0.1:8080-:80", response: ""),
         .init(command: "info usernet", response: usernet),
     ])
-    let running = Task.detached { server.run() }
+    let running = server.start()
     let monitor = QEMUMonitor(port: server.port)
 
     #expect(throws: QEMUMonitor.MonitorError.commandFailed("host forwarding rule was not installed")) {
@@ -47,7 +47,7 @@ func qemuMonitorReportsPausedStateAndCommandFailure() async throws {
         .init(command: "info status", response: "VM status: paused\r\n"),
         .init(command: "hostfwd_remove net0 tcp:127.0.0.1:8080", response: "host forwarding rule not found\r\n"),
     ])
-    let running = Task.detached { server.run() }
+    let running = server.start()
     let monitor = QEMUMonitor(port: server.port)
 
     #expect(try monitor.status() == .paused)
@@ -55,6 +55,23 @@ func qemuMonitorReportsPausedStateAndCommandFailure() async throws {
         try monitor.removePortForward(hostPort: 8080)
     }
     #expect(await running.value)
+}
+
+struct RunningServer: Sendable {
+    private let results: AsyncStream<Bool>
+
+    init(work: @escaping @Sendable () -> Bool) {
+        let (results, continuation) = AsyncStream<Bool>.makeStream()
+        self.results = results
+        Thread {
+            continuation.yield(work())
+            continuation.finish()
+        }.start()
+    }
+
+    var value: Bool {
+        get async { await results.first { _ in true } ?? false }
+    }
 }
 
 struct FakeHMPServer: Sendable {
@@ -112,7 +129,11 @@ struct FakeHMPServer: Sendable {
         return UInt16(bigEndian: address.sin_port)
     }
 
-    func run() -> Bool {
+    func start() -> RunningServer {
+        RunningServer { run() }
+    }
+
+    private func run() -> Bool {
         defer { Darwin.close(listener) }
         do {
             for exchange in exchanges {
