@@ -91,6 +91,10 @@ public actor FileProjectStorage: ProjectStorage {
         try await blobs.blobExists(hash)
     }
 
+    public func blobSize(_ hash: BlobHash) async throws -> Int64? {
+        try await blobs.blobSize(hash)
+    }
+
     public func saveBlob<Body: HTTPBodyStream>(_ hash: BlobHash, from body: Body) async throws {
         try await blobs.saveBlob(hash, from: body)
     }

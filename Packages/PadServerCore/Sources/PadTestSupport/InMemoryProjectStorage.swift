@@ -98,6 +98,10 @@ public actor InMemoryProjectStorage: ProjectStorage {
         blobs[hash] != nil
     }
 
+    public func blobSize(_ hash: BlobHash) throws -> Int64? {
+        blobs[hash].map { chunks in chunks.reduce(0) { $0 + Int64($1.count) } }
+    }
+
     public func saveBlob<Body: HTTPBodyStream>(_ hash: BlobHash, from body: Body) async throws {
         var chunks: [Data] = []
         for try await chunk in body {

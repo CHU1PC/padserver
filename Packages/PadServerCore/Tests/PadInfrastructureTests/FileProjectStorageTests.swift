@@ -75,6 +75,7 @@ import Testing
         let nextHash = hashFixture(nextData)
         try await storage.saveProject(project, routes: [])
         try await storage.saveBlob(oldHash, from: OneChunkBody(data: oldData))
+        #expect(try await storage.blobSize(oldHash) == Int64(oldData.count))
         try await storage.saveBlob(nextHash, from: OneChunkBody(data: nextData))
         try await saveRelease(oldID, project: project.name, hash: oldHash, storage: storage)
         try await saveRelease(nextID, project: project.name, hash: nextHash, storage: storage)
