@@ -277,6 +277,30 @@ $ swift test --package-path Packages/PadServerCore --filter fileReleaseStore
 ✔ Test run with 6 tests in 0 suites passed after 0.017 seconds.
 ```
 
+### CLI の接続先と token の保存
+
+`padctl login <server-url>` で、管理 API の接続先と token を保存できます。
+token は端末で非表示の入力を受け付け、Mac の Keychain に保存します。
+`~/.config/padctl/config.json` に保存するのは `serverURL` だけです。
+URL に埋め込んだ認証情報は拒否します。保存が失敗した場合、以前の設定と token に戻します。
+
+```sh
+swift run --package-path cli padctl login https://pad.example.com
+```
+
+新しく追加したコマンドなので、変更前の画面はありません。
+次の画面は `padctl login --help` を実際の端末で実行したものです。
+
+![padctl login のヘルプ](docs/media/padctl-login-help.png)
+
+通常の試験は実 Keychain に触れません。結合試験は専用の一時項目で、保存と更新、
+設定ファイルに token が入らないことを確認し、作成した項目を削除します。
+
+```text
+$ PADCTL_KEYCHAIN_INTEGRATION=1 swift test --package-path cli
+✔ Test run with 19 tests in 0 suites passed after 0.079 seconds.
+```
+
 ### loopback の配信入口
 
 `ServingServer` は Hummingbird を `127.0.0.1` だけで待ち受けるよう構成します。
