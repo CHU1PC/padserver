@@ -1,0 +1,61 @@
+# Kikitoru の docker-compose.yml (commit 975182f) から, build を image に, 環境変数を見本の値に替えた構成.
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: kikitoru
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dummy-password
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: kikitoru-backend:spike
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment: &backend-env
+      MALLOC_ARENA_MAX: "2"
+      WORKER_CONCURRENT_LIMIT: "4"
+      DATABASE_URL: postgresql+psycopg://postgres:dummy-password@db:5432/kikitoru
+      AWS_REGION: ap-northeast-1
+      S3_BUCKET: dummy-bucket
+      GOOGLE_API_KEY: dummy
+      GOOGLE_CLIENT_ID: dummy.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: dummy
+      GOOGLE_REDIRECT_URI: http://localhost:8000/auth/google/callback
+      COOKIE_SECURE: "false"
+      RATE_LIMIT_STORAGE_URI: memory://
+    ports:
+      - "8000:8000"
+
+  migrate:
+    image: kikitoru-backend:spike
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *backend-env
+      PYTHONPATH: /app
+    command: uv run --no-sync alembic upgrade head
+    restart: "no"
+
+  worker:
+    image: kikitoru-backend:spike
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *backend-env
+      PYTHONPATH: /app
+    command: uv run --no-sync app/jobs/worker.py
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+volumes:
+  postgres_data:
