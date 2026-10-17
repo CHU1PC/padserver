@@ -31,6 +31,7 @@ let package = Package(
             dependencies: [
                 "PadApplication",
                 "PadDomain",
+                "PadInterface",
                 .product(name: "Hummingbird", package: "hummingbird"),
             ],
             swiftSettings: commonSwiftSettings
@@ -51,6 +52,7 @@ let package = Package(
                 "PadInfrastructure",
                 "PadApplication",
                 "PadDomain",
+                "PadInterface",
                 "PadTestSupport",
                 .product(name: "HummingbirdTesting", package: "hummingbird"),
             ],

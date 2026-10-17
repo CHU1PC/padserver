@@ -617,3 +617,20 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### 管理 API のエラー応答
+
+認証を通過した管理 API の要求で起きた失敗を、仕様のエラーの形 (`{"error": {"code", "message"}}`) の JSON に変えます。
+配備の blob 不足は 409、入力の不正は 400、大きすぎる本文は 413、存在しない endpoint は 404 で返します。
+想定外の失敗は 500 の `internal_error` にして、パスや stack trace は応答に含めません。
+
+試験の出力です。
+
+```text
+$ swift test --package-path Packages/PadServerCore --filter adminErrorMiddleware
+✔ Test adminErrorMiddlewarePassesSuccessfulResponses() passed
+✔ Test adminErrorMiddlewareReturnsUnknownEndpointAsNotFoundJSON() passed
+✔ Test adminErrorMiddlewareHidesInternalDetails() passed
+✔ Test adminErrorMiddlewareMapsFailuresToSpecifiedErrors() passed
+✔ Test run with 4 tests in 0 suites passed
+```
