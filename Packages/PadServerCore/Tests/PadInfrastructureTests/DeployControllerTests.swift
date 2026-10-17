@@ -12,8 +12,8 @@ import Testing
 
 private enum DeployControllerTestConstants {
     static let releaseID = UUID(uuidString: "00000000-0000-4000-8000-000000000001") ?? UUID()
-    static let storedHash = "stored-hash"
-    static let newHash = "new-hash"
+    static let storedHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    static let newHash = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 }
 
 private struct DeployControllerFixture {
@@ -72,10 +72,8 @@ private func errorCode(_ response: TestResponse) throws -> AdminErrorCode {
         #expect(response.status == .ok)
         let body = try AdminAPIJSON.makeDecoder().decode(
             AdminDeploymentDiffResponse.self, from: Data(response.body.readableBytesView))
-        #expect(
-            body.missingBlobs == [
-                AdminDeploymentFile(path: "file1.html", hash: BlobHash(DeployControllerTestConstants.newHash))
-            ])
+        let newHash = try BlobHash(DeployControllerTestConstants.newHash)
+        #expect(body.missingBlobs == [AdminDeploymentFile(path: "file1.html", hash: newHash)])
     }
 }
 
@@ -138,6 +136,12 @@ private func errorCode(_ response: TestResponse) throws -> AdminErrorCode {
     #expect(try await fixture.storage.listReleases().isEmpty)
 }
 
+private func unsafePathBody() -> ByteBuffer {
+    let manifest = #"{"name":"example-site","root":"dist","routes":[{"host":"example.com","path_prefix":"/"}]}"#
+    let file = #"{"path":"../secret","hash":"\#(DeployControllerTestConstants.storedHash)"}"#
+    return ByteBuffer(string: #"{"manifest":\#(manifest),"files":[\#(file)]}"#)
+}
+
 @Test(arguments: ["diff", ""])
 func deploymentEndpointsRejectInvalidInput(suffix: String) async throws {
     let fixture = DeployControllerFixture()
@@ -147,6 +151,7 @@ func deploymentEndpointsRejectInvalidInput(suffix: String) async throws {
         ByteBuffer(string: "not json"),
         ByteBuffer(string: #"{"manifest":{"name":"example-site","root":"/abs","routes":[]},"files":[]}"#),
         deploymentBody(name: "other-site", hashes: []),
+        unsafePathBody(),
     ]
 
     try await fixture.application.test(.router) { client in

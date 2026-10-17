@@ -70,7 +70,12 @@ public struct DeployController: Sendable {
             throw InvalidDeploymentRequest(message: "Manifest name does not match the project.")
         }
 
-        let files = decoded.files.map { ReleaseManifestFile(path: $0.path, blob: $0.hash) }
+        let files: [ReleaseManifestFile]
+        do {
+            files = try decoded.files.map { try ReleaseManifestFile(path: $0.path, blob: $0.hash) }
+        } catch {
+            throw InvalidDeploymentRequest(message: "A file path is invalid.")
+        }
         return ValidatedDeployment(
             project: Project(name: name, kind: .staticSite), manifest: ReleaseManifest(files: files))
     }
