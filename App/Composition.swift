@@ -1,5 +1,5 @@
 import Foundation
-import OSLog
+import os
 import PadApplication
 import PadDomain
 import PadInfrastructure
