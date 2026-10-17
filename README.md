@@ -617,3 +617,23 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### ファイルの保存と取得
+
+ファイル置き場の use case `StoreFile` を追加しました。名前を検証してファイルを保存し、
+保存したファイルは本文の stream として取り出せます。
+空の名前、`.`、`..`、`/` または NUL を含む名前は `invalidName` で拒み、何も保存しません。
+存在しないファイルを取り出すと `nil` を返します。
+
+試験用の in-memory のファイル置き場を使った試験で、動作を確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore --filter storeFile
+✔ Test storeFileOpenReturnsNilForMissingFile() passed
+✔ Test storeFileSavesEmptyBody() passed
+✔ Test storeFileSavesValidNameAndReturnsStoredFile() passed
+✔ Test storeFileReplacesExistingFileWithSameName() passed
+✔ Test storeFileOpensSavedFileAsChunkStream() passed
+✔ Test storeFileRejectsInvalidNamesWithoutSaving(name:) with 8 test cases passed
+✔ Test run with 6 tests in 0 suites passed
+```
