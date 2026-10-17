@@ -617,3 +617,19 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### guest の port の転送
+
+guest の port を、アプリの中の loopback (127.0.0.1) の空いた port に出せます。
+出した host 側の port を返し、その port を指定して外すこともできます。
+loopback 以外の住所には出しません。
+
+試験の出力です。
+
+```text
+$ swift test --package-path Packages/PadGuest -j 3
+✔ Test portForwarderAllocatesFreeLoopbackPort() passed
+✔ Test portForwarderPropagatesMonitorFailure() passed
+✔ Test portForwarderOpensAndClosesLoopbackForward() passed
+✔ Test run with 10 tests in 0 suites passed
+```
