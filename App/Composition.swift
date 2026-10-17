@@ -17,7 +17,7 @@ private struct SystemIDGenerator: IDGenerator {
 enum Composition {
     // 配信は tailnet の外から relay 経由で届く loopback の port, 管理は tailnet 側の port で受ける.
     private static let deliveryPort = 8080
-    private static let adminPort = 8081
+    static let adminPort = 8081
 
     private static let logger = Logger(subsystem: "PadServer", category: "composition")
 
@@ -45,7 +45,7 @@ enum Composition {
     }
 
     /// tailnet の IPv4 の範囲に入る, 自分の interface の address を返します.
-    private static func tailnetAddress() -> String? {
+    static func tailnetAddress() -> String? {
         var head: UnsafeMutablePointer<ifaddrs>?
         guard getifaddrs(&head) == 0, let head else { return nil }
         defer { freeifaddrs(head) }
