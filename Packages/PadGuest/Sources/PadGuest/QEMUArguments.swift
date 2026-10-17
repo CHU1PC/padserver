@@ -33,7 +33,7 @@ public struct QEMUArguments: Sendable {
             "-cpu", "Haswell-v4,-pcid,-tsc-deadline,-invpcid,-spec-ctrl",
             "-smp", "cpus=\(cpuCount),maxcpus=\(maxCPUCount),sockets=1,cores=\(maxCPUCount),threads=1",
             "-device", "virtio-blk-pci,id=disk1,drive=drive1,num-queues=\(maxCPUCount)",
-            "-drive", "media=disk,id=drive1,if=none,file=\(diskPath),discard=unmap,detect-zeroes=unmap",
+            "-drive", "media=disk,id=drive1,if=none,format=raw,file=\(diskPath),discard=unmap,detect-zeroes=unmap",
             "-kernel", kernelPath,
             "-initrd", initrdPath,
         ]
