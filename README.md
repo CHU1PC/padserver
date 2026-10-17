@@ -353,6 +353,25 @@ $ swift test --package-path Packages/PadServerCore --filter staticFileResponder
 ✔ Test run with 4 tests in 0 suites passed after 0.004 seconds.
 ```
 
+### relay の CI 試験
+
+PR と main への push では、CI の `relay` job が依存を固定した lockfile から入れ、
+型チェックと relay の試験を実行します。relay の変更を PR 上で検査できます。
+
+同じコマンドをローカルで実行した結果です。
+
+```text
+$ bun install --frozen-lockfile
+42 packages installed [5.78s]
+$ bun run typecheck
+$ tsc --noEmit
+$ bun test
+1 pass
+0 fail
+1 expect() calls
+Ran 1 test across 1 file. [18.00ms]
+```
+
 ### 配信要求の記録
 
 配信入口は要求ごとに、時刻、host、パス、応答 status、所要時間をログ bus に流します。
