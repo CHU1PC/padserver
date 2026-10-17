@@ -617,3 +617,23 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### 共有リンクの発行と失効
+
+ファイルごとに、推測できない秘密を持つ共有リンクを、期限付きで発行できます。
+発行した秘密は発行時に一度だけ返し、保存するのは SHA-256 の hash だけです。
+リンクは ID を指定して失効させられます。存在しないファイルには発行できません。
+
+use case の試験で、発行、hash だけの保存、失効を確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore -j 3
+✔ Test issueReturnsLinkExpiringAfterGivenDuration() passed
+✔ Test issueStoresOnlyHashOfSecret() passed
+✔ Test secretHashIsStableSha256Hex() passed
+✔ Test issueRejectsMissingFileAndStoresNothing() passed
+✔ Test defaultSecretIs256BitHexAndUnique() passed
+✔ Test revokeRemovesOnlyTheGivenLink() passed
+✔ Test revokeUnknownLinkSucceeds() passed
+✔ Test run with 171 tests in 2 suites passed
+```
