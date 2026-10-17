@@ -16,6 +16,8 @@ struct RootView: View {
             .tabItem { Label("Projects", systemImage: "square.stack") }
             RequestFeed(logBus: logBus)
                 .tabItem { Label("Requests", systemImage: "arrow.left.arrow.right") }
+            LogFeed(logBus: logBus)
+                .tabItem { Label("Logs", systemImage: "text.alignleft") }
         }
     }
 }
