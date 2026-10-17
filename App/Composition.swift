@@ -16,8 +16,8 @@ private struct SystemIDGenerator: IDGenerator {
 
 enum Composition {
     // 配信は tailnet の外から relay 経由で届く loopback の port, 管理は tailnet 側の port で受ける.
-    private static let deliveryPort = 8080
-    private static let adminPort = 8081
+    static let deliveryPort = 8080
+    static let adminPort = 8081
 
     private static let logger = Logger(subsystem: "PadServer", category: "composition")
 
@@ -29,10 +29,18 @@ enum Composition {
         }
     }
 
-    private static func makeServers(logBus: any LogBus) throws -> PadServers {
-        let directory = try FileManager.default.url(
+    static func listProjects() async throws -> [ListProjects.Status] {
+        try await ListProjects(storage: FileProjectStorage(directory: storageDirectory()))()
+    }
+
+    private static func storageDirectory() throws -> URL {
+        try FileManager.default.url(
             for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true
         ).appendingPathComponent("PadServer")
+    }
+
+    private static func makeServers(logBus: any LogBus) throws -> PadServers {
+        let directory = try storageDirectory()
         guard let tailnetAddress = tailnetAddress() else {
             throw CompositionError.tailnetAddressNotFound
         }
@@ -45,7 +53,7 @@ enum Composition {
     }
 
     /// tailnet の IPv4 の範囲に入る, 自分の interface の address を返します.
-    private static func tailnetAddress() -> String? {
+    static func tailnetAddress() -> String? {
         var head: UnsafeMutablePointer<ifaddrs>?
         guard getifaddrs(&head) == 0, let head else { return nil }
         defer { freeifaddrs(head) }

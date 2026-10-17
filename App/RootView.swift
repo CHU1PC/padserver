@@ -1,10 +1,21 @@
 import PadApplication
+import PadInfrastructure
 import SwiftUI
 
 struct RootView: View {
     let logBus: any LogBus
+    private let adminEndpoint = Composition.tailnetAddress().map { "http://\($0):\(Composition.adminPort)" }
 
     var body: some View {
-        RequestFeed(logBus: logBus)
+        TabView {
+            SetupScreen(secretStore: KeychainSecretStore(), adminEndpoint: adminEndpoint)
+                .tabItem { Label("Setup", systemImage: "key") }
+            NavigationStack {
+                ProjectList(load: { try await Composition.listProjects() })
+            }
+            .tabItem { Label("Projects", systemImage: "square.stack") }
+            RequestFeed(logBus: logBus)
+                .tabItem { Label("Requests", systemImage: "arrow.left.arrow.right") }
+        }
     }
 }
