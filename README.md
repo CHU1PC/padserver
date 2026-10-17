@@ -97,6 +97,24 @@ secret と管理 token もメモリ内で扱い, 固定の時刻と ID を注入
 ✔ Test run with 87 tests in 2 suites passed after 0.032 seconds.
 ```
 
+## 管理用サーバーの待ち受け
+
+`AdminServer.makeApplication` に端末の tailnet IP を `tailnetAddress` として渡すと、管理用サーバーはその IP だけで待ち受けます。tailnet 外の IP は設定時に拒否します。接続元と token の認可は管理用 middleware が担当します。
+
+実際の端末で待ち受けを確かめるには、次のように端末の tailnet IP を指定します。この試験は指定した IP に接続し、同じ port の localhost には接続できないことを確かめます。
+
+```sh
+PADSERVER_TEST_TAILNET_IP=100.x.y.z swift test --package-path Packages/PadServerCore --filter adminServerAcceptsOnlyItsTailnetInterface
+```
+
+実行結果の抜粋です。端末の IP と一時 port は伏せています。
+
+```text
+Server started and listening on [tailnet IP]:[port]
+✔ Test adminServerAcceptsOnlyItsTailnetInterface() passed
+✔ Test run with 1 test in 0 suites passed
+```
+
 ## 管理の認可
 
 内部部品の `AuthorizeAdmin` は, 接続元が tailnet の IP であり, 保存済みの管理 token と一致する場合だけ許可します.
