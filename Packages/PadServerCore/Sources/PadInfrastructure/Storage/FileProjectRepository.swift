@@ -45,13 +45,7 @@ public struct FileProjectRepository: Sendable {
         } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
             return Snapshot()
         }
-        let decoder = JSONDecoder()
-        do {
-            let snapshot = try decoder.decode(Snapshot.self, from: data)
-            return snapshot
-        } catch DecodingError.typeMismatch {
-            return Snapshot(projects: try decoder.decode([Project].self, from: data))
-        }
+        return try JSONDecoder().decode(Snapshot.self, from: data)
     }
 
     public func saveProjects(_ projects: [Project]) throws {

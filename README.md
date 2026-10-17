@@ -361,6 +361,7 @@ $ swift test --package-path Packages/PadServerCore --filter fileReleaseStore
 project の登録時には host と prefix の重複を確認し、登録内容を一つの JSON ファイルで置き換えます。
 release の切り替え前には project と manifest 内の全 blob の存在を確認します。
 検証で拒否した場合は旧 active を保ち、成功した場合は旧 active が retired になります。
+切り替えと blob の削除が同時に来た場合は、後から来た操作を拒否します。
 
 `swift test --package-path Packages/PadServerCore --filter fileProjectStorage` の実行結果です。
 

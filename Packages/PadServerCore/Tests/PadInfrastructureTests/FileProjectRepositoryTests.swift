@@ -39,7 +39,7 @@ import PadDomain
     defer { removeTemporaryDirectory(directory) }
     let fileURL = directory.appendingPathComponent("projects.json")
     let originalProjects = [try makeProject("old-site")]
-    try JSONEncoder().encode(originalProjects).write(to: fileURL)
+    try FileProjectRepository(fileURL: fileURL).saveProjects(originalProjects)
     let interruptedWrite = FileProjectRepository(
         fileURL: fileURL,
         writeTemporaryFile: { data, temporaryURL in
@@ -62,7 +62,7 @@ import PadDomain
     defer { removeTemporaryDirectory(directory) }
     let fileURL = directory.appendingPathComponent("projects.json")
     let originalProjects = [try makeProject("old-site")]
-    try JSONEncoder().encode(originalProjects).write(to: fileURL)
+    try FileProjectRepository(fileURL: fileURL).saveProjects(originalProjects)
     let failedRename = FileProjectRepository(
         fileURL: fileURL,
         writeTemporaryFile: { data, temporaryURL in
