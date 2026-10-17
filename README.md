@@ -704,4 +704,22 @@ $ swift test --package-path Packages/PadServerCore --filter projectController
 ✔ Test projectControllerListsProjectsWithActiveReleaseAndRunState() passed.
 ✔ Test projectControllerStopsAndStartsProjectAndReturnsUpdatedStatus() passed.
 ✔ Test run with 7 tests in 0 suites passed.
+
+### blob hash とファイルパスの検証
+
+blob の hash と release のファイルパスは、値を作るときと JSON を decode するときに同じ条件で検証します。
+hash は SHA-256 の小文字16進64桁だけを受け付けます。
+ファイルパスは release 内の相対パスだけを受け付け、絶対パス、`..` による親ディレクトリへの移動、空の要素、バックスラッシュ、制御文字を拒否します。
+保存側の `FileBlobStore` は hash をファイル名に使うため、不正な値が保存先のパスに届きません。
+
+正常値の encode と decode の一致と、不正値の拒否を試験で確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore -j 3 --filter StorageValidation
+✔ Test blobHashAcceptsLowercaseSHA256HexAndRoundTrips() passed.
+✔ Test releaseManifestFileAcceptsRelativePathsAndRoundTrips(path:) with 8 test cases passed.
+✔ Test releaseManifestDecodeRejectsInvalidHashInFile() passed.
+✔ Test blobHashRejectsInvalidValuesOnInitAndDecode(value:) with 11 test cases passed.
+✔ Test releaseManifestFileRejectsUnsafePathsOnInitAndDecode(path:) with 19 test cases passed.
+✔ Test run with 5 tests in 0 suites passed.
 ```
