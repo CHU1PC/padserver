@@ -56,3 +56,5 @@ Requesting system poweroff
 ```
 
 この結果で、設定を変えない kernel の再ビルドと Mac 上の guest 起動を確認しました。Docker の既定のネットワーク、`docker exec`、`docker compose` の動作は、この検証には含めていません。
+
+kernel にネットワークの機能を足す検証 (Issue #21) は [NETWORK.md](NETWORK.md) にあります。
