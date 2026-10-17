@@ -41,7 +41,7 @@ private let validHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 }
 
 @Test func diffDeploymentPostsManifestAndFilesAndDecodesMissingBlobs() async throws {
-    let missing = #"{"missingBlobs":[{"path":"index.html","hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}"#
+    let missing = #"{"missingBlobs":[{"path":"index.html","hash":"\#(validHash)"}]}"#
     let server = StubServer(.json(status: 200, body: missing))
     let client = try server.makeClient()
     let request = try makeDeploymentRequest()
