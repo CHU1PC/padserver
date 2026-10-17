@@ -454,14 +454,20 @@ blob を読みながら応答します。公開ルートからの相対 path を
 `Content-Type` と `ETag` を返し、一致する `If-None-Match` には 304 を返します。
 親ディレクトリへ出る path と見つからないファイルには 404 を返します。
 
-経路の prefix、条件付き応答、親ディレクトリを指定する path を試験で確認しました。
+単一の `Range: bytes=...` には、保存済み blob の全長から選んだ部分を 206 で返します。範囲を満たせない場合は `Content-Range: bytes */<全長>` と 416 を返します。複数 range は無視して 200 で全文を返します。部分応答も blob の stream から小分けに読みます。
+
+経路の prefix、条件付き応答、親ディレクトリを指定する path と Range の応答を試験で確認しました。
 
 ```text
 $ swift test --package-path Packages/PadServerCore --filter staticFileResponder
-✔ Test staticFileResponderRejectsParentSegments(path:) with 4 test cases passed after 0.004 seconds.
-✔ Test staticFileResponderUsesRoutePrefixAndManifestRelativePath() passed after 0.004 seconds.
-✔ Test staticFileResponderServesActiveRootIndexAndConditionalResponse() passed after 0.004 seconds.
-✔ Test run with 4 tests in 0 suites passed after 0.004 seconds.
+✔ Test staticFileResponderServesSingleByteRanges() passed
+✔ Test staticFileResponderRejectsUnsatisfiableRange() passed
+✔ Test staticFileResponderIgnoresMultipleRanges() passed
+✔ Test staticFileResponderRejectsRangeForEmptyBlob() passed
+✔ Test staticFileResponderRejectsParentSegments(path:) with 4 test cases passed
+✔ Test staticFileResponderUsesRoutePrefixAndManifestRelativePath() passed
+✔ Test staticFileResponderServesActiveRootIndexAndConditionalResponse() passed
+✔ Test run with 8 tests in 0 suites passed
 ```
 
 ### relay の CI 試験

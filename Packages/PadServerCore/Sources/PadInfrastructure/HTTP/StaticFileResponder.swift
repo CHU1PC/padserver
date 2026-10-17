@@ -20,6 +20,7 @@ public struct StaticFileResponder: Sendable {
         }
         let manifest = try await storage.releaseManifest(for: release.id)
         guard let file = manifest.files.first(where: { $0.path == path }),
+            let size = try await storage.blobSize(file.blob),
             let stream = try await storage.openBlob(file.blob)
         else {
             return Response(status: .notFound)
@@ -30,16 +31,9 @@ public struct StaticFileResponder: Sendable {
             ?? MediaType.applicationBinary.description
         let eTag = "\"\(file.blob.value)\""
         return try await request.ifNoneMatch(
-            headers: [.contentType: contentType], eTag: eTag, context: context
+            headers: [.contentType: contentType, .acceptRanges: "bytes"], eTag: eTag, context: context
         ) {
-            Response(
-                status: .ok,
-                body: ResponseBody { writer in
-                    for try await chunk in stream {
-                        try await writer.write(.init(bytes: chunk))
-                    }
-                    try await writer.finish(nil)
-                })
+            RangeResponder().respond(to: request, stream: stream, size: size)
         }
     }
 
