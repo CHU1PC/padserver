@@ -74,7 +74,7 @@ public actor FileBlobStore {
             at: directory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
         var hashes: [BlobHash] = []
         for url in urls where Self.isStoredHash(url.lastPathComponent) {
-            let hash = BlobHash(url.lastPathComponent)
+            let hash = try BlobHash(url.lastPathComponent)
             if try blobExists(hash) { hashes.append(hash) }
         }
         return hashes.sorted { $0.value < $1.value }

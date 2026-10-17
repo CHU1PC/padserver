@@ -49,7 +49,7 @@ import Testing
 }
 
 private func prepareBlobPruningFixture(storage: InMemoryProjectStorage) async throws -> Set<BlobHash> {
-    let blobs = PruneBlobFixture()
+    let blobs = try PruneBlobFixture()
     let project = try ProjectName("site")
     let other = try ProjectName("other")
     for name in [project, other] {
@@ -114,11 +114,19 @@ private enum PruneFixtureID {
 }
 
 private struct PruneBlobFixture {
-    let active = BlobHash("active")
-    let shared = BlobHash("shared")
-    let recent = BlobHash("recent")
-    let obsolete = BlobHash("obsolete")
-    let orphan = BlobHash("orphan")
+    let active: BlobHash
+    let shared: BlobHash
+    let recent: BlobHash
+    let obsolete: BlobHash
+    let orphan: BlobHash
+
+    init() throws {
+        active = try fixtureBlobHash("active")
+        shared = try fixtureBlobHash("shared")
+        recent = try fixtureBlobHash("recent")
+        obsolete = try fixtureBlobHash("obsolete")
+        orphan = try fixtureBlobHash("orphan")
+    }
 
     var all: [BlobHash] { [active, shared, recent, obsolete, orphan] }
     var retained: Set<BlobHash> { [active, shared, recent] }

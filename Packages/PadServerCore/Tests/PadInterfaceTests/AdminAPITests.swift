@@ -28,18 +28,19 @@ private func expectJSON<T: Encodable>(_ value: T, matches example: String) throw
             "root": "dist",
             "routes": [{"host": "www.example.com", "path_prefix": "/"}]
           },
-          "files": [{"path": "index.html", "hash": "abc123"}]
+          "files": [{"path": "index.html", "hash": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"}]
         }
         """
     let request = try AdminAPIJSON.makeDecoder().decode(AdminDeploymentRequest.self, from: Data(example.utf8))
     try expectJSON(request, matches: example)
-    #expect(request.files == [AdminDeploymentFile(path: "index.html", hash: BlobHash("abc123"))])
+    let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+    #expect(request.files == [AdminDeploymentFile(path: "index.html", hash: hash)])
 
     let diff = AdminDeploymentDiffResponse(missingBlobs: request.files)
     try expectJSON(
         diff,
         matches: """
-            {"missingBlobs":[{"path":"index.html","hash":"abc123"}]}
+            {"missingBlobs":[{"path":"index.html","hash":"\(hash.value)"}]}
             """)
 }
 
