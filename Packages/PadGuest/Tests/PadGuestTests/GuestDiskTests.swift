@@ -5,7 +5,13 @@ import Testing
 @Test func guestDiskCreatesSparseRawFileOutsideBackup() throws {
     let applicationSupportURL = FileManager.default.temporaryDirectory
         .appendingPathComponent("padguest-disk-tests-\(UUID())", isDirectory: true)
-    defer { try? FileManager.default.removeItem(at: applicationSupportURL) }
+    defer {
+        do {
+            try FileManager.default.removeItem(at: applicationSupportURL)
+        } catch {
+            Issue.record("Could not remove the temporary guest disk test directory.")
+        }
+    }
     let disk = GuestDisk(applicationSupportURL: applicationSupportURL)
     let sizeBytes: UInt64 = 64 * 1024 * 1024
 
@@ -25,7 +31,13 @@ import Testing
 @Test func guestDiskDoesNotReplaceExistingFileOnSecondLaunch() throws {
     let applicationSupportURL = FileManager.default.temporaryDirectory
         .appendingPathComponent("padguest-disk-tests-\(UUID())", isDirectory: true)
-    defer { try? FileManager.default.removeItem(at: applicationSupportURL) }
+    defer {
+        do {
+            try FileManager.default.removeItem(at: applicationSupportURL)
+        } catch {
+            Issue.record("Could not remove the temporary guest disk test directory.")
+        }
+    }
     let disk = GuestDisk(applicationSupportURL: applicationSupportURL)
     let originalSize: UInt64 = 8 * 1024 * 1024
     let diskURL = try disk.createIfNeeded(sizeBytes: originalSize)

@@ -4,9 +4,11 @@ import Foundation
 public struct GuestDisk {
     private let applicationSupportURL: URL
 
-    public init(applicationSupportURL: URL = FileManager.default.urls(
-        for: .applicationSupportDirectory, in: .userDomainMask
-    )[0]) {
+    public init(
+        applicationSupportURL: URL = FileManager.default.urls(
+            for: .applicationSupportDirectory, in: .userDomainMask
+        )[0]
+    ) {
         self.applicationSupportURL = applicationSupportURL
     }
 
@@ -28,7 +30,7 @@ public struct GuestDisk {
             try file.truncate(atOffset: sizeBytes)
             try file.close()
         } catch {
-            try? FileManager.default.removeItem(at: diskURL)
+            try FileManager.default.removeItem(at: diskURL)
             throw error
         }
         return diskURL
