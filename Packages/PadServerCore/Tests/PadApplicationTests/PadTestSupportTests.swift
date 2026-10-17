@@ -24,6 +24,7 @@ import Testing
     #expect(try await storage.listReleases() == [Release(id: releaseID, project: projectName, state: .preparing)])
     #expect(try await storage.releaseManifest(for: releaseID).files.first?.blob == hash)
     #expect(try await storage.blobExists(hash))
+    #expect(try await storage.blobSize(hash) == 9)
     #expect(try await storage.listBlobHashes() == [hash])
 
     let body = try #require(await storage.openBlob(hash))

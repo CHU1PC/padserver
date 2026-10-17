@@ -28,6 +28,18 @@ public actor FileBlobStore {
         return status.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG)
     }
 
+    public func blobSize(_ hash: BlobHash) throws -> Int64? {
+        guard Self.isStoredHash(hash.value) else { return nil }
+        var status = stat()
+        let result = Darwin.lstat(directory.appendingPathComponent(hash.value).path, &status)
+        guard result == 0 else {
+            if errno == ENOENT || errno == ENOTDIR { return nil }
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        guard status.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG) else { return nil }
+        return status.st_size
+    }
+
     public func saveBlob<Body: HTTPBodyStream>(_ hash: BlobHash, from body: Body) async throws {
         try Task.checkCancellation()
         guard Self.isStoredHash(hash.value) else { throw Failure.hashMismatch }
