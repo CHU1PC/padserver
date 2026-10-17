@@ -29,10 +29,18 @@ enum Composition {
         }
     }
 
-    private static func makeServers() throws -> PadServers {
-        let directory = try FileManager.default.url(
+    static func listProjects() async throws -> [ListProjects.Status] {
+        try await ListProjects(storage: FileProjectStorage(directory: storageDirectory()))()
+    }
+
+    private static func storageDirectory() throws -> URL {
+        try FileManager.default.url(
             for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true
         ).appendingPathComponent("PadServer")
+    }
+
+    private static func makeServers() throws -> PadServers {
+        let directory = try storageDirectory()
         guard let tailnetAddress = tailnetAddress() else {
             throw CompositionError.tailnetAddressNotFound
         }

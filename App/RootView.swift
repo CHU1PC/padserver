@@ -5,6 +5,13 @@ struct RootView: View {
     private let adminEndpoint = Composition.tailnetAddress().map { "http://\($0):\(Composition.adminPort)" }
 
     var body: some View {
-        SetupScreen(secretStore: KeychainSecretStore(), adminEndpoint: adminEndpoint)
+        TabView {
+            SetupScreen(secretStore: KeychainSecretStore(), adminEndpoint: adminEndpoint)
+                .tabItem { Label("Setup", systemImage: "key") }
+            NavigationStack {
+                ProjectList(load: { try await Composition.listProjects() })
+            }
+            .tabItem { Label("Projects", systemImage: "square.stack") }
+        }
     }
 }
