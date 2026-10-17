@@ -141,6 +141,12 @@ token の内容は `timingsafe_bcmp` で比較します。
 | [docs/pull-requests.md](docs/pull-requests.md) | PR の作り方と, merge の規則. 全ての PR で README を更新する |
 | [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) | merge 係の手順と, Codex との連絡の規則 (同じ内容) |
 
+配備の実装では、[docs/admin-api.md](docs/admin-api.md) の例に従い、`ProjectManifest.root` からの相対 path を指定できます。`root` が `dist` の場合、`dist/index.html` の送信 path は `index.html` です。次の JSON は修正した配備例の抜粋です。
+
+```json
+{"manifest":{"root":"dist"},"files":[{"path":"index.html"}]}
+```
+
 ## プロジェクトの一覧と状態
 
 内部部品の `ListProjects` は, プロジェクトごとに種類, 有効な release, 動いているかを返します.
@@ -367,6 +373,24 @@ project と blob の存在確認は、ProjectStorage の組み立て側が担当
 ```text
 $ swift test --package-path Packages/PadServerCore --filter fileReleaseStore
 ✔ Test run with 6 tests in 0 suites passed after 0.017 seconds.
+```
+
+### ProjectStorage のファイル保存
+
+`FileProjectStorage` は project、経路、実行状態、release、blob の保存部品を束ねます。
+project の登録時には host と prefix の重複を確認し、登録内容を一つの JSON ファイルで置き換えます。
+release の切り替え前には project と manifest 内の全 blob の存在を確認します。
+検証で拒否した場合は旧 active を保ち、成功した場合は旧 active が retired になります。
+切り替えと blob の削除が同時に来た場合は、後から来た操作を拒否します。
+
+`swift test --package-path Packages/PadServerCore --filter fileProjectStorage` の実行結果です。
+
+```text
+✔ Test fileProjectStorageRejectsDuplicateRoutesWithoutChangingRegistration() passed
+✔ Test fileProjectStorageRejectsMissingProjectWithoutSwitchingActiveRelease() passed
+✔ Test fileProjectStoragePersistsProjectsRoutesAndRunState() passed
+✔ Test fileProjectStorageValidatesBlobsBeforeSwitchingActiveRelease() passed
+✔ Test run with 4 tests in 0 suites passed
 ```
 
 ### CLI の接続先と token の保存
