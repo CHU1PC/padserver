@@ -7,6 +7,23 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 
 clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツールが入り, commit hook が有効になります.
 
+## 管理 API の通信型
+
+内部の `PadInterface` は、配備の差分確認と確定、プロジェクトの一覧と開始や停止、ログ1件、エラー応答の JSON 形式を表します。管理 API 自体の接続口は後続の実装で用意します。
+日時は UTC の ISO 8601 文字列を秒精度で表し、有効な release が無い場合は `activeRelease: null` を返します。
+
+`swift test --package-path Packages/PadServerCore` の出力から、JSON 例との照合結果を以下に示します。
+
+```text
+✔ Test deploymentRequestAndDiffJSONMatchDocumentedExamples() passed
+✔ Test deploymentResponseJSONMatchesDocumentedExample() passed
+✔ Test projectListJSONMatchesDocumentedExample() passed
+✔ Test projectStopJSONMatchesDocumentedExample() passed
+✔ Test projectStatusEncodesMissingReleaseAsNull() passed
+✔ Test errorJSONMatchesDocumentedExampleAndCodes() passed
+✔ Test logEntryUsesUTCISO8601Timestamp() passed
+```
+
 ## QEMU のソースの取得
 
 `scripts/fetch-qemu.sh` は, tctiSH とその QEMU fork を固定した commit で `build/sources/` に取得します.
