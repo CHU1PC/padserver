@@ -1,0 +1,25 @@
+--- a/assets/overlay/init
++++ b/assets/overlay/init
+@@ -182,6 +182,12 @@
+ mount -t securityfs none /var/tcti-rootfs/rw-union/sys/kernel/security
+ mount -t debugfs -o mode=700 none /var/tcti-rootfs/rw-union/sys/kernel/debug
+ 
++# Docker's default data directory lives on the persistent ext4 disk. overlay2
++# cannot sit on the overlay root, so /var/lib/docker is a bind mount of it.
++mkdir -p /var/tcti-rootfs/rw-ios/docker
++mkdir -p /var/tcti-rootfs/rw-union/var/lib/docker
++mount --bind /var/tcti-rootfs/rw-ios/docker /var/tcti-rootfs/rw-union/var/lib/docker
++
+ # Ensure we can create psuedoterminals.
+ #
+ # -p because devtmpfs may already have provided it, which it does on a current
+@@ -227,4 +233,8 @@
+ echo /usr/bin/tctish-cpu-online >/proc/sys/kernel/hotplug
+ 
+ # Finally, pass control to real init.
+-exec chroot /var/tcti-rootfs/rw-union /sbin/init
++# Move the union onto / instead of only chroot-ing into it, so that / is a real
++# mount and runc can pivot_root. Nothing is deleted: ro-root is the lower layer.
++cd /var/tcti-rootfs/rw-union
++mount --move . /
++exec chroot . /sbin/init

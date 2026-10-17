@@ -56,3 +56,5 @@ Requesting system poweroff
 ```
 
 この結果で、設定を変えない kernel の再ビルドと Mac 上の guest 起動を確認しました。Docker の既定のネットワーク、`docker exec`、`docker compose` の動作は、この検証には含めていません。
+
+guest の起動の処理を直す Issue #22 の結果は [BOOT.md](BOOT.md) にあります。
