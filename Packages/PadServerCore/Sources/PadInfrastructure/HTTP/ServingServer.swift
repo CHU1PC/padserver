@@ -9,21 +9,25 @@ public enum ServingServer {
     public static func makeApplication(
         port: Int,
         resolveRoute: ResolveRoute,
+        logBus: any LogBus = InMemoryLogBus(),
         handleRoute: @escaping @Sendable (Route, Request, BasicRequestContext) async throws -> Response
     ) -> Application<CallbackResponder<BasicRequestContext>> {
+        let requestLogger = RequestLogMiddleware(logBus: logBus)
         let responder = CallbackResponder<BasicRequestContext> { request, context in
-            guard let host = try routeHost(for: request) else {
-                return Response(status: .notFound)
-            }
-            switch try await resolveRoute(host: host, path: request.uri.path) {
-            case .matched(let route):
-                return try await handleRoute(route, request, context)
+            try await requestLogger.handle(request, context: context) { request, context in
+                guard let host = try routeHost(for: request) else {
+                    return Response(status: .notFound)
+                }
+                switch try await resolveRoute(host: host, path: request.uri.path) {
+                case .matched(let route):
+                    return try await handleRoute(route, request, context)
 
-            case .stopped:
-                return Response(status: .serviceUnavailable)
+                case .stopped:
+                    return Response(status: .serviceUnavailable)
 
-            case .notFound, .ambiguous:
-                return Response(status: .notFound)
+                case .notFound, .ambiguous:
+                    return Response(status: .notFound)
+                }
             }
         }
         return Application(

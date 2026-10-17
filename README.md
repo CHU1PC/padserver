@@ -351,3 +351,18 @@ $ bun test
 1 expect() calls
 Ran 1 test across 1 file. [18.00ms]
 ```
+
+### 配信要求の記録
+
+配信入口は要求ごとに、時刻、host、パス、応答 status、所要時間をログ bus に流します。
+一致した経路の応答と、経路が見つからない 404 の両方を記録します。
+ハンドラーが失敗して 500 を返す場合も記録します。
+
+実際の配信入口を通す試験で、ログの内容を確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
+✔ Test requestLogMiddlewarePublishesResponseAndMissingRoute() passed after 0.004 seconds.
+✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
+✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
+```
