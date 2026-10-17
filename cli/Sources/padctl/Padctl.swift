@@ -6,6 +6,6 @@ struct Padctl: ParsableCommand {
         commandName: "padctl",
         abstract: "Manage a PadServer instance from the command line.",
         version: "0.1.0",
-        subcommands: [Login.self],
+        subcommands: [Login.self, Reinstall.self],
     )
 }
