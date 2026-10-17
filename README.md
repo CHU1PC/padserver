@@ -617,3 +617,31 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### padctl の管理 API client
+
+`padctl` に管理 API の client を足しました。`padctl login` で保存した接続先と、Keychain の token を読み、全要求に `Authorization: Bearer` header を付けて管理 API を呼びます。
+配備の差分確認、blob の送信、配備の確定、プロジェクトの一覧、開始、停止、ログの streaming を呼べます。
+サーバーのエラー応答と接続の失敗は、`padctl login` をやり直す、tailnet から接続する、のように次の行動が分かる英語の文にします。token は文に含めません。
+ログの streaming は、1行1件の JSON を `LogEntry` に変えて、届いた順に返します。
+
+実際の URLSession を通し、応答だけを差し替えた試験で確認しました。
+
+```text
+$ swift test --package-path cli -j 3
+✔ Test clientRequiresSavedConfigAndToken(token:hasConfig:) with 6 test cases passed.
+✔ Test commitDeploymentExpectsCreatedStatus() passed.
+✔ Test commitDeploymentRejectsUnexpectedSuccessStatus() passed.
+✔ Test connectionFailureIsReadableAndDoesNotExposeToken() passed.
+✔ Test diffDeploymentPostsManifestAndFilesAndDecodesMissingBlobs() passed.
+✔ Test listProjectsSendsBearerTokenAndDecodesResponse() passed.
+✔ Test nonAdminErrorBodyFallsBackToStatusSentence() passed.
+✔ Test run with 37 tests in 0 suites passed.
+✔ Test serverErrorsBecomeReadableSentences() passed.
+✔ Test startAndStopPostToProjectPathWithoutBody() passed.
+✔ Test streamLogsReportsMalformedLineAsInvalidResponse() passed.
+✔ Test streamLogsThrowsReadableErrorForNonSuccessStatus() passed.
+✔ Test streamLogsYieldsEntriesAcrossChunkBoundaries() passed.
+✔ Test undecodableSuccessBodyIsInvalidResponse() passed.
+✔ Test uploadBlobPutsFileContentAsOctetStream(status:) with 2 test cases passed.
+```
