@@ -14,7 +14,7 @@ import Testing
         target: .staticSite
     )
     let releaseID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000051")))
-    let hash = BlobHash("sha256-first")
+    let hash = try fixtureBlobHash("sha256-first")
     let storage: any ProjectStorage = PadTestSupport.InMemoryProjectStorage()
 
     try await assertProjectRoutesAndRunState(project, route: route, storage: storage)
@@ -49,13 +49,13 @@ import Testing
     let nextID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000052")))
     let missingBlobID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000053")))
     let absentProjectID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000055")))
-    let firstHash = BlobHash("sha256-first")
-    let nextHash = BlobHash("sha256-next")
+    let firstHash = try fixtureBlobHash("sha256-first")
+    let nextHash = try fixtureBlobHash("sha256-next")
 
     try await savePreparingRelease(firstID, project: projectName, hash: firstHash, storage: storage)
     try await savePreparingRelease(nextID, project: projectName, hash: nextHash, storage: storage)
     try await savePreparingRelease(
-        missingBlobID, project: projectName, hash: BlobHash("sha256-missing"), storage: storage)
+        missingBlobID, project: projectName, hash: try fixtureBlobHash("sha256-missing"), storage: storage)
     try await saveReleaseForAbsentProject(absentProjectID, hash: firstHash, storage: storage)
     try await storage.saveBlob(firstHash, from: TestBodyStream(chunks: [Data("first".utf8)]))
     try await storage.saveBlob(nextHash, from: TestBodyStream(chunks: [Data("next".utf8)]))
@@ -147,7 +147,7 @@ import Testing
     let oldID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000055")))
     let nextID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000056")))
     let otherID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000057")))
-    let hash = BlobHash("shared")
+    let hash = try fixtureBlobHash("shared")
     try await storage.saveProject(Project(name: first, kind: .staticSite), routes: [])
     try await storage.saveProject(Project(name: other, kind: .staticSite), routes: [])
     try await storage.saveBlob(hash, from: TestBodyStream(chunks: [Data("content".utf8)]))
@@ -193,7 +193,7 @@ import Testing
 
 @Test func sharedBlobStreamKeepsIndependentPullCursors() async throws {
     let storage = PadTestSupport.InMemoryProjectStorage()
-    let hash = BlobHash("example")
+    let hash = try fixtureBlobHash("example")
     let first = Data("first".utf8)
     let second = Data("second".utf8)
     try await storage.saveBlob(hash, from: TestBodyStream(chunks: [first, second]))
@@ -215,7 +215,7 @@ private func savePreparingRelease(
     storage: any ProjectStorage
 ) async throws {
     let release = Release(id: id, project: project, state: .preparing)
-    let manifest = ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: hash)])
+    let manifest = ReleaseManifest(files: [try ReleaseManifestFile(path: "index.html", blob: hash)])
     try await storage.saveRelease(release, manifest: manifest)
 }
 

@@ -10,7 +10,8 @@ import Testing
         let project = try ProjectName("site")
         let id = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000062")))
         let release = Release(id: id, project: project, state: .preparing)
-        let manifest = ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: BlobHash("opaque"))])
+        let file = try ReleaseManifestFile(path: "index.html", blob: fixtureBlobHash("opaque"))
+        let manifest = ReleaseManifest(files: [file])
 
         try await store.saveRelease(release, manifest: manifest)
 
@@ -26,7 +27,8 @@ import Testing
         let first = try releaseStoreFixture("00000000-0000-0000-0000-000000000003", project: "site")
         let second = try releaseStoreFixture("00000000-0000-0000-0000-000000000001", project: "site")
         let other = try releaseStoreFixture("00000000-0000-0000-0000-000000000002", project: "other")
-        let manifest = ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: BlobHash("opaque"))])
+        let file = try ReleaseManifestFile(path: "index.html", blob: fixtureBlobHash("opaque"))
+        let manifest = ReleaseManifest(files: [file])
         for release in [first, second, other] {
             try await store.saveRelease(release, manifest: manifest)
         }

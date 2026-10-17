@@ -2,30 +2,83 @@ import Foundation
 import PadDomain
 
 public struct BlobHash: Hashable, Codable, Sendable {
+    public enum ValidationError: Error {
+        case invalidHash
+    }
+
+    private static let length = 64
+
     public let value: String
 
-    public init(_ value: String) {
+    /// SHA-256 の小文字16進64桁だけを受け付けます。
+    public init(_ value: String) throws {
+        guard value.utf8.count == Self.length, value.utf8.allSatisfy(Self.isLowercaseHexDigit) else {
+            throw ValidationError.invalidHash
+        }
         self.value = value
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.init(try container.decode(String.self))
+        let value = try container.decode(String.self)
+        do {
+            try self.init(value)
+        } catch {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid blob hash")
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(value)
     }
+
+    private static func isLowercaseHexDigit(_ byte: UInt8) -> Bool {
+        (UInt8(ascii: "0")...UInt8(ascii: "9")).contains(byte) || (UInt8(ascii: "a")...UInt8(ascii: "f")).contains(byte)
+    }
 }
 
 public struct ReleaseManifestFile: Hashable, Codable, Sendable {
+    public enum ValidationError: Error {
+        case invalidPath
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case path
+        case blob
+    }
+
     public let path: String
     public let blob: BlobHash
 
-    public init(path: String, blob: BlobHash) {
+    /// release 内の相対パスだけを受け付けます。空の要素、`.`、`..`、バックスラッシュ、制御文字を含む値は拒否します。
+    public init(path: String, blob: BlobHash) throws {
+        guard Self.isValidPath(path) else {
+            throw ValidationError.invalidPath
+        }
         self.path = path
         self.blob = blob
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let path = try container.decode(String.self, forKey: .path)
+        let blob = try container.decode(BlobHash.self, forKey: .blob)
+        do {
+            try self.init(path: path, blob: blob)
+        } catch {
+            throw DecodingError.dataCorruptedError(
+                forKey: .path, in: container, debugDescription: "Invalid release file path")
+        }
+    }
+
+    private static func isValidPath(_ path: String) -> Bool {
+        guard !path.isEmpty, path.unicodeScalars.allSatisfy({ $0 != "\\" && $0.properties.generalCategory != .control })
+        else {
+            return false
+        }
+        return path.split(separator: "/", omittingEmptySubsequences: false)
+            .allSatisfy { !$0.isEmpty && $0 != "." && $0 != ".." }
     }
 }
 

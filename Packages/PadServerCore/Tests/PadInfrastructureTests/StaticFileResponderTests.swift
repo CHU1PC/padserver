@@ -9,6 +9,8 @@ import Testing
 
 private enum StaticTestConstants {
     static let port = 8080
+    static let blobHashText = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    static let etag = "\"\(blobHashText)\""
 }
 
 private struct RangeExpectation {
@@ -26,13 +28,13 @@ private struct RangeExpectation {
         let response = try await client.execute(uri: "/", method: .get)
         #expect(response.status == .ok)
         #expect(response.headers[.contentType] == "text/html")
-        #expect(response.headers[.eTag] == "\"test-blob\"")
+        #expect(response.headers[.eTag] == StaticTestConstants.etag)
         #expect(String(buffer: response.body) == "<h1>hello</h1>")
 
         let unchanged = try await client.execute(
-            uri: "/", method: .get, headers: [.ifNoneMatch: "\"test-blob\""])
+            uri: "/", method: .get, headers: [.ifNoneMatch: StaticTestConstants.etag])
         #expect(unchanged.status == .notModified)
-        #expect(unchanged.headers[.eTag] == "\"test-blob\"")
+        #expect(unchanged.headers[.eTag] == StaticTestConstants.etag)
         #expect(unchanged.body.readableBytes == 0)
 
         let changed = try await client.execute(
@@ -159,14 +161,14 @@ private func staticRelease(
     storage: InMemoryProjectStorage, route: Route, path: String, content: String
 ) async throws {
     try await storage.saveProject(Project(name: route.project, kind: .staticSite), routes: [route])
-    let hash = BlobHash("test-blob")
+    let hash = try BlobHash(StaticTestConstants.blobHashText)
     let body = BlobBodyStream {
         let cursor = StaticTestBodyCursor(Data(content.utf8))
         return { await cursor.next() }
     }
     try await storage.saveBlob(hash, from: body)
     let release = Release(id: ReleaseID(UUID()), project: route.project, state: .preparing)
-    try await storage.saveRelease(release, manifest: ReleaseManifest(files: [.init(path: path, blob: hash)]))
+    try await storage.saveRelease(release, manifest: ReleaseManifest(files: [try .init(path: path, blob: hash)]))
     try await storage.activateRelease(release.id, for: route.project)
 }
 
