@@ -16,7 +16,7 @@ private struct SystemIDGenerator: IDGenerator {
 
 enum Composition {
     // 配信は tailnet の外から relay 経由で届く loopback の port, 管理は tailnet 側の port で受ける.
-    private static let deliveryPort = 8080
+    static let deliveryPort = 8080
     private static let adminPort = 8081
 
     private static let logger = Logger(subsystem: "PadServer", category: "composition")
