@@ -169,6 +169,10 @@ private actor InMemoryProjectStorage: ProjectStorage {
         runStates[project.name] = .running
     }
 
+    func registerProject(_ project: Project, routes newRoutes: [Route]) throws {
+        try saveProject(project, routes: newRoutes)
+    }
+
     func projectRunState(for project: ProjectName) throws -> ProjectRunState? { runStates[project] }
 
     func saveProjectRunState(_ state: ProjectRunState, for project: ProjectName) throws {

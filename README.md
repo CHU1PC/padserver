@@ -307,6 +307,20 @@ blob が欠けている場合や release の保存が失敗した場合は, そ�
 ✔ Test run with 102 tests in 2 suites passed
 ```
 
+### 経路の重複の検出
+
+`RegisterProjectRoutes` は、登録する経路の host とパスの prefix が既存の別プロジェクトの経路、または同時に登録する経路と重なる場合に拒否します。保存側で検査と更新を一つの操作として行うため、並行登録でも重複を残しません。拒否時は既存の経路とプロジェクトを変更しません。host または prefix が違う経路は登録できます。
+
+`swift test --package-path Packages/PadServerCore --filter registerProjectRoutes` の実行結果です。
+
+```text
+✔ Test registerProjectRoutesAcceptsDistinctHostOrPrefix() passed
+✔ Test registerProjectRoutesRejectsDuplicatesWithinOneRegistration() passed
+✔ Test registerProjectRoutesRejectsDuplicateAcrossProjectsWithoutChangingExistingRoutes() passed
+✔ Test registerProjectRoutesRejectsOneOfTwoConcurrentDuplicates() passed
+✔ Test run with 4 tests in 0 suites passed
+```
+
 ### release と manifest のファイル保存
 
 `FileReleaseStore` は release と manifest を保存し、再起動後も読み出せます。
