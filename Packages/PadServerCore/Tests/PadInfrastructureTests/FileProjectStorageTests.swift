@@ -48,7 +48,7 @@ import Testing
         let oldID = ReleaseID(UUID())
         let releaseID = ReleaseID(UUID())
         let data = Data("old".utf8)
-        let hash = hashFixture(data)
+        let hash = try hashFixture(data)
         try await storage.saveProject(existing, routes: [])
         try await storage.saveBlob(hash, from: OneChunkBody(data: data))
         try await saveRelease(oldID, project: existing.name, hash: hash, storage: storage)
@@ -71,8 +71,8 @@ import Testing
         let nextID = ReleaseID(UUID())
         let oldData = Data("old".utf8)
         let nextData = Data("next".utf8)
-        let oldHash = hashFixture(oldData)
-        let nextHash = hashFixture(nextData)
+        let oldHash = try hashFixture(oldData)
+        let nextHash = try hashFixture(nextData)
         try await storage.saveProject(project, routes: [])
         try await storage.saveBlob(oldHash, from: OneChunkBody(data: oldData))
         #expect(try await storage.blobSize(oldHash) == Int64(oldData.count))
@@ -107,14 +107,14 @@ private func routeFixture(project: ProjectName, host: String) throws -> Route {
     Route(project: project, host: try RouteHost(host), pathPrefix: try RoutePathPrefix("/"), target: .staticSite)
 }
 
-private func hashFixture(_ data: Data) -> BlobHash {
-    BlobHash(CryptoKit.SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined())
+private func hashFixture(_ data: Data) throws -> BlobHash {
+    try BlobHash(CryptoKit.SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined())
 }
 
 private func saveRelease(
     _ id: ReleaseID, project: ProjectName, hash: BlobHash, storage: any ProjectStorage
 ) async throws {
-    let manifest = ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: hash)])
+    let manifest = ReleaseManifest(files: [try ReleaseManifestFile(path: "index.html", blob: hash)])
     try await storage.saveRelease(Release(id: id, project: project, state: .preparing), manifest: manifest)
 }
 

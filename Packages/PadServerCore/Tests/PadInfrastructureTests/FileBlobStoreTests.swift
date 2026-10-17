@@ -9,7 +9,7 @@ import Testing
 @Test func fileBlobStoreWritesStreamingBodyUnderItsSHA256Name() async throws {
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
-        let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
         let body = BlobFixtureBody(chunks: [Data("a".utf8), Data("bc".utf8)])
 
         try await store.saveBlob(hash, from: body)
@@ -23,7 +23,7 @@ import Testing
 @Test func fileBlobStoreDiscardsMismatchedContentAndTemporaryFile() async throws {
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
-        let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
 
         await #expect(throws: FileBlobStore.Failure.hashMismatch) {
             try await store.saveBlob(hash, from: BlobFixtureBody(chunks: [Data("wrong".utf8)]))
@@ -37,7 +37,7 @@ import Testing
 @Test func fileBlobStoreReportsSizeWithoutReadingBlob() async throws {
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
-        let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
         try await store.saveBlob(hash, from: BlobFixtureBody(chunks: [Data("abc".utf8)]))
         let path = directory.appendingPathComponent(hash.value).path
         #expect(Darwin.chmod(path, 0) == 0)
@@ -49,7 +49,7 @@ import Testing
 @Test func fileBlobStoreDoesNotDuplicateExistingContent() async throws {
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
-        let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
         let body = BlobFixtureBody(chunks: [Data("abc".utf8)])
         try await store.saveBlob(hash, from: body)
 
@@ -62,7 +62,7 @@ import Testing
 @Test func fileBlobStoreOpensIndependentStreamsAndListsAndRemovesBlob() async throws {
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
-        let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
         try await store.saveBlob(hash, from: BlobFixtureBody(chunks: [Data("abc".utf8)]))
         let stream = try #require(try await store.openBlob(hash))
         var first = stream.makeAsyncIterator()
@@ -83,7 +83,7 @@ import Testing
 @Test func fileBlobStoreDiscardsInterruptedReceiveAndAllowsRetry() async throws {
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
-        let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
         let interrupted = BlobFixtureBody(chunks: [Data("a".utf8)], failsAtEnd: true)
 
         await #expect(throws: BlobFixtureFailure.interrupted) {
@@ -100,7 +100,7 @@ import Testing
 @Test func fileBlobStoreAcceptsEmptyBlobAndStreamsEndImmediately() async throws {
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
-        let hash = BlobHash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        let hash = try BlobHash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 
         try await store.saveBlob(hash, from: BlobFixtureBody(chunks: []))
 
@@ -115,7 +115,7 @@ import Testing
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
         let data = Data(repeating: UInt8(ascii: "a"), count: 128 * 1024 + 1)
-        let hash = BlobHash(CryptoKit.SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined())
+        let hash = try BlobHash(CryptoKit.SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined())
         try await store.saveBlob(hash, from: BlobFixtureBody(chunks: [data]))
         let stream = try #require(try await store.openBlob(hash))
         var iterator = stream.makeAsyncIterator()
@@ -133,7 +133,7 @@ import Testing
         let outside = directory.deletingLastPathComponent().appendingPathComponent(UUID().uuidString)
         try Data("outside".utf8).write(to: outside)
         do {
-            let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+            let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
             try FileManager.default.createSymbolicLink(
                 at: directory.appendingPathComponent(hash.value), withDestinationURL: outside)
 
@@ -151,7 +151,7 @@ import Testing
 @Test func fileBlobStoreRejectsLinkReplacementBeforeFirstPull() async throws {
     try await withBlobStoreDirectory { directory async throws in
         let store = FileBlobStore(directory: directory)
-        let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        let hash = try BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
         try await store.saveBlob(hash, from: BlobFixtureBody(chunks: [Data("abc".utf8)]))
         let stream = try #require(try await store.openBlob(hash))
         let outside = directory.appendingPathComponent("outside")
