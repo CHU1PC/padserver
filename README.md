@@ -617,3 +617,19 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### 管理 API のログ streaming
+
+管理用 port で `GET /v1/logs/stream` を呼ぶと、直近のログを返した後、繋いだまま新しいログを流します。
+応答は `200` の `application/x-ndjson` で、1行に `LogEntry` を1件ずつ書きます。
+接続を切ると、ログ bus の購読が外れます。
+
+Router に載せた状態で確認した試験の出力です。
+
+```text
+$ swift test --package-path Packages/PadServerCore --filter logController
+✔ Test logControllerReleasesSubscriptionWhenConnectionEnds() passed.
+✔ Test logControllerStreamsReplayedEntriesAsNDJSON() passed.
+✔ Test logControllerSendsNewEntriesAfterReplayInArrivalOrder() passed.
+✔ Test run with 3 tests in 0 suites passed.
+```
