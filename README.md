@@ -117,17 +117,18 @@ Server started and listening on [tailnet IP]:[port]
 
 ## 管理の認可
 
-内部部品の `AuthorizeAdmin` は, 接続元が tailnet の IP であり, 保存済みの管理 token と一致する場合だけ許可します.
-tailnet の IPv4 と IPv6 に対応し, token が正しくても tailnet 外からは拒否します.
-token の内容は `timingsafe_bcmp` で比較し, 長さが違う token と, token が未設定の場合も拒否します.
+内部部品の `AuthorizeAdmin` は、管理 token と接続元から `authorized`、`unauthorized`、`forbidden` を返します。
+token が無効または未設定なら `unauthorized`、token が有効でも tailnet 外なら `forbidden` です。
+tailnet 内の IPv4 と IPv6 で token が有効なら `authorized` になります。
+token の内容は `timingsafe_bcmp` で比較します。
 
-`swift test --package-path Packages/PadServerCore` の実行結果から, 実行時間を省いて掲載します.
+`swift test --package-path Packages/PadServerCore --filter authorizeAdmin` の実行結果です。
 
 ```text
 ✔ Test authorizeAdminRequiresTailnetAddressEvenWithCorrectToken() passed
 ✔ Test authorizeAdminRejectsMismatchedTokens(supplied:) with 7 test cases passed
 ✔ Test authorizeAdminRejectsUnconfiguredToken() passed
-✔ Test run with 93 tests in 2 suites passed
+✔ Test run with 3 tests in 0 suites passed
 ```
 
 ## 文書

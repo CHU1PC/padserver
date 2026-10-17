@@ -9,10 +9,10 @@ import Testing
     try await store.setAdminToken(token)
     let authorize = AuthorizeAdmin(secretStore: store)
 
-    #expect(try await authorize(token: token, address: ClientAddress("100.64.0.1")))
-    #expect(try await authorize(token: token, address: ClientAddress("fd7a:115c:a1e0::1")))
-    #expect(try await !authorize(token: token, address: ClientAddress("192.0.2.1")))
-    #expect(try await !authorize(token: token, address: ClientAddress("127.0.0.1")))
+    #expect(try await authorize(token: token, address: ClientAddress("100.64.0.1")) == .authorized)
+    #expect(try await authorize(token: token, address: ClientAddress("fd7a:115c:a1e0::1")) == .authorized)
+    #expect(try await authorize(token: token, address: ClientAddress("192.0.2.1")) == .forbidden)
+    #expect(try await authorize(token: token, address: ClientAddress("127.0.0.1")) == .forbidden)
 }
 
 @Test(arguments: [
@@ -24,11 +24,13 @@ func authorizeAdminRejectsMismatchedTokens(supplied: String) async throws {
     try await store.setAdminToken(AdminToken("test-admin-token"))
     let authorize = AuthorizeAdmin(secretStore: store)
 
-    #expect(try await !authorize(token: AdminToken(supplied), address: ClientAddress("100.64.0.1")))
+    #expect(try await authorize(token: AdminToken(supplied), address: ClientAddress("100.64.0.1")) == .unauthorized)
+    #expect(try await authorize(token: AdminToken(supplied), address: ClientAddress("192.0.2.1")) == .unauthorized)
 }
 
 @Test func authorizeAdminRejectsUnconfiguredToken() async throws {
     let authorize = AuthorizeAdmin(secretStore: InMemorySecretStore())
 
-    #expect(try await !authorize(token: AdminToken("test-admin-token"), address: ClientAddress("100.64.0.1")))
+    let result = try await authorize(token: AdminToken("test-admin-token"), address: ClientAddress("100.64.0.1"))
+    #expect(result == .unauthorized)
 }
