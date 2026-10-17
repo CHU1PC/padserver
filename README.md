@@ -141,6 +141,12 @@ token の内容は `timingsafe_bcmp` で比較します。
 | [docs/pull-requests.md](docs/pull-requests.md) | PR の作り方と, merge の規則. 全ての PR で README を更新する |
 | [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) | merge 係の手順と, Codex との連絡の規則 (同じ内容) |
 
+配備の実装では、[docs/admin-api.md](docs/admin-api.md) の例に従い、`ProjectManifest.root` からの相対 path を指定できます。`root` が `dist` の場合、`dist/index.html` の送信 path は `index.html` です。次の JSON は修正した配備例の抜粋です。
+
+```json
+{"manifest":{"root":"dist"},"files":[{"path":"index.html"}]}
+```
+
 ## プロジェクトの一覧と状態
 
 内部部品の `ListProjects` は, プロジェクトごとに種類, 有効な release, 動いているかを返します.

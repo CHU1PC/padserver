@@ -36,7 +36,7 @@ JSON のキーは lower camel case とし, domain 型の値と対応させます
 
 ## 4. 配備
 
-配備は差分確認, blob 送信, 確定の順に行います. ファイル一覧は project-relative path と blob hash の組で表します. 同じ内容の blob は一度だけ送れます.
+配備は差分確認, blob 送信, 確定の順に行います. ファイル一覧は `ProjectManifest.root` からの相対 path と blob hash の組で表します. 同じ内容の blob は一度だけ送れます.
 
 ### 4.1 差分確認
 
@@ -56,7 +56,7 @@ JSON のキーは lower camel case とし, domain 型の値と対応させます
   },
   "files": [
     {
-      "path": "dist/index.html",
+      "path": "index.html",
       "hash": "<content-hash>"
     }
   ]
@@ -69,7 +69,7 @@ JSON のキーは lower camel case とし, domain 型の値と対応させます
 {
   "missingBlobs": [
     {
-      "path": "dist/index.html",
+      "path": "index.html",
       "hash": "<content-hash>"
     }
   ]
