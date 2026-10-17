@@ -3,8 +3,10 @@ import Hummingbird
 import HummingbirdTesting
 import HTTPTypes
 import NIOCore
+import PadApplication
 import PadDomain
 @testable import PadInfrastructure
+import PadTestSupport
 import Testing
 
 private enum AdminServerTestConstants {
@@ -19,11 +21,16 @@ private enum AdminServerTestConstants {
     static let spoofedForwardedAddress = "203.0.113.9"
 }
 
+private func testAuthorizeAdmin() -> AuthorizeAdmin {
+    AuthorizeAdmin(secretStore: InMemorySecretStore())
+}
+
 @Test func adminServerKeepsAdminRoutesSeparateFromDeliveryRoutes() async throws {
     let adminApplication = try AdminServer.makeApplication(
         adminPort: AdminServerTestConstants.adminPort,
         deliveryPort: AdminServerTestConstants.deliveryPort,
-        tailnetAddress: AdminServerTestConstants.tailnetAddress
+        tailnetAddress: AdminServerTestConstants.tailnetAddress,
+        authorizeAdmin: testAuthorizeAdmin()
     ) { router in
         router.get("/admin-probe") { _, _ in
             Response(status: .ok)
@@ -39,8 +46,8 @@ private enum AdminServerTestConstants {
         let adminResponse = try await client.execute(uri: "/admin-probe", method: .get)
         let deliveryResponse = try await client.execute(uri: "/delivery-probe", method: .get)
 
-        #expect(adminResponse.status == .ok)
-        #expect(deliveryResponse.status == .notFound)
+        #expect(adminResponse.status == .unauthorized)
+        #expect(deliveryResponse.status == .unauthorized)
     }
 
     try await deliveryApplication.test(.router) { client in
@@ -52,21 +59,23 @@ private enum AdminServerTestConstants {
     }
 }
 
-@Test func adminRequestContextUsesTransportAddressInsteadOfForwardedHeader() async throws {
+@Test func adminAuthIgnoresForwardedClientAddress() async throws {
     let forwardedHeaderName = try #require(HTTPField.Name("Forwarded"))
     let xForwardedForHeaderName = try #require(HTTPField.Name("X-Forwarded-For"))
+    let store = InMemorySecretStore()
+    try await store.setAdminToken(AdminToken("test-token"))
     let application = try AdminServer.makeApplication(
         adminPort: AdminServerTestConstants.adminPort,
         deliveryPort: AdminServerTestConstants.deliveryPort,
-        tailnetAddress: AdminServerTestConstants.tailnetAddress
+        tailnetAddress: AdminServerTestConstants.tailnetAddress,
+        authorizeAdmin: AuthorizeAdmin(secretStore: store)
     ) { router in
-        router.get("/client-address") { _, context in
-            Response(status: context.clientAddress == nil ? .noContent : .ok)
-        }
+        router.get("/client-address") { _, _ in Response(status: .ok) }
     }
 
     try await application.test(.router) { client in
         var headers = HTTPFields()
+        headers[.authorization] = "Bearer test-token"
         headers[forwardedHeaderName] = AdminServerTestConstants.spoofedForwardedAddress
         headers[xForwardedForHeaderName] = AdminServerTestConstants.spoofedForwardedAddress
         let response = try await client.execute(
@@ -75,9 +84,11 @@ private enum AdminServerTestConstants {
             headers: headers
         )
 
-        #expect(response.status == .noContent)
+        #expect(response.status == .forbidden)
     }
+}
 
+@Test func adminRequestContextUsesTransportAddress() throws {
     let socketAddress = try SocketAddress(
         ipAddress: AdminServerTestConstants.exampleClientAddress,
         port: AdminServerTestConstants.exampleSocketPort
@@ -92,7 +103,8 @@ private enum AdminServerTestConstants {
     let application = try AdminServer.makeApplication(
         adminPort: AdminServerTestConstants.adminPort,
         deliveryPort: AdminServerTestConstants.deliveryPort,
-        tailnetAddress: AdminServerTestConstants.tailnetAddress
+        tailnetAddress: AdminServerTestConstants.tailnetAddress,
+        authorizeAdmin: testAuthorizeAdmin()
     )
 
     #expect(
@@ -106,7 +118,8 @@ private enum AdminServerTestConstants {
         try AdminServer.makeApplication(
             adminPort: AdminServerTestConstants.adminPort,
             deliveryPort: AdminServerTestConstants.adminPort,
-            tailnetAddress: AdminServerTestConstants.tailnetAddress
+            tailnetAddress: AdminServerTestConstants.tailnetAddress,
+            authorizeAdmin: testAuthorizeAdmin()
         )
     }
 }
@@ -117,7 +130,8 @@ func adminServerRejectsAddressesOutsideTailnet(address: String) {
         try AdminServer.makeApplication(
             adminPort: AdminServerTestConstants.adminPort,
             deliveryPort: AdminServerTestConstants.deliveryPort,
-            tailnetAddress: address
+            tailnetAddress: address,
+            authorizeAdmin: testAuthorizeAdmin()
         )
     }
 }
@@ -131,7 +145,8 @@ func adminServerAcceptsOnlyItsTailnetInterface() async throws {
     let configured = try AdminServer.makeApplication(
         adminPort: 0,
         deliveryPort: AdminServerTestConstants.deliveryPort,
-        tailnetAddress: tailnetAddress
+        tailnetAddress: tailnetAddress,
+        authorizeAdmin: testAuthorizeAdmin()
     ) { router in
         router.get("/admin-probe") { _, _ in Response(status: .ok) }
     }
@@ -152,7 +167,7 @@ func adminServerAcceptsOnlyItsTailnetInterface() async throws {
 
     try await TestClient.withClient(host: tailnetAddress, port: port) { tailnetClient in
         let response = try await tailnetClient.get("/admin-probe")
-        #expect(response.status == .ok)
+        #expect(response.status == .unauthorized)
     }
     #expect(await canConnectFromLocalhost(port: port) == false)
 }

@@ -101,6 +101,12 @@ secret と管理 token もメモリ内で扱い, 固定の時刻と ID を注入
 
 `AdminServer.makeApplication` に端末の tailnet IP を `tailnetAddress` として渡すと、管理用サーバーはその IP だけで待ち受けます。tailnet 外の IP は設定時に拒否します。接続元と token の認可は管理用 middleware が担当します。
 
+管理用 router は `AuthorizeAdmin` を受け取ります。全要求の `Authorization: Bearer <token>` を検査し、token が無い場合と無効な場合は 401 を返します。有効な token でも接続元が tailnet 外なら 403 を返します。試験では、header の欠落と不正な形式、無効な token、tailnet 外の接続元を確認しています。
+
+```text
+✔ Test adminAuthMiddlewareReturnsUnauthorizedWithoutValidBearerToken() passed
+```
+
 実際の端末で待ち受けを確かめるには、次のように端末の tailnet IP を指定します。この試験は指定した IP に接続し、同じ port の localhost には接続できないことを確かめます。
 
 ```sh

@@ -1,5 +1,6 @@
 import Hummingbird
 import NIOCore
+import PadApplication
 import PadDomain
 
 public struct AdminRequestContext: RequestContext, RemoteAddressRequestContext {
@@ -43,6 +44,7 @@ public enum AdminServer {
         adminPort: Int,
         deliveryPort: Int,
         tailnetAddress: String,
+        authorizeAdmin: AuthorizeAdmin,
         configureRoutes: (Router<AdminRequestContext>) -> Void = { _ in
             // 管理 endpoint は後続 Issue の責務として追加する。
         }
@@ -54,8 +56,8 @@ public enum AdminServer {
             throw AdminServerError.invalidTailnetAddress
         }
 
-        // 接続元と token による認可は #70 の middleware が行う。
         let router = Router(context: AdminRequestContext.self)
+        router.add(middleware: AdminAuthMiddleware(authorizeAdmin: authorizeAdmin))
         configureRoutes(router)
         return Application(
             responder: router.buildResponder(),
