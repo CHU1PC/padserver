@@ -193,6 +193,19 @@ hash 名のシンボリックリンクを拒否し, 最初の読み出し前に�
 ✔ Test publishAtTheReplayBoundaryIsDeliveredExactlyOnceAndInOrder() passed
 ```
 
+## QEMU の起動引数
+
+`PadGuest` の `QEMUArguments` は, メモリ, CPU 数, kernel, initrd, disk, network の設定から QEMU の引数を組み立てます.
+引数の並びは, 検証で使った tctiSH の実機向け起動コードに合わせています. QEMU の起動自体は後続の作業です.
+
+`swift test --package-path Packages/PadGuest` で並びを照合した出力です.
+
+```text
+✔ Test qemuArgumentsMatchIPadLauncherOptionOrder() passed after 0.001 seconds.
+✔ Test packageNamespaceIsAvailableToConsumers() passed after 0.001 seconds.
+✔ Test run with 2 tests in 0 suites passed after 0.001 seconds.
+```
+
 ## ライセンス
 
 MIT です. [LICENSE](LICENSE) にあります.
