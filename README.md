@@ -7,6 +7,16 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 
 clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツールが入り, commit hook が有効になります.
 
+## ファイル置き場の保存 port
+
+内部の `StoredFile` はファイル名とバイト数を表します。`FileStore` はファイルの保存、取得、一覧、削除を扱い、`ShareLinkStore` はファイルに結び付いた期限付きリンクの保存と失効を扱います。実際の保存処理は後続の Issue で実装します。
+
+`swift test --package-path Packages/PadServerCore` の出力から、型の JSON 試験を示します。
+
+```text
+✔ Test storedFileKeepsNameAndByteSize() passed
+```
+
 ## 管理 API の通信型
 
 内部の `PadInterface` は、配備の差分確認と確定、プロジェクトの一覧と開始や停止、ログ1件、エラー応答の JSON 形式を表します。管理 API 自体の接続口は後続の実装で用意します。
