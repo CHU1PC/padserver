@@ -11,6 +11,12 @@ private enum StaticTestConstants {
     static let port = 8080
 }
 
+private struct RangeExpectation {
+    let range: String
+    let body: String
+    let contentRange: String
+}
+
 @Test func staticFileResponderServesActiveRootIndexAndConditionalResponse() async throws {
     let storage = InMemoryProjectStorage()
     let route = try staticRoute(prefix: "/")
@@ -48,6 +54,75 @@ private enum StaticTestConstants {
         #expect(String(buffer: found.body) == "guide")
         let missing = try await client.execute(uri: "/docs/page.txt", method: .get)
         #expect(missing.status == .notFound)
+    }
+}
+
+@Test func staticFileResponderServesSingleByteRanges() async throws {
+    let storage = InMemoryProjectStorage()
+    let route = try staticRoute(prefix: "/")
+    try await staticRelease(storage: storage, route: route, path: "index.html", content: "0123456789")
+    let application = staticApplication(storage: storage, route: route)
+    let cases = [
+        RangeExpectation(range: "bytes=2-5", body: "2345", contentRange: "bytes 2-5/10"),
+        RangeExpectation(range: "bytes=8-", body: "89", contentRange: "bytes 8-9/10"),
+        RangeExpectation(range: "bytes=-3", body: "789", contentRange: "bytes 7-9/10"),
+        RangeExpectation(range: "bytes=8-20", body: "89", contentRange: "bytes 8-9/10"),
+    ]
+    try await application.test(.router) { client in
+        for testCase in cases {
+            let response = try await client.execute(uri: "/", method: .get, headers: [.range: testCase.range])
+            #expect(response.status == .partialContent)
+            #expect(response.headers[.contentRange] == testCase.contentRange)
+            #expect(response.headers[.contentLength] == String(testCase.body.utf8.count))
+            #expect(response.headers[.acceptRanges] == "bytes")
+            #expect(String(buffer: response.body) == testCase.body)
+        }
+    }
+}
+
+@Test func staticFileResponderRejectsUnsatisfiableRange() async throws {
+    let storage = InMemoryProjectStorage()
+    let route = try staticRoute(prefix: "/")
+    try await staticRelease(storage: storage, route: route, path: "index.html", content: "0123456789")
+    let application = staticApplication(storage: storage, route: route)
+    try await application.test(.router) { client in
+        let response = try await client.execute(uri: "/", method: .get, headers: [.range: "bytes=10-"])
+        #expect(response.status == .rangeNotSatisfiable)
+        #expect(response.headers[.contentRange] == "bytes */10")
+        #expect(response.body.readableBytes == 0)
+    }
+}
+
+@Test func staticFileResponderIgnoresMultipleRanges() async throws {
+    let storage = InMemoryProjectStorage()
+    let route = try staticRoute(prefix: "/")
+    try await staticRelease(storage: storage, route: route, path: "index.html", content: "0123456789")
+    let application = staticApplication(storage: storage, route: route)
+    try await application.test(.router) { client in
+        let response = try await client.execute(uri: "/", method: .get, headers: [.range: "bytes=0-1,3-4"])
+        #expect(response.status == .ok)
+        #expect(response.headers[.contentRange] == nil)
+        #expect(String(buffer: response.body) == "0123456789")
+
+        let invalid = try await client.execute(uri: "/", method: .get, headers: [.range: "bytes=8-7"])
+        #expect(invalid.status == .ok)
+        #expect(String(buffer: invalid.body) == "0123456789")
+    }
+}
+
+@Test func staticFileResponderRejectsRangeForEmptyBlob() async throws {
+    let storage = InMemoryProjectStorage()
+    let route = try staticRoute(prefix: "/")
+    try await staticRelease(storage: storage, route: route, path: "index.html", content: "")
+    let application = staticApplication(storage: storage, route: route)
+    try await application.test(.router) { client in
+        let response = try await client.execute(uri: "/", method: .get, headers: [.range: "bytes=0-0"])
+        #expect(response.status == .rangeNotSatisfiable)
+        #expect(response.headers[.contentRange] == "bytes */0")
+
+        let suffix = try await client.execute(uri: "/", method: .get, headers: [.range: "bytes=-1"])
+        #expect(suffix.status == .ok)
+        #expect(suffix.body.readableBytes == 0)
     }
 }
 
