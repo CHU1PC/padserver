@@ -24,6 +24,16 @@ clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツール�
 ✔ Test logEntryUsesUTCISO8601Timestamp() passed
 ```
 
+## guest の状態と操作 port
+
+内部の `GuestState` は guest の停止、起動中、準備完了、失敗を表します。`GuestController` は状態の取得と起動、停止の操作を呼び出すための port です。QEMU を使った実装は後続の Issue で追加します。
+
+`swift test --package-path Packages/PadServerCore` で状態の JSON 値を確認した出力です。
+
+```text
+✔ Test guestStateJSONValuesAreStable(state:wireValue:) with 4 test cases passed
+```
+
 ## QEMU のソースの取得
 
 `scripts/fetch-qemu.sh` は, tctiSH とその QEMU fork を固定した commit で `build/sources/` に取得します.
