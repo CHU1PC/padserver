@@ -30,6 +30,16 @@ public actor InMemoryProjectStorage: ProjectStorage {
         routes.append(contentsOf: newRoutes)
     }
 
+    public func registerProject(_ project: Project, routes newRoutes: [Route]) throws {
+        var occupied = Set(routes.filter { $0.project != project.name }.map(RouteLocation.init))
+        for route in newRoutes {
+            guard occupied.insert(RouteLocation(route)).inserted else {
+                throw RegisterProjectRoutes.Error.duplicateRoute
+            }
+        }
+        try saveProject(project, routes: newRoutes)
+    }
+
     public func projectRunState(for project: ProjectName) throws -> ProjectRunState? {
         runStates[project]
     }
@@ -110,6 +120,16 @@ public actor InMemoryProjectStorage: ProjectStorage {
 
     public func removeBlob(_ hash: BlobHash) throws {
         blobs[hash] = nil
+    }
+}
+
+private struct RouteLocation: Hashable {
+    let host: RouteHost
+    let pathPrefix: RoutePathPrefix
+
+    init(_ route: Route) {
+        host = route.host
+        pathPrefix = route.pathPrefix
     }
 }
 
