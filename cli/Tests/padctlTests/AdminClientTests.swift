@@ -119,6 +119,8 @@ private struct ErrorCase {
         ErrorCase(401, .unauthorized, "The token is missing or invalid. Run `padctl login <server URL>` again."),
         ErrorCase(403, .forbidden, "The server refused this device. Connect from inside the tailnet."),
         ErrorCase(404, .projectNotFound, "The project was not found on the server."),
+        ErrorCase(404, .fileNotFound, "The file was not found on the server."),
+        ErrorCase(404, .shareLinkNotFound, "The share link was not found on the server."),
         ErrorCase(
             409, .deploymentIncomplete,
             "The deployment is incomplete: some blobs are missing or the project cannot take this action now."),

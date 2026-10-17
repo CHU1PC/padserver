@@ -36,6 +36,12 @@ enum AdminClientError: Error, CustomStringConvertible, Equatable {
         case .projectNotFound:
             "The project was not found on the server."
 
+        case .fileNotFound:
+            "The file was not found on the server."
+
+        case .shareLinkNotFound:
+            "The share link was not found on the server."
+
         case .deploymentIncomplete:
             "The deployment is incomplete: some blobs are missing or the project cannot take this action now."
 
