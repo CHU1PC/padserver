@@ -18,7 +18,7 @@ token が無い場合と無効な場合は `401 Unauthorized` を返します. t
 
 全 endpoint の path は `/v1` から始まります. 互換性のない変更は新しい版の path に追加し, `/v1` の意味は変えません. 未知の版の path は `404 Not Found` とします.
 
-JSON のキーは lower camel case とし, domain 型の値と対応させます. 例では `ProjectName` は文字列, `ProjectKind` は `staticSite` または `compose`, `ReleaseID` は UUID 文字列, `ReleaseState` は `preparing`, `active`, `retired` のいずれかです. `ProjectManifest` は `name`, `root`, `routes` を持ち, 現在の `Codable` に合わせて route の `pathPrefix` は `path_prefix` として送ります. 日時の wire format は未確定で, #50 で通信型と一緒に固定します.
+JSON のキーは lower camel case とし, domain 型の値と対応させます. 例では `ProjectName` は文字列, `ProjectKind` は `staticSite` または `compose`, `ReleaseID` は UUID 文字列, `ReleaseState` は `preparing`, `active`, `retired` のいずれかです. `ProjectManifest` は `name`, `root`, `routes` を持ち, 現在の `Codable` に合わせて route の `pathPrefix` は `path_prefix` として送ります. 日時は UTC の ISO 8601 文字列を秒精度で表します (例: `2026-10-17T12:34:56Z`).
 
 ## 3. Endpoint 一覧
 
@@ -153,10 +153,10 @@ release の `state` は `ReleaseState` と一致します. 配備確定後にプ
 `GET /v1/logs/stream` は `200 OK` とし, `Content-Type: application/x-ndjson` で返します. 各行は `LogEntry` 1件の JSON で, JSON の終端に改行を付けます. 接続直後に直近1,000件を時刻順に送り, 続けて新しいログを到着順に送ります. ログ行の例は次の通りです.
 
 ```json
-{"timestamp":"<date-time>","source":"web","level":"info","message":"Started"}
+{"timestamp":"2026-10-17T12:34:56Z","source":"web","level":"info","message":"Started"}
 ```
 
-`LogEntry` の項目は `timestamp`, `source`, `level`, `message` です. `level` は `debug`, `info`, `warning`, `error` のいずれかです. 日時の wire format は #50 で固定します. 接続を閉じるとその購読を解除し, サーバー側のログ生成や他の購読者には影響しません. クライアントが切断した場合, サーバーは当該 stream の送信を止めて購読を終了します.
+`LogEntry` の項目は `timestamp`, `source`, `level`, `message` です. `level` は `debug`, `info`, `warning`, `error` のいずれかです. 日時は2章の形式で送ります. 接続を閉じるとその購読を解除し, サーバー側のログ生成や他の購読者には影響しません. クライアントが切断した場合, サーバーは当該 stream の送信を止めて購読を終了します.
 
 M2 ではログ stream に対する絞り込み, 再開 cursor, 過去ログの保持期間は定めません. 後続で絞り込みが必要な場合は, 通信型との整合を確認して追加します.
 
@@ -173,7 +173,7 @@ M2 ではログ stream に対する絞り込み, 再開 cursor, 過去ログの�
 }
 ```
 
-| HTTP status | 用途 | code の例 |
+| HTTP status | 用途 | code |
 | --- | --- | --- |
 | `400 Bad Request` | JSON 不正, 入力値不正 | `invalid_request` |
 | `401 Unauthorized` | token が無い, または無効 | `unauthorized` |
@@ -187,10 +187,9 @@ M2 ではログ stream に対する絞り込み, 再開 cursor, 過去ログの�
 
 blob の hash は, 所有者の決定により SHA-256 の小文字16進64桁に確定しました (#61). 照合には CryptoKit の `SHA256` を使います. `BlobHash` の一般的な検証は #246 で扱います.
 
-この文書は endpoint の境界と処理の約束を定めます. 通信型の実装に入る前に, 次の値と wire-level の細部を確定します.
+この文書は endpoint の境界と処理の約束を定めます. 日時とエラー `code` は #50 で固定しました. 次の値と wire-level の細部は後続の作業で確定します.
 
 - blob の最大受信サイズ. 大きさは根拠なくこの文書で定めません.
-- `Date` の JSON 表現とエラー `code` の正式な一覧.
 - 同時配備, 配備の冪等性, 初回配備時の稼働状態.
 - 直近1,000件の送信中に到着した新規ログとの順序保証と重複回避.
 - compose 配備の manifest とファイル構成. M5 の範囲で定めます.
