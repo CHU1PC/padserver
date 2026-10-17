@@ -35,6 +35,11 @@ jobs:
         run: |
           swift build
           swift test
+      - name: Build and test PadGuest
+        working-directory: Packages/PadGuest
+        run: |
+          swift build
+          swift test
 
   cli:
     name: cli
@@ -56,6 +61,7 @@ jobs:
         working-directory: cli
         run: |
           swift build
+          swift test
           swift run padctl --version
 
   relay:

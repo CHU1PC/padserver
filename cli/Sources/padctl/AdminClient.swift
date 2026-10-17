@@ -120,6 +120,41 @@ struct AdminClient: Sendable {
         try await send(makeRequest(.post, ["projects", project.value, "stop"]), expecting: [Status.success])
     }
 
+    func uploadFile(name: String, from file: URL) async throws -> StoredFile {
+        let request = makeRequest(.put, ["files", name], contentType: "application/octet-stream")
+        let (data, response) = try await perform { try await session.upload(for: request, fromFile: file) }
+        try validate(response, data: data, expecting: [Status.created])
+        do {
+            return try AdminAPIJSON.makeDecoder().decode(StoredFile.self, from: data)
+        } catch {
+            throw AdminClientError.invalidResponse
+        }
+    }
+
+    func downloadFile(name: String, to destination: URL) async throws {
+        let request = makeRequest(.get, ["files", name])
+        let (temporary, response) = try await perform { try await session.download(for: request) }
+        guard let http = response as? HTTPURLResponse else {
+            throw AdminClientError.invalidResponse
+        }
+        guard http.statusCode == Status.success else {
+            let body = try Data(contentsOf: temporary)
+            try FileManager.default.removeItem(at: temporary)
+            throw Self.makeServerError(status: http.statusCode, data: body)
+        }
+        try FileManager.default.moveItem(at: temporary, to: destination)
+    }
+
+    func listFiles() async throws -> AdminFilesResponse {
+        try await send(makeRequest(.get, ["files"]), expecting: [Status.success])
+    }
+
+    func deleteFile(name: String) async throws {
+        let request = makeRequest(.delete, ["files", name])
+        let (data, response) = try await perform { try await session.data(for: request) }
+        try validate(response, data: data, expecting: [Status.noContent])
+    }
+
     func issueShareLink(fileName: String, expiresAt: Date) async throws -> AdminShareLinkIssueResponse {
         let request = try makeRequest(
             .post, ["files", fileName, "share-links"], body: AdminShareLinkRequest(expiresAt: expiresAt))
