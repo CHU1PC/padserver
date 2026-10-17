@@ -18,8 +18,9 @@ struct LoginService {
         guard token.utf8.count <= TokenInput.maximumByteCount else {
             throw TokenInputError.tooLong
         }
-        let config = try PadctlConfig(serverURL: serverURL)
+        let validatedConfig = try PadctlConfig(serverURL: serverURL)
         let oldConfig = try configStore.load()
+        let config = try PadctlConfig(serverURL: validatedConfig.serverURL, deviceID: oldConfig?.deviceID)
         let oldToken = try tokenStore.load()
 
         do {

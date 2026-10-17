@@ -80,6 +80,31 @@ import Testing
     #expect(tokenStore.token == "old-token")
 }
 
+@Test func loginPreservesDeviceIDEditedInConfigFile() throws {
+    let directory = FileManager.default.temporaryDirectory.appending(path: "padctl-tests-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer {
+        do {
+            try FileManager.default.removeItem(at: directory)
+        } catch {
+            Issue.record("Could not remove the temporary config directory.")
+        }
+    }
+    let fileURL = directory.appending(path: "config.json")
+    let editedConfig = #"{"serverURL":"https://old.example.com","deviceID":"example-device"}"#
+    try Data(editedConfig.utf8).write(to: fileURL)
+    let configStore = ConfigFileStore(fileURL: fileURL)
+    let tokenStore = InMemoryTokenStore()
+    let service = LoginService(configStore: configStore, tokenStore: tokenStore)
+    let newURL = try #require(URL(string: "https://new.example.com"))
+
+    try service.login(serverURL: newURL, token: "dummy-token")
+
+    #expect(try configStore.load()?.serverURL == newURL)
+    #expect(try configStore.load()?.deviceID == "example-device")
+    #expect(tokenStore.token == "dummy-token")
+}
+
 @Test func loginRestoresTokenWhenTokenSaveFailsAfterWriting() throws {
     let serverURL = try #require(URL(string: "https://pad.example.com"))
     let oldConfig = try PadctlConfig(serverURL: #require(URL(string: "https://old.example.com")))

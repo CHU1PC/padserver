@@ -373,8 +373,21 @@ $ swift test --package-path Packages/PadServerCore --filter fileReleaseStore
 
 `padctl login <server-url>` で、管理 API の接続先と token を保存できます。
 token は端末で非表示の入力を受け付け、Mac の Keychain に保存します。
-`~/.config/padctl/config.json` に保存するのは `serverURL` だけです。
+`~/.config/padctl/config.json` には `serverURL` を保存し、必要なら `deviceID` も指定できます。token はこのファイルに保存しません。
 URL に埋め込んだ認証情報は拒否します。保存が失敗した場合、以前の設定と token に戻します。
+
+実機の端末 ID を使う場合は、利用者が `~/.config/padctl/config.json` を編集し、省略可能な `deviceID` を加えます。`padctl login` を再実行してもその値は残ります。
+
+```json
+{"serverURL":"https://pad.example.com","deviceID":"example-device-id"}
+```
+
+`swift test --package-path cli --filter loginPreservesDeviceIDEditedInConfigFile` で、編集後に login しても ID が残ることを確認した結果です。
+
+```text
+✔ Test loginPreservesDeviceIDEditedInConfigFile() passed
+✔ Test run with 1 test in 0 suites passed
+```
 
 ```sh
 swift run --package-path cli padctl login https://pad.example.com

@@ -3,12 +3,14 @@ import Security
 
 struct PadctlConfig: Codable, Equatable {
     let serverURL: URL
+    let deviceID: String?
 
-    init(serverURL: URL) throws {
+    init(serverURL: URL, deviceID: String? = nil) throws {
         guard Self.isValidServerURL(serverURL) else {
             throw ConfigError.invalidServerURL
         }
         self.serverURL = serverURL
+        self.deviceID = deviceID
     }
 
     init(from decoder: any Decoder) throws {
@@ -22,10 +24,12 @@ struct PadctlConfig: Codable, Equatable {
             )
         }
         self.serverURL = serverURL
+        deviceID = try container.decodeIfPresent(String.self, forKey: .deviceID)
     }
 
     private enum CodingKeys: String, CodingKey {
         case serverURL
+        case deviceID
     }
 
     private static func isValidServerURL(_ url: URL) -> Bool {
