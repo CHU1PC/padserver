@@ -142,4 +142,4 @@ feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に項
 | 無料の Apple ID の権限で, guest に必要なだけのメモリを与えられる | guest のメモリを 2GB, 3GB, 4GB にして起動し, container を増やしてアプリが落ちないかを見る | 未実施. 手がかりとして, アプリの既定では guest のメモリは 1GB で, container を3つ動かした状態の使用は 169MB だった |
 | relay で, 大きいファイルと streaming を運べる | 本文を小分けにして送る取り決めを最小の形で作り, 数百 MB のファイルと Range の要求を通す. upload の大きさの上限も確かめる | 未実施 |
 | relay への WebSocket が切れた後と, アプリが前面に戻った後に, 自動で繋ぎ直せる | 回線を切る, アプリを背景に回す, relay を配備し直す, の3つで繋ぎ直しを見る | 未実施 |
-| tctiSH の QEMU で, arm64 の guest が JIT 無しで動く | arm64 の Alpine と Docker を Mac の上の QEMU で動かして, x86_64 と速さを比べる | 未実施 |
+| tctiSH の QEMU で, arm64 の guest が JIT 無しで動く | arm64 の Alpine と Docker を Mac の上の QEMU で動かして, x86_64 と速さを比べる | 確認済み, ただし Mac の上だけ (2026-10-18). tctiSH の fork の source から `aarch64-softmmu` を TCTI でビルドして, arm64 の Alpine 3.24.2 が起動し, Docker 29.8.2 で arm64 の `python:3-alpine` が動いた. 同じ source の x86_64 用 QEMU と比べて (4 CPU, 各5回の中央値), Python の loop, md5, zlib の所要時間の比 (arm64 / x86_64) は 0.93 から 1.09 だった. 実機では試していない. 実機の app の QEMU は x86_64 用なので, app の build の変更が要る. 比べた x86_64 の guest は Alpine の `virt` kernel で, tctiSH の自前の kernel ではない. 手順と数字は [検証記録](../spikes/011-arm64-guest/README.md) に残した |
