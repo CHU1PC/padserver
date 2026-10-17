@@ -7,6 +7,15 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 
 clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツールが入り, commit hook が有効になります.
 
+## guest kernel の再ビルド確認
+
+tctiSH の設定を変えずに Linux 上で kernel をビルドし、Mac の QEMU で guest を起動できました。ビルド手順と固定した入力は [検証記録](spikes/007-guest-rebuild/README.md) にあります。
+
+```text
+# uname -a
+Linux tctiSH 6.18.53tctish #1 SMP Tue Jan  1 00:00:00 UTC 1980 x86_64 Linux
+```
+
 ## ファイル置き場の保存 port
 
 内部の `StoredFile` はファイル名とバイト数を表します。`FileStore` はファイルの保存、取得、一覧、削除を扱い、`ShareLinkStore` はファイルに結び付いた期限付きリンクの保存と失効を扱います。実際の保存処理は後続の Issue で実装します。
