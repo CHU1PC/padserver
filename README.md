@@ -617,3 +617,24 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### 共有リンクの保存
+
+共有リンクを、ファイルに保存できます。
+URL の秘密の部分は SHA-256 の小文字16進の hash だけを保存し、元の値はファイルに残しません。
+hash から探す、ファイル名ごとに一覧する、1件または1ファイル分をまとめて消す、の操作ができます。
+書き込みは一時ファイルを経由した原子的な置換で、途中で失敗しても元のファイルは変わりません。
+
+試験の出力です。
+
+```text
+$ swift test --package-path Packages/PadServerCore -j 3 --filter fileShareLinkStore
+✔ Test fileShareLinkStoreDoesNotWriteRawSecretToDisk() passed
+✔ Test fileShareLinkStoreFailedWriteLeavesFileUnchanged() passed
+✔ Test fileShareLinkStoreRemovesOneLinkById() passed
+✔ Test fileShareLinkStoreRemovesAllLinksOfFile() passed
+✔ Test fileShareLinkStorePersistsAndFindsLinkBySecretHash() passed
+✔ Test fileShareLinkStoreSavingSameIdReplacesRecord() passed
+✔ Test fileShareLinkStoreListsLinksPerFile() passed
+✔ Test run with 7 tests in 0 suites passed
+```
