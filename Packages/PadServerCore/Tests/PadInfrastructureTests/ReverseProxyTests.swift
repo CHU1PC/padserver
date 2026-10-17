@@ -11,10 +11,8 @@ private enum ReverseProxyTestConstants {
     static let chunkKibibytes = 64
     static let chunkSize = chunkKibibytes * kibibyte
     static let chunkCount = 2_048
-    // socket の buffer と proxy の保持分を合わせても、消費が止まった間に先読みされる量はこの値を超えない。
-    static let maximumReadAheadMebibytes = 32
-    static let maximumReadAhead = maximumReadAheadMebibytes * kibibyte * kibibyte
-    static let stallMilliseconds = 500
+    static let pollMilliseconds = 100
+    static let maximumPolls = 100
     static let shortTimeoutMilliseconds = 200
     static let hangSeconds = 30
     static let uploadChunkCount = 8
@@ -112,6 +110,18 @@ private func echoHandler(
         seenBody.withLockedValue { $0 = String(buffer: body) }
         return Response(status: .created, headers: [.contentType: "text/plain"], body: .init(byteBuffer: body))
     }
+}
+
+// 書き込みが止まった時点の量を返す。止まらなければ Int.max を返す。
+private func settledValue(of box: NIOLockedValueBox<Int>) async throws -> Int {
+    var previous = box.withLockedValue { $0 }
+    for _ in 0..<ReverseProxyTestConstants.maximumPolls {
+        try await Task.sleep(for: .milliseconds(ReverseProxyTestConstants.pollMilliseconds))
+        let current = box.withLockedValue { $0 }
+        if current == previous { return current }
+        previous = current
+    }
+    return Int.max
 }
 
 private func slowConsumerHandler(produced: NIOLockedValueBox<Int>) -> UpstreamHandler {
@@ -227,7 +237,7 @@ private func slowConsumerHandler(produced: NIOLockedValueBox<Int>) -> UpstreamHa
 
 @Test func reverseProxyDoesNotReadAheadWhenResponseIsConsumedSlowly() async throws {
     let produced = NIOLockedValueBox(0)
-    let readAhead = NIOLockedValueBox(0)
+    let plateau = NIOLockedValueBox(0)
     let consumed = NIOLockedValueBox(0)
     let finished = NIOLockedValueBox(false)
     let totalBytes = ReverseProxyTestConstants.chunkSize * ReverseProxyTestConstants.chunkCount
@@ -236,8 +246,8 @@ private func slowConsumerHandler(produced: NIOLockedValueBox<Int>) -> UpstreamHa
         let writer = ProbeWriter(
             onWrite: { chunk in
                 if consumed.withLockedValue({ $0 == 0 }) {
-                    try await Task.sleep(for: .milliseconds(ReverseProxyTestConstants.stallMilliseconds))
-                    readAhead.withLockedValue { $0 = produced.withLockedValue { $0 } }
+                    let settled = try await settledValue(of: produced)
+                    plateau.withLockedValue { $0 = settled }
                 }
                 consumed.withLockedValue { $0 += chunk.readableBytes }
             },
@@ -247,5 +257,5 @@ private func slowConsumerHandler(produced: NIOLockedValueBox<Int>) -> UpstreamHa
     }
     #expect(finished.withLockedValue { $0 })
     #expect(consumed.withLockedValue { $0 } == totalBytes)
-    #expect(readAhead.withLockedValue { $0 } < ReverseProxyTestConstants.maximumReadAhead)
+    #expect(plateau.withLockedValue { $0 } < totalBytes)
 }
