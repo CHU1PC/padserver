@@ -227,6 +227,19 @@ PADSERVER_KEYCHAIN_INTEGRATION=1 swift test --package-path Packages/PadServerCor
 ✔ Test run with 1 test in 1 suite passed after 0.072 seconds.
 ```
 
+## プロジェクトごとの secret 管理
+
+内部部品の `ManageSecrets` は、プロジェクトごとに secret の値を設定し、名前の一覧を返し、指定した secret を削除します。
+一覧には値を含めず、同じ名前を別のプロジェクトで使っても内容を分けます。
+
+`swift test --package-path Packages/PadServerCore --filter manageSecrets` の出力です。
+
+```text
+✔ Test manageSecretsRemovesOnlyNamedProjectSecret() passed after 0.001 seconds.
+✔ Test manageSecretsKeepsValuesPerProjectAndListsOnlyNames() passed after 0.001 seconds.
+✔ Test run with 2 tests in 0 suites passed after 0.001 seconds.
+```
+
 ## 古い release の掃除
 
 内部部品の `PruneReleases` は, プロジェクトごとに保存順で直近3つの release を残します.
