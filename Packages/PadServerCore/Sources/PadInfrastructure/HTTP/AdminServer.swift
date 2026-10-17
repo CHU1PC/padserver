@@ -35,17 +35,14 @@ public struct AdminRequestContext: RequestContext, RemoteAddressRequestContext {
 
 public enum AdminServerError: Error, Equatable, Sendable {
     case portsMustBeDistinct
+    case invalidTailnetAddress
 }
 
 public enum AdminServer {
-    private enum Constants {
-        // 管理接続は全 interface で受け、認可は #70 の middleware が行う。
-        static let bindHost = "0.0.0.0"
-    }
-
     public static func makeApplication(
         adminPort: Int,
         deliveryPort: Int,
+        tailnetAddress: String,
         configureRoutes: (Router<AdminRequestContext>) -> Void = { _ in
             // 管理 endpoint は後続 Issue の責務として追加する。
         }
@@ -53,12 +50,16 @@ public enum AdminServer {
         guard adminPort != deliveryPort else {
             throw AdminServerError.portsMustBeDistinct
         }
+        guard ClientAddress(tailnetAddress).isInTailnet else {
+            throw AdminServerError.invalidTailnetAddress
+        }
 
+        // 接続元と token による認可は #70 の middleware が行う。
         let router = Router(context: AdminRequestContext.self)
         configureRoutes(router)
         return Application(
             responder: router.buildResponder(),
-            configuration: .init(address: .hostname(Constants.bindHost, port: adminPort))
+            configuration: .init(address: .hostname(tailnetAddress, port: adminPort))
         )
     }
 }
