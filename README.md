@@ -195,6 +195,24 @@ token の内容は `timingsafe_bcmp` で比較します。
 | [docs/pull-requests.md](docs/pull-requests.md) | PR の作り方と, merge の規則. 全ての PR で README を更新する |
 | [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) | merge 係の手順と, Codex との連絡の規則 (同じ内容) |
 
+PadServer は任意のドメインを relay に割り当てる手順を提供します。どのドメインを使い、Cloudflare にどう向けるかは、利用者が決めます。特定のドメインの設定は製品の範囲外です。[決定記録](docs/decisions.md) と [計画](docs/roadmap.md) に同じ境界を記録しました。
+
+文書の整合性は、次の検査で確認します。
+
+```text
+$ pre-commit run --all-files
+SwiftLint................................................................Passed
+Swift format.............................................................Passed
+Markdown lint............................................................Passed
+YAML lint................................................................Passed
+ShellCheck...............................................................Passed
+Shell format.............................................................Passed
+GitHub Actions lint......................................................Passed
+zizmor audit.............................................................Passed
+Gitleaks.................................................................Passed
+Typos....................................................................Passed
+```
+
 配備の実装では、[docs/admin-api.md](docs/admin-api.md) の例に従い、`ProjectManifest.root` からの相対 path を指定できます。`root` が `dist` の場合、`dist/index.html` の送信 path は `index.html` です。次の JSON は修正した配備例の抜粋です。
 
 ```json
