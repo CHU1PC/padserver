@@ -37,7 +37,7 @@ private func expectError(
 }
 
 @Test func adminErrorMiddlewareMapsFailuresToSpecifiedErrors() async throws {
-    let blob = BlobHash(String(repeating: "a", count: 64))
+    let blob = try BlobHash(String(repeating: "a", count: 64))
     let cases = [
         ErrorCase(error: CommitDeployment.Failure.blobNotFound(blob), status: .conflict, code: .deploymentIncomplete),
         ErrorCase(
