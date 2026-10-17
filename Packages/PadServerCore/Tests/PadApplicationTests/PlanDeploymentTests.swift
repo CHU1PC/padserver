@@ -6,8 +6,8 @@ import Testing
 
 @Test func planDeploymentOmitsStoredBlobs() async throws {
     let storage = PadTestSupport.InMemoryProjectStorage()
-    let storedFile = ReleaseManifestFile(path: "stored.txt", blob: BlobHash("stored"))
-    let missingFile = ReleaseManifestFile(path: "missing.txt", blob: BlobHash("missing"))
+    let storedFile = try ReleaseManifestFile(path: "stored.txt", blob: try fixtureBlobHash("stored"))
+    let missingFile = try ReleaseManifestFile(path: "missing.txt", blob: try fixtureBlobHash("missing"))
     try await storage.saveBlob(storedFile.blob, from: EmptyBodyStream())
 
     let result = try await PlanDeployment(storage: storage).missingBlobs(from: [storedFile, missingFile])
@@ -17,8 +17,8 @@ import Testing
 
 @Test func planDeploymentReturnsEmptyWhenAllBlobsAreStored() async throws {
     let storage = PadTestSupport.InMemoryProjectStorage()
-    let firstFile = ReleaseManifestFile(path: "first.txt", blob: BlobHash("first"))
-    let secondFile = ReleaseManifestFile(path: "second.txt", blob: BlobHash("second"))
+    let firstFile = try ReleaseManifestFile(path: "first.txt", blob: try fixtureBlobHash("first"))
+    let secondFile = try ReleaseManifestFile(path: "second.txt", blob: try fixtureBlobHash("second"))
     try await storage.saveBlob(firstFile.blob, from: EmptyBodyStream())
     try await storage.saveBlob(secondFile.blob, from: EmptyBodyStream())
 
@@ -45,9 +45,9 @@ private struct EmptyBodyStream: HTTPBodyStream {
 
 @Test func planDeploymentDeduplicatesByBlobAndPreservesFirstReferenceOrder() async throws {
     let storage = PadTestSupport.InMemoryProjectStorage()
-    let firstFile = ReleaseManifestFile(path: "first.txt", blob: BlobHash("shared"))
-    let duplicateFile = ReleaseManifestFile(path: "duplicate.txt", blob: BlobHash("shared"))
-    let nextFile = ReleaseManifestFile(path: "next.txt", blob: BlobHash("next"))
+    let firstFile = try ReleaseManifestFile(path: "first.txt", blob: try fixtureBlobHash("shared"))
+    let duplicateFile = try ReleaseManifestFile(path: "duplicate.txt", blob: try fixtureBlobHash("shared"))
+    let nextFile = try ReleaseManifestFile(path: "next.txt", blob: try fixtureBlobHash("next"))
 
     let result = try await PlanDeployment(storage: storage).missingBlobs(
         from: [firstFile, duplicateFile, nextFile])

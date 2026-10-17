@@ -637,18 +637,146 @@ $ swift test --package-path Packages/PadServerCore --filter storeFile
 ✔ Test storeFileRejectsInvalidNamesWithoutSaving(name:) with 8 test cases passed
 ✔ Test run with 6 tests in 0 suites passed
 
-### 管理 API のログ streaming
+### guest の port の転送
 
-管理用 port で `GET /v1/logs/stream` を呼ぶと、直近のログを返した後、繋いだまま新しいログを流します。
-応答は `200` の `application/x-ndjson` で、1行に `LogEntry` を1件ずつ書きます。
-接続を切ると、ログ bus の購読が外れます。
+guest の port を、アプリの中の loopback (127.0.0.1) の空いた port に出せます。
+出した host 側の port を返し、その port を指定して外すこともできます。
+loopback 以外の住所には出しません。
+
+### 管理 API のエラー応答
+
+認証を通過した管理 API の要求で起きた失敗を、仕様のエラーの形 (`{"error": {"code", "message"}}`) の JSON に変えます。
+配備の blob 不足は 409、入力の不正は 400、大きすぎる本文は 413、存在しない endpoint は 404 で返します。
+想定外の失敗は 500 の `internal_error` にして、パスや stack trace は応答に含めません。
+
+試験の出力です。
+
+```text
+$ swift test --package-path Packages/PadGuest -j 3
+✔ Test portForwarderAllocatesFreeLoopbackPort() passed
+✔ Test portForwarderPropagatesMonitorFailure() passed
+✔ Test portForwarderOpensAndClosesLoopbackForward() passed
+✔ Test run with 10 tests in 0 suites passed
+
+### padctl の管理 API client
+
+`padctl` に管理 API の client を足しました。`padctl login` で保存した接続先と、Keychain の token を読み、全要求に `Authorization: Bearer` header を付けて管理 API を呼びます。
+配備の差分確認、blob の送信、配備の確定、プロジェクトの一覧、開始、停止、ログの streaming を呼べます。
+サーバーのエラー応答と接続の失敗は、`padctl login` をやり直す、tailnet から接続する、のように次の行動が分かる英語の文にします。token は文に含めません。
+ログの streaming は、1行1件の JSON を `LogEntry` に変えて、届いた順に返します。
+
+実際の URLSession を通し、応答だけを差し替えた試験で確認しました。
+
+```text
+$ swift test --package-path cli -j 3
+✔ Test clientRequiresSavedConfigAndToken(token:hasConfig:) with 6 test cases passed.
+✔ Test commitDeploymentExpectsCreatedStatus() passed.
+✔ Test commitDeploymentRejectsUnexpectedSuccessStatus() passed.
+✔ Test connectionFailureIsReadableAndDoesNotExposeToken() passed.
+✔ Test diffDeploymentPostsManifestAndFilesAndDecodesMissingBlobs() passed.
+✔ Test listProjectsSendsBearerTokenAndDecodesResponse() passed.
+✔ Test nonAdminErrorBodyFallsBackToStatusSentence() passed.
+✔ Test run with 37 tests in 0 suites passed.
+✔ Test serverErrorsBecomeReadableSentences() passed.
+✔ Test startAndStopPostToProjectPathWithoutBody() passed.
+✔ Test streamLogsReportsMalformedLineAsInvalidResponse() passed.
+✔ Test streamLogsThrowsReadableErrorForNonSuccessStatus() passed.
+✔ Test streamLogsYieldsEntriesAcrossChunkBoundaries() passed.
+✔ Test undecodableSuccessBodyIsInvalidResponse() passed.
+✔ Test uploadBlobPutsFileContentAsOctetStream(status:) with 2 test cases passed.
+
+### 管理 API のプロジェクト状態
+
+管理用 port で、プロジェクトの一覧と稼働状態の取得、開始、停止ができます。
+3つの endpoint は認証の middleware の内側に置かれ、token が無い要求は 401 になります。
+
+| Method | Path | 応答 |
+| --- | --- | --- |
+| `GET` | `/v1/projects` | `200`、プロジェクトごとの `project`、`activeRelease`、`running` |
+| `POST` | `/v1/projects/{name}/start` | `200`、更新後の状態 |
+| `POST` | `/v1/projects/{name}/stop` | `200`、更新後の状態 |
+
+名前が不正なら 400 (`invalid_request`)、存在しないプロジェクトなら 404 (`project_not_found`) を返します。
 
 Router に載せた状態で確認した試験の出力です。
 
 ```text
-$ swift test --package-path Packages/PadServerCore --filter logController
-✔ Test logControllerReleasesSubscriptionWhenConnectionEnds() passed.
-✔ Test logControllerStreamsReplayedEntriesAsNDJSON() passed.
-✔ Test logControllerSendsNewEntriesAfterReplayInArrivalOrder() passed.
-✔ Test run with 3 tests in 0 suites passed.
+$ swift test --package-path Packages/PadServerCore --filter projectController
+✔ Test projectControllerRoutesRequireAdminAuthentication() passed.
+✔ Test projectControllerReturnsEmptyListWithoutProjects() passed.
+✔ Test projectControllerEncodesMissingActiveReleaseAsNull() passed.
+✔ Test projectControllerReturnsNotFoundForUnknownProject(action:) with 2 test cases passed.
+✔ Test projectControllerRejectsInvalidProjectName(action:) with 2 test cases passed.
+✔ Test projectControllerListsProjectsWithActiveReleaseAndRunState() passed.
+✔ Test projectControllerStopsAndStartsProjectAndReturnsUpdatedStatus() passed.
+✔ Test run with 7 tests in 0 suites passed.
+
+### blob hash とファイルパスの検証
+
+blob の hash と release のファイルパスは、値を作るときと JSON を decode するときに同じ条件で検証します。
+hash は SHA-256 の小文字16進64桁だけを受け付けます。
+ファイルパスは release 内の相対パスだけを受け付け、絶対パス、`..` による親ディレクトリへの移動、空の要素、バックスラッシュ、制御文字を拒否します。
+保存側の `FileBlobStore` は hash をファイル名に使うため、不正な値が保存先のパスに届きません。
+
+正常値の encode と decode の一致と、不正値の拒否を試験で確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore -j 3 --filter StorageValidation
+✔ Test blobHashAcceptsLowercaseSHA256HexAndRoundTrips() passed.
+✔ Test releaseManifestFileAcceptsRelativePathsAndRoundTrips(path:) with 8 test cases passed.
+✔ Test releaseManifestDecodeRejectsInvalidHashInFile() passed.
+✔ Test blobHashRejectsInvalidValuesOnInitAndDecode(value:) with 11 test cases passed.
+✔ Test releaseManifestFileRejectsUnsafePathsOnInitAndDecode(path:) with 19 test cases passed.
+✔ Test run with 5 tests in 0 suites passed.
+
+### 管理 API: 配備の問い合わせと確定
+
+管理 API に、配備の差分を答える endpoint と、配備を確定する endpoint を足しました。
+`DeployController.addRoutes(to:)` を `AdminServer.makeApplication` の `configureRoutes` に渡すと、次の 2 つが認証の middleware の内側で動きます。
+
+| Method | Path | 結果 |
+| --- | --- | --- |
+| `POST` | `/v1/projects/{name}/deployments/diff` | `200` と、端末側に無い blob の一覧 (`missingBlobs`) |
+| `POST` | `/v1/projects/{name}/deployments` | 全 blob が揃っていれば `201` と新しい release。足りなければ `409` |
+
+JSON が不正な場合、manifest の名前が path の `{name}` と違う場合、`{name}` が不正な場合は、`400` を返します。
+中身は `docs/admin-api.md` の 4.1 と 4.3 に合わせています。
+
+実際の router を通す試験で、差分、確定、`409`、`400`、認証の有無を確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore -j 3
+✔ Test diffReturnsOnlyBlobsMissingFromStorage() passed
+✔ Test diffReturnsEmptyListWhenAllBlobsExist() passed
+✔ Test commitCreatesActiveReleaseWhenAllBlobsExist() passed
+✔ Test commitRejectsMissingBlobWithConflictAndKeepsReleases() passed
+✔ Test deploymentEndpointsRejectInvalidInput(suffix:) with 2 test cases passed
+✔ Test deploymentEndpointsRequireAdminAuthorization(uri:) with 2 test cases passed
+✔ Test run with 170 tests in 2 suites passed
+
+$ swift test --package-path Packages/PadServerCore --filter adminErrorMiddleware
+✔ Test adminErrorMiddlewarePassesSuccessfulResponses() passed
+✔ Test adminErrorMiddlewareReturnsUnknownEndpointAsNotFoundJSON() passed
+✔ Test adminErrorMiddlewareHidesInternalDetails() passed
+✔ Test adminErrorMiddlewareMapsFailuresToSpecifiedErrors() passed
+✔ Test run with 4 tests in 0 suites passed
+
+### 共有リンクの発行と失効
+
+ファイルごとに、推測できない秘密を持つ共有リンクを、期限付きで発行できます。
+発行した秘密は発行時に一度だけ返し、保存するのは SHA-256 の hash だけです。
+リンクは ID を指定して失効させられます。存在しないファイルには発行できません。
+
+use case の試験で、発行、hash だけの保存、失効を確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore -j 3
+✔ Test issueReturnsLinkExpiringAfterGivenDuration() passed
+✔ Test issueStoresOnlyHashOfSecret() passed
+✔ Test secretHashIsStableSha256Hex() passed
+✔ Test issueRejectsMissingFileAndStoresNothing() passed
+✔ Test defaultSecretIs256BitHexAndUnique() passed
+✔ Test revokeRemovesOnlyTheGivenLink() passed
+✔ Test revokeUnknownLinkSucceeds() passed
+✔ Test run with 171 tests in 2 suites passed
 ```
