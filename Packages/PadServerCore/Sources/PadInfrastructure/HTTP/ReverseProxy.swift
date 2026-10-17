@@ -1,7 +1,7 @@
 import AsyncAlgorithms
 import Foundation
 import HTTPTypes
-import Hummingbird
+import HummingbirdCore
 import NIOCore
 import NIOHTTP1
 import NIOHTTPTypes
