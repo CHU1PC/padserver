@@ -17,6 +17,17 @@ clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツール�
 ✔ Test storedFileKeepsNameAndByteSize() passed
 ```
 
+## 実装の担当
+
+コードや文書を書く Issue は、型と port も含めて Codex の実装者が担当します。Codex が確認して PR を作り、所有者か指名された merge 係が merge します。この変更は [決定記録](docs/decisions.md) の項目83に残しています。
+
+`pre-commit run --all-files` で文書を検査した出力です。
+
+```text
+Markdown lint............................................................Passed
+Typos....................................................................Passed
+```
+
 ## 管理 API の通信型
 
 内部の `PadInterface` は、配備の差分確認と確定、プロジェクトの一覧と開始や停止、ログ1件、エラー応答の JSON 形式を表します。管理 API 自体の接続口は後続の実装で用意します。
