@@ -206,6 +206,19 @@ hash 名のシンボリックリンクを拒否し, 最初の読み出し前に�
 ✔ Test run with 2 tests in 0 suites passed after 0.001 seconds.
 ```
 
+## QEMU monitor の操作
+
+`PadGuest` の `QEMUMonitor` は、端末内の HMP `localhost:10045` に接続して VM の状態を取得します。guest の通常停止には `system_powerdown` を送り、強制終了には `quit` を送ります。port 転送は `hostfwd_add` と `hostfwd_remove` で操作し、追加後は `info usernet` で反映を確認します。`stop` による一時停止と、停止を待って強制終了へ切り替える処理は含めません。
+
+`swift test --package-path Packages/PadGuest --filter qemuMonitor` で、ローカルの偽 HMP サーバーが受け取ったコマンドと返答の処理を確認した結果です。
+
+```text
+✔ Test qemuMonitorReportsPausedStateAndCommandFailure() passed
+✔ Test qemuMonitorRejectsUninstalledPortForward() passed
+✔ Test qemuMonitorSendsHMPCommandsToLoopback() passed
+✔ Test run with 3 tests in 0 suites passed
+```
+
 ## ライセンス
 
 MIT です. [LICENSE](LICENSE) にあります.
