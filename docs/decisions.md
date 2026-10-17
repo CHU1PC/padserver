@@ -133,7 +133,7 @@ feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に項
 | tctiSH の設定を変えずに kernel を再ビルドし, Mac の QEMU で guest を起動できる | Linux x86_64 で tctiSH の `assets/build_kernel.sh` を実行し, 生成した `bzImage` を Mac の QEMU fork で起動して `uname -a` を見る | 確認済み (2026-10-17). `Linux tctiSH 6.18.53tctish #1 SMP Tue Jan  1 00:00:00 UTC 1980 x86_64 Linux` が返った. 入力の固定値と手順は [検証記録](../spikes/007-guest-rebuild/README.md) に残した |
 | Kikitoru の backend と worker の image が, guest の Docker の上で, 実用になる時間で起動して応答する | Kikitoru の image を linux/amd64 でビルドして, Postgres と一緒に動かす. Mac の上の同じ QEMU で試してから, 本番機で試す | 未実施. 本番機で動かしたのは, 小さな FastAPI のアプリだけである |
 | guest の Linux を作り直すと, Docker の既定のネットワーク, `docker exec`, `docker compose` が動く | kernel に netfilter, bridge, veth を入れ, 起動の処理が root を切り替える方法を直して, Mac の上の同じ QEMU で試す | 未実施 |
-| Mac でビルドした linux/amd64 の image を, iPad の Docker へ送って読み込める | Mac で `--platform linux/amd64` を付けてビルドし, 送って読み込む時間を測る | 未実施 |
+| Mac でビルドした linux/amd64 の image を, iPad の Docker へ送って読み込める | Mac で `--platform linux/amd64` を付けてビルドし, 送って読み込む時間を測る | Mac の上の QEMU の guest では確認済み (2026-10-17). 約100MB の tar は, 書き出しが 2.1 秒, guest への読み込みが 1 分 14 秒だった. 約500MB の tar は, 書き出しが 9.5 秒, 読み込みが 5 分 30 秒だった. 本番機の iPad へ tailnet 越しに送る場合は未実施 (M1-7). 手順と出力は [検証記録](../spikes/008-image-transfer/README.md) に残した |
 | container を動かしたまま, 何日も動かし続けられる | container を3つ動かしたまま丸1日以上置いて, 応答, メモリ, 発熱を見る | 未実施. 動かしたのは約12分である |
 | アプリが背景に回った後と, 前面に戻った後に, guest と container が動き続ける | アクセスガイドの有り無しで, 背景に回す, 画面をロックする, 通知を受ける, の3つを試す | 未実施. tctiSH は, 背景に回ると状態を保存して, 動いていたプログラムを失うと書いている |
 | 無料の Apple ID の権限で, guest に必要なだけのメモリを与えられる | guest のメモリを 2GB, 3GB, 4GB にして起動し, container を増やしてアプリが落ちないかを見る | 未実施. 手がかりとして, アプリの既定では guest のメモリは 1GB で, container を3つ動かした状態の使用は 169MB だった |
