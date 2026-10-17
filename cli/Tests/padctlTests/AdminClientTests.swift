@@ -10,6 +10,8 @@ private let exampleRelease =
     #"{"id":"00000000-0000-4000-8000-000000000001","project":"example-site","state":"active"}"#
 private let exampleStatus = #"{"project":\#(exampleProject),"activeRelease":\#(exampleRelease),"running":true}"#
 
+private let validHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
 @Test func listProjectsSendsBearerTokenAndDecodesResponse() async throws {
     let server = StubServer(.json(status: 200, body: #"{"projects":[\#(exampleStatus)]}"#))
     let client = try server.makeClient(token: "dummy-token")
@@ -39,7 +41,7 @@ private let exampleStatus = #"{"project":\#(exampleProject),"activeRelease":\#(e
 }
 
 @Test func diffDeploymentPostsManifestAndFilesAndDecodesMissingBlobs() async throws {
-    let missing = #"{"missingBlobs":[{"path":"index.html","hash":"abc"}]}"#
+    let missing = #"{"missingBlobs":[{"path":"index.html","hash":"\#(validHash)"}]}"#
     let server = StubServer(.json(status: 200, body: missing))
     let client = try server.makeClient()
     let request = try makeDeploymentRequest()
@@ -92,11 +94,11 @@ func uploadBlobPutsFileContentAsOctetStream(status: Int) async throws {
         }
     }
 
-    try await client.uploadBlob(hash: BlobHash("abc/def"), file: file)
+    try await client.uploadBlob(hash: BlobHash(validHash), file: file)
 
     let sent = try #require(server.requests.first)
     #expect(sent.method == "PUT")
-    #expect(sent.path == "/v1/blobs/abc%2Fdef")
+    #expect(sent.path == "/v1/blobs/\(validHash)")
     #expect(sent.contentType == "application/octet-stream")
     #expect(sent.authorization == "Bearer dummy-token")
     #expect(sent.body == Data("hello".utf8))
@@ -246,6 +248,6 @@ private func makeDeploymentRequest() throws -> AdminDeploymentRequest {
     )
     return try AdminDeploymentRequest(
         manifest: ProjectManifest(name: name, root: "dist", routes: [route]),
-        files: [AdminDeploymentFile(path: "index.html", hash: BlobHash("abc"))]
+        files: [AdminDeploymentFile(path: "index.html", hash: BlobHash(validHash))]
     )
 }
