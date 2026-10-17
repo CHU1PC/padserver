@@ -1,5 +1,6 @@
 import Foundation
-import Hummingbird
+import HummingbirdCore
+import HTTPTypes
 import PadApplication
 
 public struct RangeResponder: Sendable {
