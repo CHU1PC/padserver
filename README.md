@@ -214,6 +214,16 @@ hash 名のシンボリックリンクを拒否し, 最初の読み出し前に�
 引数の並びは, 検証で使った tctiSH の実機向け起動コードに合わせています. QEMU の起動自体は後続の作業です.
 guest disk は `-drive` の `format=raw` で raw 形式として読み込みます。これは #126 の raw 疎ファイルと形式をそろえるためです。
 
+`GuestDisk.createIfNeeded(sizeBytes:)` は、指定した容量の raw 疎ファイルを Application Support 内の `PadServer/GuestDisk` に初回だけ作ります。この専用ディレクトリはバックアップの対象から外します。2回目は既存の disk をそのまま返すため、保存済みの内容と容量を保ちます。
+
+`swift test --package-path Packages/PadGuest` で、疎ファイル、バックアップの除外、2回目の保持を確認した出力です。
+
+```text
+✔ Test guestDiskDoesNotReplaceExistingFileOnSecondLaunch() passed after 0.011 seconds.
+✔ Test guestDiskCreatesSparseRawFileOutsideBackup() passed after 0.012 seconds.
+✔ Test run with 7 tests in 0 suites passed after 0.012 seconds.
+```
+
 `swift test --package-path Packages/PadGuest` で並びを照合した出力です.
 
 ```text
