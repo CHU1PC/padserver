@@ -637,6 +637,21 @@ $ swift test --package-path Packages/PadServerCore --filter storeFile
 ✔ Test storeFileRejectsInvalidNamesWithoutSaving(name:) with 8 test cases passed
 ✔ Test run with 6 tests in 0 suites passed
 
+### guest の port の転送
+
+guest の port を、アプリの中の loopback (127.0.0.1) の空いた port に出せます。
+出した host 側の port を返し、その port を指定して外すこともできます。
+loopback 以外の住所には出しません。
+
+試験の出力です。
+
+```text
+$ swift test --package-path Packages/PadGuest -j 3
+✔ Test portForwarderAllocatesFreeLoopbackPort() passed
+✔ Test portForwarderPropagatesMonitorFailure() passed
+✔ Test portForwarderOpensAndClosesLoopbackForward() passed
+✔ Test run with 10 tests in 0 suites passed
+
 ### padctl の管理 API client
 
 `padctl` に管理 API の client を足しました。`padctl login` で保存した接続先と、Keychain の token を読み、全要求に `Authorization: Bearer` header を付けて管理 API を呼びます。
