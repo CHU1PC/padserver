@@ -33,14 +33,8 @@ enum AdminClientError: Error, CustomStringConvertible, Equatable {
         case .forbidden:
             "The server refused this device. Connect from inside the tailnet."
 
-        case .projectNotFound:
-            "The project was not found on the server."
-
-        case .fileNotFound:
-            "The file was not found on the server."
-
-        case .shareLinkNotFound:
-            "The share link was not found on the server."
+        case .projectNotFound, .fileNotFound, .shareLinkNotFound:
+            describeNotFound(code)
 
         case .deploymentIncomplete:
             "The deployment is incomplete: some blobs are missing or the project cannot take this action now."
@@ -56,6 +50,19 @@ enum AdminClientError: Error, CustomStringConvertible, Equatable {
 
         case nil:
             "The server returned HTTP \(status)."
+        }
+    }
+
+    private static func describeNotFound(_ code: AdminErrorCode?) -> String {
+        switch code {
+        case .fileNotFound:
+            "The file was not found on the server."
+
+        case .shareLinkNotFound:
+            "The share link was not found on the server."
+
+        default:
+            "The project was not found on the server."
         }
     }
 }
