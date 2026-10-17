@@ -212,6 +212,7 @@ hash 名のシンボリックリンクを拒否し, 最初の読み出し前に�
 
 `PadGuest` の `QEMUArguments` は, メモリ, CPU 数, kernel, initrd, disk, network の設定から QEMU の引数を組み立てます.
 引数の並びは, 検証で使った tctiSH の実機向け起動コードに合わせています. QEMU の起動自体は後続の作業です.
+guest disk は `-drive` の `format=raw` で raw 形式として読み込みます。これは #126 の raw 疎ファイルと形式をそろえるためです。
 
 `swift test --package-path Packages/PadGuest` で並びを照合した出力です.
 
@@ -219,6 +220,12 @@ hash 名のシンボリックリンクを拒否し, 最初の読み出し前に�
 ✔ Test qemuArgumentsMatchIPadLauncherOptionOrder() passed after 0.001 seconds.
 ✔ Test packageNamespaceIsAvailableToConsumers() passed after 0.001 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.001 seconds.
+```
+
+`format=raw` を含む引数の試験結果です。
+
+```text
+✔ Test qemuArgumentsMatchIPadLauncherOptionOrder() passed after 0.001 seconds.
 ```
 
 ## QEMU monitor の操作
