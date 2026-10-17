@@ -7,7 +7,8 @@ struct Padctl: AsyncParsableCommand {
         abstract: "Manage a PadServer instance from the command line.",
         version: "0.1.0",
         subcommands: [
-            Login.self, Reinstall.self, Start.self, Stop.self, StatusCommand.self, Logs.self, Share.self,
+            Login.self, Reinstall.self, Deploy.self, Start.self, Stop.self, StatusCommand.self, Logs.self,
+            Share.self,
         ],
     )
 }
