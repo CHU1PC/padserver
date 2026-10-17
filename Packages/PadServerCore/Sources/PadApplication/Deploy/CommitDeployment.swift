@@ -1,6 +1,6 @@
 import PadDomain
 
-public struct CommitDeployment {
+public struct CommitDeployment: Sendable {
     public enum Failure: Error, Equatable {
         case blobNotFound(BlobHash)
     }
