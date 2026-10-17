@@ -26,10 +26,10 @@ mount --bind / /var/tcti-rootfs/ro-root
 
 if grep -q "tcti_disk=file" /proc/cmdline; then
 	if ! mount -o discard /dev/vda "$ios"; then
-		# 何かが入っている disk は, 壊さないために作り直さない.
-		fs_type=$(blkid /dev/vda 2>/dev/null || true)
-		if [ -n "$fs_type" ]; then
-			echo "The persistent disk has a filesystem but could not be mounted."
+		# busybox の blkid は何も見つからなくても 0 を返すので, 出力と先頭 1 MiB が全部 0 かで判定し, 読めない disk も作り直さない.
+		fs_info=$(blkid /dev/vda 2>/dev/null || true)
+		if [ -n "$fs_info" ] || ! cmp -s -n 1048576 /dev/vda /dev/zero; then
+			echo "The persistent disk is not empty or could not be read."
 			echo "Refusing to reformat it. Changes made in this session will NOT persist."
 		else
 			echo "The persistent disk holds no filesystem. Creating one."
