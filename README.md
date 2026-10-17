@@ -438,6 +438,22 @@ $ PADCTL_KEYCHAIN_INTEGRATION=1 swift test --package-path cli
 ✔ Test run with 19 tests in 0 suites passed after 0.079 seconds.
 ```
 
+### iPad アプリの入れ直し
+
+`padctl reinstall` は repo の直下で実行します。設定ファイルの `deviceID` は利用者が編集して指定します。コマンドは `xcodegen` で Xcode project を生成し、scheme `PadServer` の `Debug` を実機向けにビルドして、`xcrun devicectl` でその端末へ `PadServer.app` を入れ直します。ビルド成果物は一時ディレクトリに置き、処理後に削除します。
+
+```sh
+swift run --package-path cli padctl reinstall
+```
+
+外部コマンドを記録する試験で、コマンドの順序、指定する端末 ID、ビルド成果物の path を確認しています。実機での入れ直しは M2-54 で確認します。
+
+```text
+✔ Test reinstallCommandIsRegistered() passed
+✔ Test reinstallBuildsAndInstallsAppForConfiguredDevice() passed
+✔ Test reinstallRequiresDeviceIDBeforeRunningCommands() passed
+```
+
 ### loopback の配信入口
 
 `ServingServer` は Hummingbird を `127.0.0.1` だけで待ち受けるよう構成します。
