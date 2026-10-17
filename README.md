@@ -617,3 +617,26 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### ファイル置き場の管理 API の仕様と通信の型
+
+管理 API の仕様 (`docs/admin-api.md` の7章) と通信の型 (`AdminAPI.swift`) に、ファイル置き場の分を足しました。
+ファイルの送信、取得、一覧、削除と、共有リンクの発行、一覧、失効の endpoint と、その JSON の形が決まります。
+endpoint の実装はまだありません。この変更で、後続の実装と `padctl` が同じ型を使えるようになります。
+
+仕様の JSON の見本と encode の結果が一致することを試験で確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore -j 3 --filter PadInterfaceTests
+✔ Test projectStopJSONMatchesDocumentedExample() passed
+✔ Test projectStatusEncodesMissingReleaseAsNull() passed
+✔ Test errorJSONMatchesDocumentedExampleAndCodes() passed
+✔ Test deploymentResponseJSONMatchesDocumentedExample() passed
+✔ Test projectListJSONMatchesDocumentedExample() passed
+✔ Test fileListJSONMatchesDocumentedExample() passed
+✔ Test deploymentRequestAndDiffJSONMatchDocumentedExamples() passed
+✔ Test shareLinkRequestJSONMatchesDocumentedExample() passed
+✔ Test logEntryUsesUTCISO8601Timestamp() passed
+✔ Test shareLinkIssueAndListJSONMatchDocumentedExamples() passed
+✔ Test run with 10 tests in 0 suites passed
+```

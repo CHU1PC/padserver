@@ -119,11 +119,11 @@ private func expectJSON<T: Encodable>(_ value: T, matches example: String) throw
     )
     let codes: [AdminErrorCode] = [
         .invalidRequest, .unauthorized, .forbidden, .projectNotFound,
-        .deploymentIncomplete, .payloadTooLarge, .internalError,
+        .deploymentIncomplete, .payloadTooLarge, .internalError, .fileNotFound, .shareLinkNotFound,
     ]
     let wireValues = [
         "invalid_request", "unauthorized", "forbidden", "project_not_found",
-        "deployment_incomplete", "payload_too_large", "internal_error",
+        "deployment_incomplete", "payload_too_large", "internal_error", "file_not_found", "share_link_not_found",
     ]
     for (code, wireValue) in zip(codes, wireValues) {
         #expect(try AdminAPIJSON.makeEncoder().encode(code) == Data("\"\(wireValue)\"".utf8))
@@ -136,4 +136,47 @@ private func expectJSON<T: Encodable>(_ value: T, matches example: String) throw
         """
     let entry = try AdminAPIJSON.makeDecoder().decode(LogEntry.self, from: Data(example.utf8))
     try expectJSON(entry, matches: example)
+}
+
+@Test func fileListJSONMatchesDocumentedExample() throws {
+    let example = """
+        {"files":[{"name":"report.pdf","size":1234}]}
+        """
+    let response = try AdminAPIJSON.makeDecoder().decode(AdminFilesResponse.self, from: Data(example.utf8))
+    try expectJSON(response, matches: example)
+    #expect(response.files == [StoredFile(name: "report.pdf", size: 1234)])
+}
+
+@Test func shareLinkRequestJSONMatchesDocumentedExample() throws {
+    let example = """
+        {"expiresAt":"2026-10-18T12:34:56Z"}
+        """
+    let request = try AdminAPIJSON.makeDecoder().decode(AdminShareLinkRequest.self, from: Data(example.utf8))
+    try expectJSON(request, matches: example)
+}
+
+@Test func shareLinkIssueAndListJSONMatchDocumentedExamples() throws {
+    let id = try #require(UUID(uuidString: "00000000-0000-4000-8000-000000000002"))
+    let expiresAt = Date(timeIntervalSince1970: 1_792_326_896)
+    let shareLink = AdminShareLink(id: id, fileName: "report.pdf", expiresAt: expiresAt)
+    let shareLinkExample = """
+        {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "fileName": "report.pdf",
+          "expiresAt": "2026-10-18T12:34:56Z"
+        }
+        """
+    try expectJSON(shareLink, matches: shareLinkExample)
+    try expectJSON(
+        AdminShareLinkIssueResponse(shareLink: shareLink, secret: "<secret>"),
+        matches: """
+            {"shareLink":\(shareLinkExample),"secret":"<secret>"}
+            """)
+    try expectJSON(
+        AdminShareLinksResponse(shareLinks: [shareLink]),
+        matches: """
+            {"shareLinks":[\(shareLinkExample)]}
+            """)
+    let decoded = try AdminAPIJSON.makeDecoder().decode(AdminShareLink.self, from: Data(shareLinkExample.utf8))
+    #expect(decoded == shareLink)
 }
