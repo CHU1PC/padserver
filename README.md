@@ -369,6 +369,24 @@ $ swift test --package-path Packages/PadServerCore --filter fileReleaseStore
 ✔ Test run with 6 tests in 0 suites passed after 0.017 seconds.
 ```
 
+### ProjectStorage のファイル保存
+
+`FileProjectStorage` は project、経路、実行状態、release、blob の保存部品を束ねます。
+project の登録時には host と prefix の重複を確認し、登録内容を一つの JSON ファイルで置き換えます。
+release の切り替え前には project と manifest 内の全 blob の存在を確認します。
+検証で拒否した場合は旧 active を保ち、成功した場合は旧 active が retired になります。
+切り替えと blob の削除が同時に来た場合は、後から来た操作を拒否します。
+
+`swift test --package-path Packages/PadServerCore --filter fileProjectStorage` の実行結果です。
+
+```text
+✔ Test fileProjectStorageRejectsDuplicateRoutesWithoutChangingRegistration() passed
+✔ Test fileProjectStorageRejectsMissingProjectWithoutSwitchingActiveRelease() passed
+✔ Test fileProjectStoragePersistsProjectsRoutesAndRunState() passed
+✔ Test fileProjectStorageValidatesBlobsBeforeSwitchingActiveRelease() passed
+✔ Test run with 4 tests in 0 suites passed
+```
+
 ### CLI の接続先と token の保存
 
 `padctl login <server-url>` で、管理 API の接続先と token を保存できます。
