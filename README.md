@@ -7,6 +7,26 @@ iPad を, 前面に固定したアプリ1つで動くサーバーにします.
 
 clone 後に `scripts/bootstrap.sh` を1回実行すると, 開発用ツールが入り, commit hook が有効になります.
 
+## QEMU のソースの取得
+
+`scripts/fetch-qemu.sh` は, tctiSH とその QEMU fork を固定した commit で `build/sources/` に取得します.
+同じ script を再実行すると, 取得済みの commit と取得元を確認します. `build/` は git の管理対象から外しています.
+QEMU のビルドは, 後続の作業で行います.
+
+2回続けて実行し, commit と git の除外設定を確認した出力です.
+
+```text
+$ ./scripts/fetch-qemu.sh
+tctiSH 76b6f6081fc328c05c4e0fc1d770aec7f1cdcbc4
+qemu ded0cff5a2a6d3b0a5261ab570518719b42ae2e6
+$ ./scripts/fetch-qemu.sh
+tctiSH 76b6f6081fc328c05c4e0fc1d770aec7f1cdcbc4
+qemu ded0cff5a2a6d3b0a5261ab570518719b42ae2e6
+$ git check-ignore build/sources/tctiSH build/sources/qemu
+build/sources/tctiSH
+build/sources/qemu
+```
+
 ## 管理 token の発行
 
 内部部品の `IssueToken` は, システムの暗号的乱数から32バイトの管理 token を生成して保存します.
