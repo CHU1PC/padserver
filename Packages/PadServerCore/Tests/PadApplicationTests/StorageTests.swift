@@ -56,6 +56,7 @@ import Testing
     try await storage.saveRelease(release, manifest: manifest)
     try await storage.saveBlob(hash, from: TestBodyStream(chunks: [Data("first".utf8), Data("second".utf8)]))
     #expect(try await storage.blobExists(hash))
+    #expect(try await storage.blobSize(hash) == 11)
 
     let body = try #require(await storage.openBlob(hash))
     var receivedChunks: [Data] = []
@@ -227,6 +228,10 @@ private actor InMemoryProjectStorage: ProjectStorage {
     }
 
     func blobExists(_ hash: BlobHash) throws -> Bool { blobs[hash] != nil }
+
+    func blobSize(_ hash: BlobHash) throws -> Int64? {
+        blobs[hash].map { chunks in chunks.reduce(0) { $0 + Int64($1.count) } }
+    }
 
     func saveBlob<Body: HTTPBodyStream>(_ hash: BlobHash, from body: Body) async throws {
         var chunks: [Data] = []

@@ -174,6 +174,7 @@ hash は小文字16進64桁とし, 一致した内容だけを hash の名前で
 不一致や受信中断の一時データを破棄し, 同じ内容は1つだけ保存します.
 読み出しも小分けに行い, 繰り返し開いた stream はそれぞれ独立して読み進められます.
 hash 名のシンボリックリンクを拒否し, 最初の読み出し前にリンクへ差し替えられても追跡しません.
+`ProjectStorage.blobSize` は、blob の中身を読み込まずにファイルの大きさをバイト数で返します。存在しない blob とシンボリックリンクは `nil` です。ファイルを読み取れない権限にした試験でも、大きさを取得できます。
 
 `swift test --package-path Packages/PadServerCore --filter fileBlobStore` の実行結果から, 実行時間を省いて掲載します.
 
@@ -187,7 +188,8 @@ hash 名のシンボリックリンクを拒否し, 最初の読み出し前に�
 ✔ Test fileBlobStoreDiscardsInterruptedReceiveAndAllowsRetry() passed
 ✔ Test fileBlobStoreRejectsLinkReplacementBeforeFirstPull() passed
 ✔ Test fileBlobStoreOpensIndependentStreamsAndListsAndRemovesBlob() passed
-✔ Test run with 9 tests in 0 suites passed
+✔ Test fileBlobStoreReportsSizeWithoutReadingBlob() passed
+✔ Test run with 10 tests in 0 suites passed
 ```
 
 ## ログの配信

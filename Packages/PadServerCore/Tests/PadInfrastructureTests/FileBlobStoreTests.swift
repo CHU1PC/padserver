@@ -1,3 +1,4 @@
+import Darwin
 import CryptoKit
 import Foundation
 import PadApplication
@@ -14,6 +15,7 @@ import Testing
         try await store.saveBlob(hash, from: body)
 
         #expect(try await store.blobExists(hash))
+        #expect(try await store.blobSize(hash) == 3)
         #expect(try Data(contentsOf: directory.appendingPathComponent(hash.value)) == Data("abc".utf8))
     }
 }
@@ -29,6 +31,18 @@ import Testing
 
         #expect(try await !store.blobExists(hash))
         #expect(try FileManager.default.contentsOfDirectory(atPath: directory.path).isEmpty)
+    }
+}
+
+@Test func fileBlobStoreReportsSizeWithoutReadingBlob() async throws {
+    try await withBlobStoreDirectory { directory async throws in
+        let store = FileBlobStore(directory: directory)
+        let hash = BlobHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        try await store.saveBlob(hash, from: BlobFixtureBody(chunks: [Data("abc".utf8)]))
+        let path = directory.appendingPathComponent(hash.value).path
+        #expect(Darwin.chmod(path, 0) == 0)
+
+        #expect(try await store.blobSize(hash) == 3)
     }
 }
 
@@ -124,6 +138,7 @@ import Testing
                 at: directory.appendingPathComponent(hash.value), withDestinationURL: outside)
 
             #expect(try await !store.blobExists(hash))
+            #expect(try await store.blobSize(hash) == nil)
             #expect(try await store.openBlob(hash) == nil)
         } catch {
             try FileManager.default.removeItem(at: outside)

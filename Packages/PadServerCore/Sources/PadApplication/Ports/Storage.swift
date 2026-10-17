@@ -86,6 +86,8 @@ public protocol ProjectStorage: Sendable {
     func activateRelease(_ releaseID: ReleaseID, for project: ProjectName) async throws
     func removeRelease(_ releaseID: ReleaseID) async throws
     func blobExists(_ hash: BlobHash) async throws -> Bool
+    /// blob を読み込まず、保存済みファイルの大きさをバイト数で返します。存在しなければ nil です。
+    func blobSize(_ hash: BlobHash) async throws -> Int64?
     func saveBlob<Body: HTTPBodyStream>(_ hash: BlobHash, from body: Body) async throws
     /// 呼び出し側の next() ごとに最大 1 chunk を返し、需要前の先読みをしません。
     func openBlob(_ hash: BlobHash) async throws -> BlobBodyStream?
