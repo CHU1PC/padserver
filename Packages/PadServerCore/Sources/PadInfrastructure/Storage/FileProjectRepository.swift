@@ -1,8 +1,15 @@
 import Darwin
 import Foundation
+import PadApplication
 import PadDomain
 
 public struct FileProjectRepository: Sendable {
+    struct Snapshot: Codable, Sendable {
+        var projects: [Project] = []
+        var routes: [Route] = []
+        var runStates: [String: ProjectRunState] = [:]
+    }
+
     private let fileURL: URL
     private let writeTemporaryFile: @Sendable (Data, URL) throws -> Void
     private let renameFile: @Sendable (URL, URL) throws -> Void
@@ -28,18 +35,35 @@ public struct FileProjectRepository: Sendable {
     }
 
     public func listProjects() throws -> [Project] {
+        try loadSnapshot().projects
+    }
+
+    func loadSnapshot() throws -> Snapshot {
         let data: Data
         do {
             data = try Data(contentsOf: fileURL)
         } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
-            return []
+            return Snapshot()
         }
-        return try JSONDecoder().decode([Project].self, from: data)
+        let decoder = JSONDecoder()
+        do {
+            let snapshot = try decoder.decode(Snapshot.self, from: data)
+            return snapshot
+        } catch DecodingError.typeMismatch {
+            return Snapshot(projects: try decoder.decode([Project].self, from: data))
+        }
     }
 
     public func saveProjects(_ projects: [Project]) throws {
-        let data = try JSONEncoder().encode(projects)
+        var snapshot = try loadSnapshot()
+        snapshot.projects = projects
+        try saveSnapshot(snapshot)
+    }
+
+    func saveSnapshot(_ snapshot: Snapshot) throws {
+        let data = try JSONEncoder().encode(snapshot)
         let temporaryDirectory = fileURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
         let temporaryURL = temporaryDirectory.appendingPathComponent(
             ".\(fileURL.lastPathComponent).\(UUID().uuidString).tmp"
         )
