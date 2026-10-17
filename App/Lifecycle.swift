@@ -1,9 +1,15 @@
+import PadApplication
 import UIKit
 
 /// サーバーの起動を持ち, 前面に戻るたびに待ち受けを確かめて, 止まっていれば起動し直します.
 @MainActor
 final class Lifecycle {
+    private let logBus: any LogBus
     private var serverTask: Task<Void, Never>?
+
+    init(logBus: any LogBus) {
+        self.logBus = logBus
+    }
 
     func becomeActive() {
         UIApplication.shared.isIdleTimerDisabled = true
@@ -11,7 +17,7 @@ final class Lifecycle {
             return
         }
         serverTask?.cancel()
-        serverTask = Task { await Composition.run() }
+        serverTask = Task { [logBus] in await Composition.run(logBus: logBus) }
     }
 
     func enterBackground() {

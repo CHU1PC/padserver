@@ -1,13 +1,22 @@
+import PadApplication
+import PadInfrastructure
 import SwiftUI
 
 @main
 struct PadServerApp: App {
     @Environment(\.scenePhase) private var scenePhase
-    @State private var lifecycle = Lifecycle()
+    private let logBus: any LogBus
+    @State private var lifecycle: Lifecycle
+
+    init() {
+        let logBus = InMemoryLogBus()
+        self.logBus = logBus
+        _lifecycle = State(initialValue: Lifecycle(logBus: logBus))
+    }
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            RootView(logBus: logBus)
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     switch phase {
                     case .active:

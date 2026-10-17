@@ -21,9 +21,9 @@ enum Composition {
 
     private static let logger = Logger(subsystem: "PadServer", category: "composition")
 
-    static func run() async {
+    static func run(logBus: any LogBus) async {
         do {
-            try await makeServers().run()
+            try await makeServers(logBus: logBus).run()
         } catch {
             logger.error("servers stopped: \(error)")
         }
@@ -39,7 +39,7 @@ enum Composition {
         ).appendingPathComponent("PadServer")
     }
 
-    private static func makeServers() throws -> PadServers {
+    private static func makeServers(logBus: any LogBus) throws -> PadServers {
         let directory = try storageDirectory()
         guard let tailnetAddress = tailnetAddress() else {
             throw CompositionError.tailnetAddressNotFound
@@ -49,7 +49,7 @@ enum Composition {
             storage: FileProjectStorage(directory: directory),
             secretStore: KeychainSecretStore(),
             idGenerator: SystemIDGenerator(),
-            logBus: InMemoryLogBus())
+            logBus: logBus)
     }
 
     /// tailnet の IPv4 の範囲に入る, 自分の interface の address を返します.
