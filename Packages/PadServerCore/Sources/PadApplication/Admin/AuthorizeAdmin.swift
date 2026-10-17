@@ -1,6 +1,12 @@
 import Darwin
 import PadDomain
 
+public enum AdminAuthorizationResult: Equatable, Sendable {
+    case authorized
+    case unauthorized
+    case forbidden
+}
+
 public struct AuthorizeAdmin: Sendable {
     private let secretStore: any SecretStore
 
@@ -8,11 +14,11 @@ public struct AuthorizeAdmin: Sendable {
         self.secretStore = secretStore
     }
 
-    public func callAsFunction(token: AdminToken, address: ClientAddress) async throws -> Bool {
-        guard address.isInTailnet, let expected = try await secretStore.adminToken() else {
-            return false
+    public func callAsFunction(token: AdminToken, address: ClientAddress) async throws -> AdminAuthorizationResult {
+        guard let expected = try await secretStore.adminToken(), tokensMatch(token, expected) else {
+            return .unauthorized
         }
-        return tokensMatch(token, expected)
+        return address.isInTailnet ? .authorized : .forbidden
     }
 
     private func tokensMatch(_ supplied: AdminToken, _ expected: AdminToken) -> Bool {
