@@ -315,3 +315,20 @@ $ PADCTL_KEYCHAIN_INTEGRATION=1 swift test --package-path cli
 $ swift test --package-path Packages/PadServerCore --filter servingServer
 ✔ Test run with 7 tests in 0 suites passed after 0.006 seconds.
 ```
+
+### 有効な release の静的ファイル応答
+
+`StaticFileResponder` は経路に対応する有効な release の manifest からファイルを探し、
+blob を読みながら応答します。公開ルートからの相対 path を使い、`/` は `index.html` に対応します。
+`Content-Type` と `ETag` を返し、一致する `If-None-Match` には 304 を返します。
+親ディレクトリへ出る path と見つからないファイルには 404 を返します。
+
+経路の prefix、条件付き応答、親ディレクトリを指定する path を試験で確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore --filter staticFileResponder
+✔ Test staticFileResponderRejectsParentSegments(path:) with 4 test cases passed after 0.004 seconds.
+✔ Test staticFileResponderUsesRoutePrefixAndManifestRelativePath() passed after 0.004 seconds.
+✔ Test staticFileResponderServesActiveRootIndexAndConditionalResponse() passed after 0.004 seconds.
+✔ Test run with 4 tests in 0 suites passed after 0.004 seconds.
+```
