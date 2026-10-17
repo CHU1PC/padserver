@@ -120,6 +120,22 @@ struct AdminClient: Sendable {
         try await send(makeRequest(.post, ["projects", project.value, "stop"]), expecting: [Status.success])
     }
 
+    func issueShareLink(fileName: String, expiresAt: Date) async throws -> AdminShareLinkIssueResponse {
+        let request = try makeRequest(
+            .post, ["files", fileName, "share-links"], body: AdminShareLinkRequest(expiresAt: expiresAt))
+        return try await send(request, expecting: [Status.created])
+    }
+
+    func listShareLinks() async throws -> AdminShareLinksResponse {
+        try await send(makeRequest(.get, ["share-links"]), expecting: [Status.success])
+    }
+
+    func revokeShareLink(id: UUID) async throws {
+        let request = makeRequest(.delete, ["share-links", id.uuidString])
+        let (data, response) = try await perform { try await session.data(for: request) }
+        try validate(response, data: data, expecting: [Status.noContent])
+    }
+
     func streamLogs() async throws -> AsyncThrowingStream<LogEntry, any Error> {
         var request = makeRequest(.get, ["logs", "stream"])
         request.timeoutInterval = Self.streamTimeout
@@ -231,6 +247,7 @@ private enum HTTPMethod: String {
     case get = "GET"
     case post = "POST"
     case put = "PUT"
+    case delete = "DELETE"
 }
 
 private enum Status {
