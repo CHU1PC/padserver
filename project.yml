@@ -14,6 +14,28 @@ targets:
     configFiles:
       Debug: Config/Shared.xcconfig
       Release: Config/Shared.xcconfig
+    settings:
+      base:
+        ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+    postBuildScripts:
+      - name: Copy guest artifacts
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          dest="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/guest"
+          rm -rf "${dest}"
+          for name in bzImage initrd.img; do
+            src="${SRCROOT}/build/guest/${name}"
+            if [ -f "${src}" ]; then
+              mkdir -p "${dest}"
+              cp -f "${src}" "${dest}/${name}"
+            elif [ "${CONFIGURATION}" = "Release" ]; then
+              echo "error: ${src} is missing. Run guest/build-kernel.sh and guest/build-rootfs.sh first."
+              exit 1
+            else
+              echo "warning: ${src} is missing, so the app is built without it."
+            fi
+          done
     dependencies:
       - package: PadServerCore
         product: PadDomain
