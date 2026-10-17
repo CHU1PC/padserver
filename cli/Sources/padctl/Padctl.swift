@@ -8,7 +8,7 @@ struct Padctl: AsyncParsableCommand {
         version: "0.1.0",
         subcommands: [
             Login.self, Reinstall.self, Deploy.self, Start.self, Stop.self, StatusCommand.self, Logs.self,
-            Share.self,
+            Share.self, Files.self,
         ],
     )
 }
