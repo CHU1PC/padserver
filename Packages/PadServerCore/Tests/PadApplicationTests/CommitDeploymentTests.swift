@@ -8,14 +8,14 @@ import Testing
     let project = try ProjectName("example")
     let oldID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000046")))
     let newID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000053")))
-    let oldHash = BlobHash("sha256-old")
-    let newHash = BlobHash("sha256-new")
+    let oldHash = try fixtureBlobHash("sha256-old")
+    let newHash = try fixtureBlobHash("sha256-new")
     let storage = PadTestSupport.InMemoryProjectStorage()
     try await prepareActiveRelease(oldID, project: project, hash: oldHash, storage: storage)
     try await storage.saveBlob(newHash, from: TestBlobBody(chunks: [Data("new".utf8)]))
     let deployment = CommitDeployment(storage: storage, idGenerator: PadTestSupport.FixedIDGenerator(id: newID.value))
 
-    let result = try await deployment(project: project, manifest: manifest(hash: newHash))
+    let result = try await deployment(project: project, manifest: try manifest(hash: newHash))
 
     #expect(result == Release(id: newID, project: project, state: .active))
     #expect(
@@ -29,11 +29,11 @@ import Testing
     let project = try ProjectName("example")
     let oldID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000046")))
     let newID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000053")))
-    let oldHash = BlobHash("sha256-old")
-    let missingHash = BlobHash("sha256-missing")
+    let oldHash = try fixtureBlobHash("sha256-old")
+    let missingHash = try fixtureBlobHash("sha256-missing")
     let incompleteManifest = ReleaseManifest(files: [
-        ReleaseManifestFile(path: "index.html", blob: oldHash),
-        ReleaseManifestFile(path: "missing.html", blob: missingHash),
+        try ReleaseManifestFile(path: "index.html", blob: oldHash),
+        try ReleaseManifestFile(path: "missing.html", blob: missingHash),
     ])
     let storage = PadTestSupport.InMemoryProjectStorage()
     try await prepareActiveRelease(oldID, project: project, hash: oldHash, storage: storage)
@@ -52,13 +52,13 @@ import Testing
 @Test func commitDeploymentPropagatesReleaseSaveFailureWithoutChangingActiveRelease() async throws {
     let project = try ProjectName("example")
     let oldID = ReleaseID(try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000046")))
-    let oldHash = BlobHash("sha256-old")
+    let oldHash = try fixtureBlobHash("sha256-old")
     let storage = PadTestSupport.InMemoryProjectStorage()
     try await prepareActiveRelease(oldID, project: project, hash: oldHash, storage: storage)
     let deployment = CommitDeployment(storage: storage, idGenerator: PadTestSupport.FixedIDGenerator(id: oldID.value))
 
     await #expect(throws: (any Error).self) {
-        try await deployment(project: project, manifest: manifest(hash: oldHash))
+        try await deployment(project: project, manifest: try manifest(hash: oldHash))
     }
 
     #expect(try await storage.listReleases() == [Release(id: oldID, project: project, state: .active)])
@@ -73,13 +73,13 @@ private func prepareActiveRelease(
     let projectRecord = Project(name: project, kind: .staticSite)
     try await storage.saveProject(projectRecord, routes: [])
     let release = Release(id: id, project: project, state: .preparing)
-    try await storage.saveRelease(release, manifest: manifest(hash: hash))
+    try await storage.saveRelease(release, manifest: try manifest(hash: hash))
     try await storage.saveBlob(hash, from: TestBlobBody(chunks: [Data("old".utf8)]))
     try await storage.activateRelease(id, for: project)
 }
 
-private func manifest(hash: BlobHash) -> ReleaseManifest {
-    ReleaseManifest(files: [ReleaseManifestFile(path: "index.html", blob: hash)])
+private func manifest(hash: BlobHash) throws -> ReleaseManifest {
+    ReleaseManifest(files: [try ReleaseManifestFile(path: "index.html", blob: hash)])
 }
 
 private struct TestBlobBody: HTTPBodyStream {

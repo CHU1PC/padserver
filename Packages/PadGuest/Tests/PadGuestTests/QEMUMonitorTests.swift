@@ -57,7 +57,7 @@ func qemuMonitorReportsPausedStateAndCommandFailure() async throws {
     #expect(await running.value)
 }
 
-private struct FakeHMPServer: Sendable {
+struct FakeHMPServer: Sendable {
     private static let newlineByte: UInt8 = 10
 
     struct Exchange: Sendable {
