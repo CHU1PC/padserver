@@ -130,7 +130,7 @@ public actor FileBlobStore {
     }
 }
 
-private actor BlobFileCursor {
+actor BlobFileCursor {
     // 読み出しを1 pull あたり64 KiBに分け、blob 全体をメモリへ積みません。
     private static let chunkByteCount = 65_536
     private let url: URL
