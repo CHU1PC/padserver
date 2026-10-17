@@ -1,6 +1,6 @@
 # 管理 API
 
-PadServer の管理 API は, tailnet 内の `padctl` からプロジェクトを配備し, 状態を操作し, ログを読むための HTTP API です. この文書は M2 の範囲を定めます.
+PadServer の管理 API は, tailnet 内の `padctl` からプロジェクトを配備し, 状態を操作し, ログを読むための HTTP API です. この文書は M2 とファイル置き場 (M7) の範囲を定めます.
 
 ## 1. 接続と認証
 
@@ -31,8 +31,15 @@ JSON のキーは lower camel case とし, domain 型の値と対応させます
 | `POST` | `/v1/projects/{name}/start` | プロジェクトを開始する |
 | `POST` | `/v1/projects/{name}/stop` | プロジェクトを停止する |
 | `GET` | `/v1/logs/stream` | 直近のログを返してから新しいログを streaming する |
+| `PUT` | `/v1/files/{name}` | ファイルを置き場に streaming で受け取る |
+| `GET` | `/v1/files/{name}` | ファイルを streaming で返す |
+| `GET` | `/v1/files` | 置き場のファイルの一覧を返す |
+| `DELETE` | `/v1/files/{name}` | ファイルを削除し, そのファイルの共有リンクを失効する |
+| `POST` | `/v1/files/{name}/share-links` | ファイルの共有リンクを期限付きで発行する |
+| `GET` | `/v1/share-links` | 共有リンクの一覧を返す |
+| `DELETE` | `/v1/share-links/{id}` | 共有リンクを失効する |
 
-`{name}` は `ProjectName` として検証します. 配備の M2 wire 例は静的サイトの `ProjectManifest` を使います. compose の manifest と配備ファイル一覧は M5 の仕様対象です.
+`/v1/projects/` の `{name}` は `ProjectName` として検証します. 配備の M2 wire 例は静的サイトの `ProjectManifest` を使います. compose の manifest と配備ファイル一覧は M5 の仕様対象です.
 
 ## 4. 配備
 
@@ -160,7 +167,84 @@ release の `state` は `ReleaseState` と一致します. 配備確定後にプ
 
 M2 ではログ stream に対する絞り込み, 再開 cursor, 過去ログの保持期間は定めません. 後続で絞り込みが必要な場合は, 通信型との整合を確認して追加します.
 
-## 7. エラー応答
+## 7. ファイル置き場
+
+ファイル置き場の `{name}` は, 置き場の中のファイル名です. 置き場の外に出る名前 (親ディレクトリの指定など) は `400 Bad Request` で拒みます. 名前の検証の細部は, ファイルの保存と取得の実装で定めます. 共有リンクの `{id}` は UUID 文字列です.
+
+### 7.1 ファイルの送信と取得
+
+`PUT /v1/files/{name}` は `application/octet-stream` の request body を, メモリに全体を読み込まずに streaming で保存します. 成功時は `201 Created` とし, 保存した `StoredFile` を返します.
+
+```json
+{
+  "name": "report.pdf",
+  "size": 1234
+}
+```
+
+`GET /v1/files/{name}` は `200 OK` とし, `application/octet-stream` でファイルの中身を streaming で返します. 存在しない名前は `404 Not Found` (`file_not_found`) とします.
+
+### 7.2 一覧と削除
+
+`GET /v1/files` は `200 OK` とし, 置き場のファイルを返します.
+
+```json
+{
+  "files": [
+    {
+      "name": "report.pdf",
+      "size": 1234
+    }
+  ]
+}
+```
+
+`DELETE /v1/files/{name}` は成功時に `204 No Content` とし, body は返しません. 削除したファイルの共有リンクもすべて失効します. 存在しない名前は `404 Not Found` (`file_not_found`) とします.
+
+### 7.3 共有リンクの発行
+
+`POST /v1/files/{name}/share-links` は有効期限を受け取ります. 日時は2章の形式です.
+
+```json
+{
+  "expiresAt": "2026-10-18T12:34:56Z"
+}
+```
+
+成功時は `201 Created` とし, 発行した共有リンクと `secret` を返します. `secret` は公開 URL の推測できない部分です. サーバーは hash だけを保存するので, `secret` は発行の応答でしか返しません.
+
+```json
+{
+  "shareLink": {
+    "id": "00000000-0000-4000-8000-000000000002",
+    "fileName": "report.pdf",
+    "expiresAt": "2026-10-18T12:34:56Z"
+  },
+  "secret": "<secret>"
+}
+```
+
+存在しないファイルは `404 Not Found` (`file_not_found`) とします.
+
+### 7.4 共有リンクの一覧と失効
+
+`GET /v1/share-links` は `200 OK` とし, 発行済みの共有リンクを返します. `secret` は含めません.
+
+```json
+{
+  "shareLinks": [
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "fileName": "report.pdf",
+      "expiresAt": "2026-10-18T12:34:56Z"
+    }
+  ]
+}
+```
+
+`DELETE /v1/share-links/{id}` は成功時に `204 No Content` とし, body は返しません. 存在しない `id` は `404 Not Found` (`share_link_not_found`) とします.
+
+## 8. エラー応答
 
 認証を通過した要求のエラーは `application/json` で返します. `code` は機械判定用の安定した文字列で, `message` は利用者向けです. token, request body の secret, stack trace は含めません.
 
@@ -179,11 +263,13 @@ M2 ではログ stream に対する絞り込み, 再開 cursor, 過去ログの�
 | `401 Unauthorized` | token が無い, または無効 | `unauthorized` |
 | `403 Forbidden` | 接続元 IP が tailnet の範囲外 | `forbidden` |
 | `404 Not Found` | project または endpoint が無い | `project_not_found` |
+| `404 Not Found` | ファイルが無い | `file_not_found` |
+| `404 Not Found` | 共有リンクが無い | `share_link_not_found` |
 | `409 Conflict` | 必要な blob が無い, 現在の状態で操作できない | `deployment_incomplete` |
 | `413 Payload Too Large` | blob の上限を超えた | `payload_too_large` |
 | `500 Internal Server Error` | 予期しないサーバーエラー | `internal_error` |
 
-## 8. #50 以降で確定する項目
+## 9. #50 以降で確定する項目
 
 blob の hash は, 所有者の決定により SHA-256 の小文字16進64桁に確定しました (#61). 照合には CryptoKit の `SHA256` を使います. `BlobHash` の検証は #246 で実装しました.
 
@@ -200,3 +286,4 @@ blob の hash は, 所有者の決定により SHA-256 の小文字16進64桁に
 - 同時配備, 配備の冪等性, 初回配備時の稼働状態.
 - 直近1,000件の送信中に到着した新規ログとの順序保証と重複回避.
 - compose 配備の manifest とファイル構成. M5 の範囲で定めます.
+- ファイル置き場: 同じ名前のファイルを送ったときの扱い, 送信の大きさの上限, 共有リンクの有効期限の上限.

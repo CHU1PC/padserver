@@ -73,6 +73,52 @@ public struct AdminProjectsResponse: Codable, Hashable, Sendable {
     }
 }
 
+public struct AdminFilesResponse: Codable, Hashable, Sendable {
+    public let files: [StoredFile]
+
+    public init(files: [StoredFile]) {
+        self.files = files
+    }
+}
+
+public struct AdminShareLinkRequest: Codable, Hashable, Sendable {
+    public let expiresAt: Date
+
+    public init(expiresAt: Date) {
+        self.expiresAt = expiresAt
+    }
+}
+
+public struct AdminShareLink: Codable, Hashable, Sendable {
+    public let id: UUID
+    public let fileName: String
+    public let expiresAt: Date
+
+    public init(id: UUID, fileName: String, expiresAt: Date) {
+        self.id = id
+        self.fileName = fileName
+        self.expiresAt = expiresAt
+    }
+}
+
+public struct AdminShareLinkIssueResponse: Codable, Hashable, Sendable {
+    public let shareLink: AdminShareLink
+    public let secret: String
+
+    public init(shareLink: AdminShareLink, secret: String) {
+        self.shareLink = shareLink
+        self.secret = secret
+    }
+}
+
+public struct AdminShareLinksResponse: Codable, Hashable, Sendable {
+    public let shareLinks: [AdminShareLink]
+
+    public init(shareLinks: [AdminShareLink]) {
+        self.shareLinks = shareLinks
+    }
+}
+
 public enum AdminErrorCode: String, Codable, Hashable, Sendable {
     case invalidRequest = "invalid_request"
     case unauthorized
@@ -81,6 +127,8 @@ public enum AdminErrorCode: String, Codable, Hashable, Sendable {
     case deploymentIncomplete = "deployment_incomplete"
     case payloadTooLarge = "payload_too_large"
     case internalError = "internal_error"
+    case fileNotFound = "file_not_found"
+    case shareLinkNotFound = "share_link_not_found"
 }
 
 public struct AdminError: Codable, Hashable, Sendable {
