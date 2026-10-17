@@ -62,23 +62,24 @@ import Testing
     let firstRoute = Route(project: first, host: host, pathPrefix: prefix, target: .staticSite)
     let secondRoute = Route(project: second, host: host, pathPrefix: prefix, target: .staticSite)
     let attempts = [
-        Task { try await register(Project(name: first, kind: .staticSite), routes: [firstRoute]) },
-        Task { try await register(Project(name: second, kind: .staticSite), routes: [secondRoute]) },
+        Task { await attemptRegistration(register, project: first, route: firstRoute) },
+        Task { await attemptRegistration(register, project: second, route: secondRoute) },
     ]
-    var succeeded = 0
-    var rejected = 0
-    for attempt in attempts {
-        do {
-            try await attempt.value
-            succeeded += 1
-        } catch RegisterProjectRoutes.Error.duplicateRoute {
-            rejected += 1
-        } catch {
-            throw error
-        }
-    }
+    let results = [await attempts[0].value, await attempts[1].value]
 
-    #expect(succeeded == 1)
-    #expect(rejected == 1)
+    #expect(results.filter { $0 }.count == 1)
+    #expect(results.filter { !$0 }.count == 1)
     #expect(try await storage.listRoutes().count == 1)
+}
+
+private func attemptRegistration(_ register: RegisterProjectRoutes, project: ProjectName, route: Route) async -> Bool {
+    do {
+        try await register(Project(name: project, kind: .staticSite), routes: [route])
+        return true
+    } catch RegisterProjectRoutes.Error.duplicateRoute {
+        return false
+    } catch {
+        Issue.record("Unexpected registration error: \(error)")
+        return false
+    }
 }
