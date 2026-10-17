@@ -1,7 +1,10 @@
+import PadApplication
 import SwiftUI
 
 struct RootView: View {
+    let logBus: any LogBus
+
     var body: some View {
-        Text("PadServer")
+        LogFeed(logBus: logBus)
     }
 }
