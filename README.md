@@ -617,3 +617,30 @@ $ swift test --package-path Packages/PadServerCore --filter requestLogMiddleware
 ✔ Test requestLogMiddlewarePublishesFailedRequestStatus() passed after 0.004 seconds.
 ✔ Test run with 2 tests in 0 suites passed after 0.004 seconds.
 ```
+
+### 管理 API のプロジェクト状態
+
+管理用 port で、プロジェクトの一覧と稼働状態の取得、開始、停止ができます。
+3つの endpoint は認証の middleware の内側に置かれ、token が無い要求は 401 になります。
+
+| Method | Path | 応答 |
+| --- | --- | --- |
+| `GET` | `/v1/projects` | `200`、プロジェクトごとの `project`、`activeRelease`、`running` |
+| `POST` | `/v1/projects/{name}/start` | `200`、更新後の状態 |
+| `POST` | `/v1/projects/{name}/stop` | `200`、更新後の状態 |
+
+名前が不正なら 400 (`invalid_request`)、存在しないプロジェクトなら 404 (`project_not_found`) を返します。
+
+Router に載せた状態で確認した試験の出力です。
+
+```text
+$ swift test --package-path Packages/PadServerCore --filter projectController
+✔ Test projectControllerRoutesRequireAdminAuthentication() passed.
+✔ Test projectControllerReturnsEmptyListWithoutProjects() passed.
+✔ Test projectControllerEncodesMissingActiveReleaseAsNull() passed.
+✔ Test projectControllerReturnsNotFoundForUnknownProject(action:) with 2 test cases passed.
+✔ Test projectControllerRejectsInvalidProjectName(action:) with 2 test cases passed.
+✔ Test projectControllerListsProjectsWithActiveReleaseAndRunState() passed.
+✔ Test projectControllerStopsAndStartsProjectAndReturnsUpdatedStatus() passed.
+✔ Test run with 7 tests in 0 suites passed.
+```
