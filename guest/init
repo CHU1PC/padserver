@@ -1,0 +1,86 @@
+#!/bin/sh
+# guest の起動の処理 (PID 1). tctiSH の assets/overlay/init をもとに, #22 と #23 の結果を入れたもの.
+
+union=/var/tcti-rootfs/rw-union
+ios=/var/tcti-rootfs/rw-ios
+
+make_misc_dev() {
+	major=10
+	minor=$(awk -v name="$2" '$2 == name { print $1 }' /proc/misc)
+	mknod "$1" c "$major" "$minor"
+}
+
+mount -t devtmpfs none /dev
+mkdir -p /dev/pts
+mount -t devpts none /dev/pts
+mount -t proc none /proc
+mount -t sysfs none /sys
+
+ifconfig eth0 192.168.100.100
+ip route add default via 192.168.100.2 dev eth0
+# lo は自動では上がらず, 127.0.0.1 宛の接続が timeout になる.
+ip link set lo up
+
+mkdir -p /var/tcti-rootfs/ro-root "$ios" "$union"
+mount --bind / /var/tcti-rootfs/ro-root
+
+if grep -q "tcti_disk=file" /proc/cmdline; then
+	if ! mount -o discard /dev/vda "$ios"; then
+		# 何かが入っている disk は, 壊さないために作り直さない.
+		fs_type=$(blkid /dev/vda 2>/dev/null || true)
+		if [ -n "$fs_type" ]; then
+			echo "The persistent disk has a filesystem but could not be mounted."
+			echo "Refusing to reformat it. Changes made in this session will NOT persist."
+		else
+			echo "The persistent disk holds no filesystem. Creating one."
+			mkfs.ext4 /dev/vda
+			mount -o discard /dev/vda "$ios" ||
+				echo "The disk was formatted but still will not mount. Changes will NOT persist."
+		fi
+	fi
+	if mountpoint -q "$ios"; then
+		nice -n 19 /sbin/fstrim -v "$ios" >/dev/kmsg 2>&1 &
+	fi
+else
+	echo "DISK BACKEND NOT YET IMPLEMENTED! Changes will NOT persist."
+fi
+
+mkdir -p "$ios/userroot/root/.ssh" "$ios/work"
+chmod 700 "$ios/userroot/root"
+cp /etc/dropbear/placeholder_key.pub "$ios/userroot/root/.ssh/authorized_keys"
+chmod -R 600 "$ios/userroot/root/.ssh"
+
+mount -t overlay overlay \
+	-o "lowerdir=/var/tcti-rootfs/ro-root,upperdir=$ios/userroot,workdir=$ios/work" \
+	"$union"
+
+mount -t proc none "$union/proc"
+mount -t sysfs none "$union/sys"
+mount -t devtmpfs none "$union/dev"
+mount -t tracefs none "$union/sys/kernel/tracing"
+mount -t bpf none "$union/sys/fs/bpf"
+mount -t cgroup2 none "$union/sys/fs/cgroup"
+mount -t securityfs none "$union/sys/kernel/security"
+mount -t debugfs -o mode=700 none "$union/sys/kernel/debug"
+mkdir -p "$union/dev/pts"
+mount -t devpts none "$union/dev/pts"
+
+# overlay の上では Docker の overlayfs が upperdir に使えないので, 永続の disk の directory を重ねる.
+mkdir -p "$ios/docker" "$union/var/lib/docker"
+mount --bind "$ios/docker" "$union/var/lib/docker"
+
+# 前の起動の pid file が残っていると, dockerd が起動しない.
+rm -f "$union/run/docker.pid"
+
+echo 1 >/proc/sys/vm/overcommit_memory
+
+rm "$union/dev/random" "$union/dev/urandom"
+make_misc_dev "$union/dev/random" hw_random
+make_misc_dev "$union/dev/urandom" hw_random
+
+echo /usr/bin/tctish-cpu-online >/proc/sys/kernel/hotplug
+
+# runc が pivot_root できるよう, union を / に移す. chroot だけでは / が mount にならない.
+cd "$union" || exit 1
+mount --move . /
+exec chroot . /sbin/init
