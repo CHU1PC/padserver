@@ -729,6 +729,31 @@ $ swift test --package-path Packages/PadServerCore -j 3 --filter StorageValidati
 ✔ Test releaseManifestFileRejectsUnsafePathsOnInitAndDecode(path:) with 19 test cases passed.
 ✔ Test run with 5 tests in 0 suites passed.
 
+### 管理 API: 配備の問い合わせと確定
+
+管理 API に、配備の差分を答える endpoint と、配備を確定する endpoint を足しました。
+`DeployController.addRoutes(to:)` を `AdminServer.makeApplication` の `configureRoutes` に渡すと、次の 2 つが認証の middleware の内側で動きます。
+
+| Method | Path | 結果 |
+| --- | --- | --- |
+| `POST` | `/v1/projects/{name}/deployments/diff` | `200` と、端末側に無い blob の一覧 (`missingBlobs`) |
+| `POST` | `/v1/projects/{name}/deployments` | 全 blob が揃っていれば `201` と新しい release。足りなければ `409` |
+
+JSON が不正な場合、manifest の名前が path の `{name}` と違う場合、`{name}` が不正な場合は、`400` を返します。
+中身は `docs/admin-api.md` の 4.1 と 4.3 に合わせています。
+
+実際の router を通す試験で、差分、確定、`409`、`400`、認証の有無を確認しました。
+
+```text
+$ swift test --package-path Packages/PadServerCore -j 3
+✔ Test diffReturnsOnlyBlobsMissingFromStorage() passed
+✔ Test diffReturnsEmptyListWhenAllBlobsExist() passed
+✔ Test commitCreatesActiveReleaseWhenAllBlobsExist() passed
+✔ Test commitRejectsMissingBlobWithConflictAndKeepsReleases() passed
+✔ Test deploymentEndpointsRejectInvalidInput(suffix:) with 2 test cases passed
+✔ Test deploymentEndpointsRequireAdminAuthorization(uri:) with 2 test cases passed
+✔ Test run with 170 tests in 2 suites passed
+
 $ swift test --package-path Packages/PadServerCore --filter adminErrorMiddleware
 ✔ Test adminErrorMiddlewarePassesSuccessfulResponses() passed
 ✔ Test adminErrorMiddlewareReturnsUnknownEndpointAsNotFoundJSON() passed
