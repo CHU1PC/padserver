@@ -65,11 +65,31 @@ public struct AdminProjectStatus: Codable, Hashable, Sendable {
     }
 }
 
+public struct AdminDockerStatus: Codable, Hashable, Sendable {
+    public let responding: Bool
+
+    public init(responding: Bool) {
+        self.responding = responding
+    }
+}
+
+public struct AdminGuestStatus: Codable, Hashable, Sendable {
+    public let state: GuestState
+    public let docker: AdminDockerStatus?
+
+    public init(state: GuestState, docker: AdminDockerStatus? = nil) {
+        self.state = state
+        self.docker = docker
+    }
+}
+
 public struct AdminProjectsResponse: Codable, Hashable, Sendable {
     public let projects: [AdminProjectStatus]
+    public let guest: AdminGuestStatus?
 
-    public init(projects: [AdminProjectStatus]) {
+    public init(projects: [AdminProjectStatus], guest: AdminGuestStatus? = nil) {
         self.projects = projects
+        self.guest = guest
     }
 }
 

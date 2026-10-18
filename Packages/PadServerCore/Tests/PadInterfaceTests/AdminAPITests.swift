@@ -192,3 +192,23 @@ private func expectJSON<T: Encodable>(_ value: T, matches example: String) throw
     let decoded = try AdminAPIJSON.makeDecoder().decode(AdminShareLink.self, from: Data(shareLinkExample.utf8))
     #expect(decoded == shareLink)
 }
+
+@Test func projectListJSONIncludesGuestAndDockerWhenPresent() throws {
+    try expectJSON(
+        AdminProjectsResponse(
+            projects: [], guest: AdminGuestStatus(state: .ready, docker: AdminDockerStatus(responding: true))),
+        matches: """
+            {"projects": [], "guest": {"state": "ready", "docker": {"responding": true}}}
+            """)
+}
+
+@Test func projectListJSONOmitsGuestWhenAbsent() throws {
+    try expectJSON(AdminProjectsResponse(projects: []), matches: "{\"projects\": []}")
+}
+
+@Test func projectListDecodesResponseWithoutGuest() throws {
+    let decoded = try AdminAPIJSON.makeDecoder().decode(
+        AdminProjectsResponse.self, from: Data("{\"projects\":[]}".utf8))
+
+    #expect(decoded.guest == nil)
+}
