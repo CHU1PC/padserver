@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import Synchronization
 
 public struct QEMURunner: Sendable {
     public enum RunnerError: Error, Equatable, Sendable {
@@ -43,29 +44,59 @@ public struct QEMURunner: Sendable {
         self.biosDirectory = biosDirectory
     }
 
-    public func start(arguments: QEMUArguments, additionalArguments: [String] = []) throws {
-        guard FileManager.default.fileExists(atPath: libraryPath) else {
-            throw RunnerError.libraryNotFound(libraryPath)
-        }
+    private final class LoadOutcome: Sendable {
+        let error = Mutex<(any Error)?>(nil)
+    }
+
+    private static func loadEntryPoints(libraryPath: String) throws -> EntryPoints {
         guard let handle = dlopen(libraryPath, RTLD_NOW) else {
             throw RunnerError.libraryOpenFailed(dlerror().map { String(cString: $0) } ?? "unknown")
         }
-        let entryPoints: EntryPoints
         do {
-            entryPoints = try EntryPoints(handle: handle)
+            return try EntryPoints(handle: handle)
         } catch {
             dlclose(handle)
             throw error
         }
+    }
 
+    private static func run(libraryPath: String, values: [String], loaded: DispatchSemaphore, outcome: LoadOutcome) {
+        // dlopen は QEMU を動かす thread で行う (constructor が登録する thread と, qemu_init を呼ぶ thread をそろえる).
+        let entryPoints: EntryPoints
+        do {
+            entryPoints = try loadEntryPoints(libraryPath: libraryPath)
+        } catch {
+            outcome.error.withLock { $0 = error }
+            loaded.signal()
+            return
+        }
+        loaded.signal()
+        var argv: [UnsafeMutablePointer<CChar>?] = values.map { strdup($0) }
+        defer { argv.forEach { free($0) } }
+        entryPoints.qemuInit(Int32(values.count), &argv)
+        entryPoints.qemuCleanup(entryPoints.qemuMainLoop())
+        // この thread を終了させない. library の constructor が RCU の reader として登録するのは
+        // dlopen を呼んだ thread で, 終了すると registry に解放済みの node が残り, call_rcu が壊れる (#402).
+        // 登録解除の関数は library から export されていないので, 呼べない.
+        while true { sleep(UInt32.max) }
+    }
+
+    public func start(arguments: QEMUArguments, additionalArguments: [String] = []) throws {
+        guard FileManager.default.fileExists(atPath: libraryPath) else {
+            throw RunnerError.libraryNotFound(libraryPath)
+        }
         let values = [Constants.programName, "-L", biosDirectory] + arguments.values + additionalArguments
+        let libraryPath = self.libraryPath
+        let loaded = DispatchSemaphore(value: 0)
+        let outcome = LoadOutcome()
         let thread = Thread {
-            var argv: [UnsafeMutablePointer<CChar>?] = values.map { strdup($0) }
-            defer { argv.forEach { free($0) } }
-            entryPoints.qemuInit(Int32(values.count), &argv)
-            entryPoints.qemuCleanup(entryPoints.qemuMainLoop())
+            Self.run(libraryPath: libraryPath, values: values, loaded: loaded, outcome: outcome)
         }
         thread.qualityOfService = .userInteractive
         thread.start()
+        loaded.wait()
+        if let error = outcome.error.withLock({ $0 }) {
+            throw error
+        }
     }
 }
