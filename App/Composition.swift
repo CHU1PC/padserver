@@ -14,6 +14,13 @@ private struct SystemIDGenerator: IDGenerator {
     }
 }
 
+// #359 の Docker client が来るまでの暫定で、常に測れないとして返す.
+private struct UnmeasuredUsageSource: UsageSource {
+    func usage(of project: ProjectName) -> ProjectUsage? {
+        nil
+    }
+}
+
 private struct SystemTimeSource: TimeSource {
     func now() -> Date {
         Date()
@@ -37,6 +44,12 @@ enum Composition {
 
     static func listProjects() async throws -> [ListProjects.Status] {
         try await ListProjects(storage: FileProjectStorage(directory: storageDirectory()))()
+    }
+
+    static func projectUsage(of name: String) async throws -> ProjectUsage? {
+        try await GetProjectUsage(
+            storage: FileProjectStorage(directory: storageDirectory()), usageSource: UnmeasuredUsageSource())(
+                of: ProjectName(name))
     }
 
     private static func storageDirectory() throws -> URL {

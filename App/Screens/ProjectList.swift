@@ -1,10 +1,12 @@
 import PadApplication
+import PadDomain
 import PadInterface
 import SwiftUI
 
 struct ProjectList: View {
     let logBus: any LogBus
     let load: @Sendable () async throws -> [ListProjects.Status]
+    let loadUsage: @Sendable (String) async throws -> ProjectUsage?
 
     @State private var rows: [ProjectListRow] = []
     @State private var errorMessage: String?
@@ -37,7 +39,7 @@ struct ProjectList: View {
             }
         }
         .navigationDestination(for: String.self) { name in
-            ProjectDetail(name: name, logBus: logBus)
+            ProjectDetail(name: name, logBus: logBus, loadUsage: { try await loadUsage(name) })
         }
         .navigationTitle("Projects")
         .task { await reload() }
