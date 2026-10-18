@@ -3,6 +3,7 @@ import Hummingbird
 import HummingbirdTesting
 import PadApplication
 import PadDomain
+import PadInterface
 @testable import PadInfrastructure
 import PadTestSupport
 import Testing
@@ -16,6 +17,8 @@ private enum PadServersTestConstants {
     static let validity: TimeInterval = 3600
     static let fileName = "report.txt"
     static let fileContent = "shared"
+    static let cpuUsage = 1.5
+    static let memoryBytes = 2_048
     static let expiresAtText = "2001-01-01T01:00:00Z"
 }
 
@@ -24,7 +27,8 @@ private func makeServers(
     adminPort: Int = PadServersTestConstants.adminPort,
     fileStore: InMemoryFileStore = InMemoryFileStore(),
     linkStore: InMemoryShareLinkStore = InMemoryShareLinkStore(),
-    now: Date = PadServersTestConstants.now
+    now: Date = PadServersTestConstants.now,
+    usageSource: any UsageSource = FixedUsageSource(usages: [:])
 ) -> PadServers {
     PadServers(
         ports: PadServerPorts(
@@ -36,7 +40,8 @@ private func makeServers(
         logBus: PadTestSupport.InMemoryLogBus(),
         fileStore: fileStore,
         linkStore: linkStore,
-        timeSource: FixedTimeSource(timestamp: now))
+        timeSource: FixedTimeSource(timestamp: now),
+        usageSource: usageSource)
 }
 
 private func seedFile(_ fileStore: InMemoryFileStore) async throws {
@@ -187,6 +192,46 @@ private func seedRoute(storage: InMemoryProjectStorage, target: RouteTarget) asy
     }
 }
 
+@Test func padServersRejectUnauthenticatedUsageRequests() async throws {
+    try await makeServers().makeAdminApplication().test(.router) { client in
+        let response = try await client.execute(uri: "/v1/projects/app/usage", method: .get)
+        #expect(response.status == .unauthorized)
+    }
+}
+
+@Test func padServersAdminRoutesServeProjectUsage() async throws {
+    let storage = InMemoryProjectStorage()
+    let name = try ProjectName("app")
+    try await storage.saveProject(Project(name: name, kind: .compose), routes: [])
+    let usage = try ProjectUsage(
+        cpuUsage: PadServersTestConstants.cpuUsage, memoryBytes: PadServersTestConstants.memoryBytes,
+        measuredAt: PadServersTestConstants.now)
+    let servers = makeServers(storage: storage, usageSource: FixedUsageSource(usages: [name: usage]))
+
+    try await adminRouterApplication(servers).test(.router) { client in
+        let measured = try await client.execute(uri: "/v1/projects/app/usage", method: .get)
+        #expect(measured.status == .ok)
+        let body = try AdminAPIJSON.makeDecoder().decode(
+            AdminProjectUsageResponse.self, from: Data(buffer: measured.body))
+        #expect(body.usage == AdminProjectUsage(usage))
+        let unknown = try await client.execute(uri: "/v1/projects/other/usage", method: .get)
+        #expect(unknown.status == .notFound)
+    }
+}
+
+@Test func padServersEncodeUnmeasuredProjectUsageAsNull() async throws {
+    let storage = InMemoryProjectStorage()
+    try await storage.saveProject(Project(name: try ProjectName("app"), kind: .compose), routes: [])
+
+    try await adminRouterApplication(makeServers(storage: storage)).test(.router) { client in
+        let response = try await client.execute(uri: "/v1/projects/app/usage", method: .get)
+        #expect(response.status == .ok)
+        let body = try AdminAPIJSON.makeDecoder().decode(
+            AdminProjectUsageResponse.self, from: Data(buffer: response.body))
+        #expect(body.usage == nil)
+    }
+}
+
 @Test func padServersRejectEqualPorts() {
     #expect(throws: AdminServerError.portsMustBeDistinct) {
         try makeServers(adminPort: PadServersTestConstants.deliveryPort).makeAdminApplication()
@@ -274,7 +319,8 @@ func padServersServeShareLinksOnDelivery(name: String) async throws {
         storage: InMemoryProjectStorage(), secretStore: InMemorySecretStore(),
         idGenerator: FixedIDGenerator(id: UUID()), logBus: logBus,
         fileStore: fileStore, linkStore: linkStore,
-        timeSource: FixedTimeSource(timestamp: PadServersTestConstants.now))
+        timeSource: FixedTimeSource(timestamp: PadServersTestConstants.now),
+        usageSource: FixedUsageSource(usages: [:]))
 
     try await servers.makeDeliveryApplication().test(.router) { client in
         _ = try await client.execute(uri: "/s/\(issued.secret)", method: .get)

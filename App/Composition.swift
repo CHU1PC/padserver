@@ -2,6 +2,7 @@ import Foundation
 import os
 import PadApplication
 import PadDomain
+import PadGuest
 import PadInfrastructure
 import PadInterface
 
@@ -15,10 +16,19 @@ private struct SystemIDGenerator: IDGenerator {
     }
 }
 
-// #359 の Docker client が来るまでの暫定で、常に測れないとして返す.
-private struct UnmeasuredUsageSource: UsageSource {
-    func usage(of project: ProjectName) -> ProjectUsage? {
-        nil
+// guest に繋がらないときと, 測れないプロジェクトは nil を返す.
+private struct DockerUsageSource: UsageSource {
+    let readUsages: @Sendable () async throws -> [String: ContainerUsage]
+    let timeSource: any TimeSource
+
+    func usage(of project: ProjectName) async -> ProjectUsage? {
+        do {
+            guard let measured = try await readUsages()[project.value] else { return nil }
+            return try ProjectUsage(
+                cpuUsage: measured.cpuUsage, memoryBytes: measured.memoryBytes, measuredAt: timeSource.now())
+        } catch {
+            return nil
+        }
     }
 }
 
@@ -59,8 +69,12 @@ enum Composition {
 
     static func projectUsage(of name: String) async throws -> ProjectUsage? {
         try await GetProjectUsage(
-            storage: FileProjectStorage(directory: storageDirectory()), usageSource: UnmeasuredUsageSource())(
+            storage: FileProjectStorage(directory: storageDirectory()), usageSource: usageSource())(
                 of: ProjectName(name))
+    }
+
+    private static func usageSource() -> DockerUsageSource {
+        DockerUsageSource(readUsages: { try await guest.projectUsages() }, timeSource: SystemTimeSource())
     }
 
     private static func storageDirectory() throws -> URL {
@@ -82,7 +96,8 @@ enum Composition {
             logBus: logBus,
             fileStore: DiskFileStore(directory: directory.appendingPathComponent("files")),
             linkStore: FileShareLinkStore(directory: directory),
-            timeSource: SystemTimeSource())
+            timeSource: SystemTimeSource(),
+            usageSource: usageSource())
     }
 
     /// tailnet の IPv4 の範囲に入る, 自分の interface の address を返します.
