@@ -25,10 +25,13 @@ public final class DockerClient: Sendable {
     private enum Constants {
         static let okStatus = 200
         static let forbiddenStatus = 403
+        // 追尾は応答が途切れることがあるので, 既定の 60 秒より長く待つ (1 日)
+        static let streamingTimeout: TimeInterval = 86_400
     }
 
     private let baseURL: URL
     private let session: URLSession
+    private let tlsDelegate: TLSDelegate
 
     public init(hostPort: UInt16, credentials: GuestCredentials) throws {
         let identity: SecIdentity
@@ -42,9 +45,8 @@ public final class DockerClient: Sendable {
         }
         guard let baseURL = URL(string: "https://127.0.0.1:\(hostPort)") else { throw ClientError.invalidCredentials }
         self.baseURL = baseURL
-        session = URLSession(
-            configuration: .ephemeral, delegate: TLSDelegate(identity: identity, caCertificate: caCertificate),
-            delegateQueue: nil)
+        tlsDelegate = TLSDelegate(identity: identity, caCertificate: caCertificate)
+        session = URLSession(configuration: .ephemeral, delegate: tlsDelegate, delegateQueue: nil)
     }
 
     deinit {
@@ -107,6 +109,21 @@ public final class DockerClient: Sendable {
         return (try Self.status(of: response), data)
     }
 
+    /// 本文を溜めずに逐次受ける. ログの追尾専用で, 状態コードの判断は呼び出し側に任せる.
+    func sendStreaming(
+        method: String, path: String, query: [URLQueryItem] = []
+    ) async throws -> (status: Int, bytes: URLSession.AsyncBytes) {
+        let request = try makeRequest(method: method, path: path, query: query, timeout: Constants.streamingTimeout)
+        let bytes: URLSession.AsyncBytes
+        let response: URLResponse
+        do {
+            (bytes, response) = try await session.bytes(for: request, delegate: tlsDelegate)
+        } catch {
+            throw ClientError.connectionFailed
+        }
+        return (try Self.status(of: response), bytes)
+    }
+
     private func makeRequest(
         method: String, path: String, query: [URLQueryItem], timeout: TimeInterval?
     ) throws -> URLRequest {
@@ -127,7 +144,7 @@ public final class DockerClient: Sendable {
 }
 
 @available(macOS 13, iOS 16, *)
-private final class TLSDelegate: NSObject, URLSessionDelegate, Sendable {
+private final class TLSDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelegate, Sendable {
     private let identity: SecIdentity
     private let caCertificate: SecCertificate
 
@@ -139,6 +156,21 @@ private final class TLSDelegate: NSObject, URLSessionDelegate, Sendable {
     func urlSession(
         _ session: URLSession, didReceive challenge: URLAuthenticationChallenge,
         completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        handle(challenge, completionHandler)
+    }
+
+    // 非同期 API に task の delegate を渡すと, 認証の問い合わせは session ではなくこちらに届く
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        handle(challenge, completionHandler)
+    }
+
+    private func handle(
+        _ challenge: URLAuthenticationChallenge,
+        _ completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {
         switch challenge.protectionSpace.authenticationMethod {
         case NSURLAuthenticationMethodClientCertificate:

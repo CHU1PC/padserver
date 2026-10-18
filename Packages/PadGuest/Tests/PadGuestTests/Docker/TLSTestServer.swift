@@ -22,6 +22,10 @@ func makeTestCredentials() async throws -> GuestCredentials {
 struct TLSTestResponse: Sendable {
     let status: Int
     let body: String
+    /// 空でなければ, Content-Length 無しで parts を少しずつ流す.
+    var parts: [Data] = []
+    /// true なら, parts を流した後も, 相手が閉じるまで接続を保つ.
+    var holdOpen = false
 }
 
 struct RecordedRequest: Equatable, Sendable {
@@ -33,8 +37,14 @@ struct RecordedRequest: Equatable, Sendable {
 actor RequestLog {
     private(set) var requests: [RecordedRequest] = []
 
+    private(set) var closedCount = 0
+
     func append(_ request: RecordedRequest) {
         requests.append(request)
+    }
+
+    func recordClosed() {
+        closedCount += 1
     }
 }
 
@@ -46,6 +56,7 @@ struct TLSTestServer: Sendable {
         static let pathIndex = 1
         static let headerFieldParts = 2
         static let notFoundStatus = 404
+        static let partIntervalMilliseconds = 30
     }
 
     private enum ServerError: Error {
@@ -162,6 +173,10 @@ struct TLSTestServer: Sendable {
         log: RequestLog?
     ) {
         let response = routes[request.path] ?? TLSTestResponse(status: Constants.notFoundStatus, body: "not found")
+        if !response.parts.isEmpty {
+            stream(response, on: connection, request: request, log: log)
+            return
+        }
         let head =
             "HTTP/1.1 \(response.status) X\r\nContent-Length: \(response.body.utf8.count)\r\nConnection: close\r\n\r\n"
         Task {
@@ -169,6 +184,35 @@ struct TLSTestServer: Sendable {
             connection.send(
                 content: Data((head + response.body).utf8),
                 completion: .contentProcessed { _ in connection.cancel() })
+        }
+    }
+
+    private static func stream(
+        _ response: TLSTestResponse, on connection: NWConnection, request: RecordedRequest, log: RequestLog?
+    ) {
+        let head =
+            "HTTP/1.1 \(response.status) X\r\nContent-Type: application/vnd.docker.raw-stream\r\n"
+            + "Connection: close\r\n\r\n"
+        Task {
+            await log?.append(request)
+            connection.send(content: Data(head.utf8), completion: .idempotent)
+            for part in response.parts {
+                do {
+                    try await Task.sleep(for: .milliseconds(Constants.partIntervalMilliseconds))
+                } catch {
+                    return
+                }
+                connection.send(content: part, completion: .idempotent)
+            }
+            guard response.holdOpen else {
+                connection.send(
+                    content: nil, isComplete: true, completion: .contentProcessed { _ in connection.cancel() })
+                return
+            }
+            connection.receive(minimumIncompleteLength: 1, maximumLength: 1) { _, _, _, _ in
+                Task { await log?.recordClosed() }
+                connection.cancel()
+            }
         }
     }
 }

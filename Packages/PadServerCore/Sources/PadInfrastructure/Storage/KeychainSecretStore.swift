@@ -90,6 +90,24 @@ enum KeychainClientError: Error, Equatable {
     case invalidStoredValue
 }
 
+enum KeychainItemAttributes {
+    static func add(_ data: Data, service: String, account: String) -> [CFString: CFTypeRef] {
+        [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: service as CFString,
+            kSecAttrAccount: account as CFString,
+        ].merging(update(data)) { _, new in new }
+    }
+
+    // 保存済みの項目も、次の保存で読める条件が更新される。
+    static func update(_ data: Data) -> [CFString: CFTypeRef] {
+        [
+            kSecValueData: data as CFData,
+            kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+        ]
+    }
+}
+
 private actor SecurityKeychainClient: KeychainClient {
     func read(service: String, account: String) throws -> Data? {
         var query = itemQuery(service: service, account: account)
@@ -111,7 +129,7 @@ private actor SecurityKeychainClient: KeychainClient {
 
     func write(_ data: Data, service: String, account: String) throws {
         let query = itemQuery(service: service, account: account)
-        let attributes: [CFString: CFTypeRef] = [kSecValueData: data as CFData]
+        let attributes = KeychainItemAttributes.update(data)
         let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
         if updateStatus == errSecSuccess {
             return
@@ -120,8 +138,7 @@ private actor SecurityKeychainClient: KeychainClient {
             throw KeychainClientError.operationFailed(updateStatus)
         }
 
-        var addQuery = query
-        addQuery[kSecValueData] = data as CFData
+        let addQuery = KeychainItemAttributes.add(data, service: service, account: account)
         let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
         if addStatus == errSecSuccess {
             return

@@ -1,6 +1,7 @@
 import Foundation
 import PadDomain
 @testable import PadInfrastructure
+import Security
 import Testing
 
 @Suite
@@ -56,6 +57,24 @@ struct KeychainSecretStoreTests {
         await #expect(throws: KeychainClientError.operationFailed(-25293)) {
             try await store.secret(named: "API_KEY", for: project)
         }
+    }
+
+    @Test
+    func newItemsAreCreatedAfterFirstUnlockThisDeviceOnly() {
+        let attributes = KeychainItemAttributes.add(Data("value".utf8), service: "padserver", account: "admin-token")
+
+        #expect(attributes[kSecAttrAccessible] as? String == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
+        #expect(attributes[kSecValueData] as? Data == Data("value".utf8))
+        #expect(attributes[kSecAttrService] as? String == "padserver")
+        #expect(attributes[kSecAttrAccount] as? String == "admin-token")
+    }
+
+    @Test
+    func updatesMigrateExistingItemsToAfterFirstUnlockThisDeviceOnly() {
+        let attributes = KeychainItemAttributes.update(Data("value".utf8))
+
+        #expect(attributes[kSecAttrAccessible] as? String == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
+        #expect(attributes[kSecValueData] as? Data == Data("value".utf8))
     }
 }
 
