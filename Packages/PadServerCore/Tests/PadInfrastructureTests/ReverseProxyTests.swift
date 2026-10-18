@@ -13,6 +13,9 @@ private enum ReverseProxyTestConstants {
     static let chunkCount = 2_048
     static let pollMilliseconds = 100
     static let maximumPolls = 100
+    static let stablePollsRequired = 3
+    static let readAheadLimitMebibytes = 32
+    static let readAheadLimit = readAheadLimitMebibytes * kibibyte * kibibyte
     static let shortTimeoutMilliseconds = 200
     static let hangSeconds = 30
     static let uploadChunkCount = 8
@@ -112,13 +115,16 @@ private func echoHandler(
     }
 }
 
-// 書き込みが止まった時点の量を返す。止まらなければ Int.max を返す。
-private func settledValue(of box: NIOLockedValueBox<Int>) async throws -> Int {
+// 量が連続して変わらなくなるか, 上限を超えた時点の量を返す。どちらにもならなければ Int.max を返す。
+private func settledValue(of box: NIOLockedValueBox<Int>, limit: Int) async throws -> Int {
     var previous = box.withLockedValue { $0 }
+    var stablePolls = 0
     for _ in 0..<ReverseProxyTestConstants.maximumPolls {
         try await Task.sleep(for: .milliseconds(ReverseProxyTestConstants.pollMilliseconds))
         let current = box.withLockedValue { $0 }
-        if current == previous { return current }
+        if current > limit { return current }
+        stablePolls = current == previous ? stablePolls + 1 : 0
+        if stablePolls >= ReverseProxyTestConstants.stablePollsRequired { return current }
         previous = current
     }
     return Int.max
@@ -246,7 +252,7 @@ private func slowConsumerHandler(produced: NIOLockedValueBox<Int>) -> UpstreamHa
         let writer = ProbeWriter(
             onWrite: { chunk in
                 if consumed.withLockedValue({ $0 == 0 }) {
-                    let settled = try await settledValue(of: produced)
+                    let settled = try await settledValue(of: produced, limit: ReverseProxyTestConstants.readAheadLimit)
                     plateau.withLockedValue { $0 = settled }
                 }
                 consumed.withLockedValue { $0 += chunk.readableBytes }
@@ -257,5 +263,5 @@ private func slowConsumerHandler(produced: NIOLockedValueBox<Int>) -> UpstreamHa
     }
     #expect(finished.withLockedValue { $0 })
     #expect(consumed.withLockedValue { $0 } == totalBytes)
-    #expect(plateau.withLockedValue { $0 } < totalBytes)
+    #expect(plateau.withLockedValue { $0 } <= ReverseProxyTestConstants.readAheadLimit)
 }
