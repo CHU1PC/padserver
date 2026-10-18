@@ -24,6 +24,7 @@ public struct PadServers: Sendable {
     private let fileStore: any FileStore
     private let linkStore: any ShareLinkStore
     private let timeSource: any TimeSource
+    private let usageSource: any UsageSource
 
     public init(
         ports: PadServerPorts,
@@ -33,7 +34,8 @@ public struct PadServers: Sendable {
         logBus: any LogBus,
         fileStore: any FileStore,
         linkStore: any ShareLinkStore,
-        timeSource: any TimeSource
+        timeSource: any TimeSource,
+        usageSource: any UsageSource
     ) {
         self.ports = ports
         self.storage = storage
@@ -43,6 +45,7 @@ public struct PadServers: Sendable {
         self.fileStore = fileStore
         self.linkStore = linkStore
         self.timeSource = timeSource
+        self.usageSource = usageSource
     }
 
     /// 配信 (loopback と tailnet) と管理の待ち受けを同時に動かし, どれかが終わるか失敗したら全部を止めます.
@@ -109,7 +112,9 @@ public struct PadServers: Sendable {
             shareLink: ShareLinkController(
                 shareLinks: ShareLinks(
                     fileStore: fileStore, linkStore: linkStore, timeSource: timeSource, idGenerator: idGenerator),
-                manageFiles: manageFiles, linkStore: linkStore, timeSource: timeSource)
+                manageFiles: manageFiles, linkStore: linkStore, timeSource: timeSource),
+            usage: ProjectUsageController(
+                getProjectUsage: GetProjectUsage(storage: storage, usageSource: usageSource))
         )
         router.add(middleware: AdminErrorMiddleware())
         controllers.deploy.addRoutes(to: router)
@@ -119,6 +124,7 @@ public struct PadServers: Sendable {
         controllers.fileTransfer.addRoutes(to: router)
         controllers.fileList.addRoutes(to: router)
         controllers.shareLink.addRoutes(to: router)
+        controllers.usage.addRoutes(to: router)
     }
 
     func makeAdminApplication() throws -> Application<RouterResponder<AdminRequestContext>> {

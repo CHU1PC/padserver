@@ -30,6 +30,7 @@ actor GuestHost: GuestController {
     private let initrd: URL
     private let qemuLibrary: URL
     private let controller: QEMUGuestController
+    private let readiness: GuestDockerReadiness
     private var bootFailed = false
 
     init(bundle: Bundle = .main) {
@@ -46,6 +47,7 @@ actor GuestHost: GuestController {
         let credentials: @Sendable () async throws -> GuestCredentials = { try await provider.credentials() }
         let readiness = GuestDockerReadiness(
             guestPort: Constants.dockerGuestPort, forwarder: PortForwarder(), credentials: credentials)
+        self.readiness = readiness
         controller = QEMUGuestController(
             runner: QEMURunner(
                 libraryPath: qemuLibrary.path, biosDirectory: guestDirectory.appendingPathComponent("pc-bios").path),
@@ -85,6 +87,10 @@ actor GuestHost: GuestController {
             bootFailed = true
             throw error
         }
+    }
+
+    func projectUsages() async throws -> [String: ContainerUsage] {
+        try await readiness.projectUsages()
     }
 
     func stop() async throws {
