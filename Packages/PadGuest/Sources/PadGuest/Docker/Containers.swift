@@ -6,6 +6,28 @@ public struct ContainerSummary: Decodable, Equatable, Sendable {
     public let image: String
     public let state: String
     public let status: String
+    public let labels: [String: String]
+
+    public init(
+        id: String, names: [String], image: String, state: String, status: String, labels: [String: String] = [:]
+    ) {
+        self.id = id
+        self.names = names
+        self.image = image
+        self.state = state
+        self.status = status
+        self.labels = labels
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        names = try container.decode([String].self, forKey: .names)
+        image = try container.decode(String.self, forKey: .image)
+        state = try container.decode(String.self, forKey: .state)
+        status = try container.decode(String.self, forKey: .status)
+        labels = try container.decodeIfPresent([String: String].self, forKey: .labels) ?? [:]
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -13,6 +35,7 @@ public struct ContainerSummary: Decodable, Equatable, Sendable {
         case image = "Image"
         case state = "State"
         case status = "Status"
+        case labels = "Labels"
     }
 }
 

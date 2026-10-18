@@ -40,7 +40,7 @@ func listContainersDecodesDocumentedResponse() async throws {
             containers == [
                 ContainerSummary(
                     id: "8dfafdbc3a40", names: ["/boring_feynman"], image: "ubuntu:latest", state: "Exited",
-                    status: "Exit 0"),
+                    status: "Exit 0", labels: ["com.example.vendor": "Acme"]),
                 ContainerSummary(
                     id: "9cd87474be90", names: ["/coolName"], image: "ubuntu:latest", state: "running",
                     status: "Up 2 hours"),
