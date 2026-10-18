@@ -13,6 +13,7 @@ enum RelaySocketError: Error, Equatable {
 
 protocol RelaySocket: Sendable {
     func receive() async throws -> RelaySocketMessage
+    func send(_ message: RelaySocketMessage) async throws
     func close(code: Int)
 }
 
@@ -87,6 +88,13 @@ private final class URLSessionRelaySocket: RelaySocket, Sendable {
         } catch {
             let code = task.closeCode.rawValue
             throw RelaySocketError.closed(code: code == URLSessionWebSocketTask.CloseCode.invalid.rawValue ? nil : code)
+        }
+    }
+
+    func send(_ message: RelaySocketMessage) async throws {
+        switch message {
+        case .data(let data): try await task.send(.data(data))
+        case .text(let text): try await task.send(.string(text))
         }
     }
 
