@@ -15,15 +15,17 @@ public enum ServingServer {
     ) -> Application<CallbackResponder<BasicRequestContext>> {
         let requestLogger = RequestLogMiddleware(logBus: logBus)
         let responder = CallbackResponder<BasicRequestContext> { request, context in
-            try await requestLogger.handle(request, context: context) { request, context in
+            try await requestLogger.handle(request, context: context) { request, context, loggedProject in
                 guard let host = try routeHost(for: request) else {
                     return Response(status: .notFound)
                 }
                 switch try await resolveRoute(host: host, path: request.uri.path) {
                 case .matched(let route):
+                    loggedProject.set(route.project)
                     return try await handleRoute(route, request, context)
 
-                case .stopped:
+                case .stopped(let project):
+                    loggedProject.set(project)
                     return Response(status: .serviceUnavailable)
 
                 case .notFound, .ambiguous:
