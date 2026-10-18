@@ -3,6 +3,7 @@ import os
 import PadApplication
 import PadDomain
 import PadInfrastructure
+import PadInterface
 
 enum CompositionError: Error {
     case tailnetAddressNotFound
@@ -33,6 +34,16 @@ enum Composition {
     static let adminPort = 8081
 
     private static let logger = Logger(subsystem: "PadServer", category: "composition")
+    private static let guest = GuestHost()
+
+    static func startGuest() async {
+        await guest.startReportingFailure()
+    }
+
+    // メモリと disk の使用は port が無いので測れないとして返す.
+    static func guestStatus() async -> GuestStatusReading? {
+        GuestStatusReading(state: await guest.state(), memoryBytes: nil, diskBytes: nil)
+    }
 
     static func run(logBus: any LogBus) async {
         do {

@@ -5,6 +5,8 @@ options:
 packages:
   PadServerCore:
     path: Packages/PadServerCore
+  PadGuest:
+    path: Packages/PadGuest
 targets:
   PadServer:
     type: application
@@ -45,6 +47,8 @@ targets:
         product: PadInterface
       - package: PadServerCore
         product: PadInfrastructure
+      - package: PadGuest
+        product: PadGuest
 schemes:
   PadServer:
     build:

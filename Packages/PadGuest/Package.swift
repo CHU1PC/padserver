@@ -7,6 +7,10 @@ let commonSwiftSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "PadGuest",
+    platforms: [
+        .iOS(.v26),
+        .macOS(.v15),
+    ],
     products: [
         .library(name: "PadGuest", targets: ["PadGuest"])
     ],
