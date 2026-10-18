@@ -26,10 +26,20 @@ jobs:
       - name: Install tools
         run: brew bundle --file Brewfile
       - name: Show toolchain versions
+        id: tc
         run: |
           swiftlint version
           xcodegen --version
           swift --version
           xcodebuild -version
+          echo "key=${RUNNER_OS}-${RUNNER_ARCH}-$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
+      - name: Cache DerivedData
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: |
+            ${{ runner.temp }}/DerivedData
+          key: dd-unused-${{ steps.tc.outputs.key }}-${{ hashFiles('project.yml', 'Packages/*/Package.resolved') }}
+          restore-keys: |
+            dd-unused-${{ steps.tc.outputs.key }}-
       - name: Generate project, build and analyze unused declarations and imports
         run: scripts/ci/unused-code.sh

@@ -12,6 +12,7 @@ fi
 
 cd "$repo_root"
 xcodegen generate
+rm -rf "$work_dir"/DerivedData/Build/Intermediates.noindex/{PadServer,PadServerCore,PadGuest}.build
 xcodebuild -project PadServer.xcodeproj -scheme PadServer \
   -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath "$work_dir/DerivedData" \
