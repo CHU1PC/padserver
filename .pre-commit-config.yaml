@@ -61,3 +61,39 @@ repos:
         entry: typos --force-exclude
         language: system
         types: [text]
+      # CI の build と試験の script を push の前にも走らせる. commit の stage では走らない.
+      - id: ci-core
+        name: "CI: core (swift test)"
+        entry: scripts/ci/core.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+      - id: ci-cli
+        name: "CI: cli (swift test)"
+        entry: scripts/ci/cli.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+      - id: ci-relay
+        name: "CI: relay (bun test)"
+        entry: scripts/ci/relay.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+      - id: ci-app
+        name: "CI: app (xcodebuild)"
+        entry: scripts/ci/app.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+      - id: ci-unused-code
+        name: "CI: unused code (swiftlint analyze)"
+        entry: scripts/ci/unused-code.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true

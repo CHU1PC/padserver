@@ -44,6 +44,15 @@ PadServer の PR を, 誰がどう作って, どう merge するかを決めた�
 1つでも落ちたら, push しません.
 pre-commit が入るまで (M0-7 が済むまで) は, その Issue に関わる検査を手で実行します.
 
+### 4.1 CI と同じ script を手元で走らせる
+
+CI の build と試験の手順は, `scripts/ci/` の script (`core.sh`, `cli.sh`, `relay.sh`, `app.sh`, `unused-code.sh`) にあります. CI の workflow と pre-push の hook は, 同じ script を呼びます.
+
+- 手動で走らせるには, `scripts/ci/<名前>.sh` を直接呼ぶか, `pre-commit run --hook-stage pre-push --all-files` を実行します. どちらも引数は要らず, repo のどこからでも呼べます.
+- push の前に自動で走らせるには, `pre-commit install --hook-type pre-push` を1回実行します. 入れると, `git push` の前に 10 分ほどかかります.
+- pre-push の hook は強制ではありません. 飛ばしたいときは, `git push --no-verify` を使わずに, CI に任せます.
+- pre-push の hook は, `pre-commit run --all-files` (commit の stage) では走りません.
+
 ## 5. commit
 
 - メッセージは `<type>: <10語ほどの説明>` の1行で, 英語で書きます.

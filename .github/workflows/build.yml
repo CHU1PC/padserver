@@ -30,16 +30,8 @@ jobs:
         run: |
           swift --version
           xcodebuild -version
-      - name: Build and test PadServerCore
-        working-directory: Packages/PadServerCore
-        run: |
-          swift build
-          swift test
-      - name: Build and test PadGuest
-        working-directory: Packages/PadGuest
-        run: |
-          swift build
-          swift test
+      - name: Build and test packages
+        run: scripts/ci/core.sh
 
   cli:
     name: cli
@@ -58,11 +50,7 @@ jobs:
           swift --version
           xcodebuild -version
       - name: Build and run padctl
-        working-directory: cli
-        run: |
-          swift build
-          swift test
-          swift run padctl --version
+        run: scripts/ci/cli.sh
 
   relay:
     name: relay
@@ -79,15 +67,8 @@ jobs:
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6  # v2.2.0
         with:
           bun-version: 1.4.2
-      - name: Install relay dependencies
-        working-directory: relay
-        run: bun install --frozen-lockfile
-      - name: Typecheck relay
-        working-directory: relay
-        run: bun run typecheck
-      - name: Test relay
-        working-directory: relay
-        run: bun test
+      - name: Install, typecheck and test relay
+        run: scripts/ci/relay.sh
 
   app:
     name: app
@@ -108,7 +89,4 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate project and build app
-        run: |
-          xcodegen generate
-          xcodebuild -project PadServer.xcodeproj -scheme PadServer \
-            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+        run: scripts/ci/app.sh
