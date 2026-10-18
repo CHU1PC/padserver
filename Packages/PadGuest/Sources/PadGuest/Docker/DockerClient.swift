@@ -64,16 +64,32 @@ public final class DockerClient: Sendable {
     }
 
     private func get(_ path: String) async throws -> Data {
+        let response = try await send(method: "GET", path: path)
+        guard response.status == Constants.okStatus else { throw ClientError.unexpectedStatus(response.status) }
+        return response.body
+    }
+
+    /// 状態コードの判断は呼び出し側に任せる. 接続の失敗は `connectionFailed` にする.
+    func send(
+        method: String, path: String, query: [URLQueryItem] = [], body: Data? = nil, timeout: TimeInterval? = nil
+    ) async throws -> (status: Int, body: Data) {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
+        else { throw ClientError.invalidResponse }
+        if !query.isEmpty { components.queryItems = query }
+        guard let url = components.url else { throw ClientError.invalidResponse }
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.httpBody = body
+        if let timeout { request.timeoutInterval = timeout }
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(from: baseURL.appendingPathComponent(path))
+            (data, response) = try await session.data(for: request)
         } catch {
             throw ClientError.connectionFailed
         }
         guard let http = response as? HTTPURLResponse else { throw ClientError.invalidResponse }
-        guard http.statusCode == Constants.okStatus else { throw ClientError.unexpectedStatus(http.statusCode) }
-        return data
+        return (http.statusCode, data)
     }
 }
 
