@@ -49,6 +49,20 @@ struct KeychainSecretStoreTests {
     }
 
     @Test
+    func keepsRelayTokenSeparateFromAdminTokenAndReplacesIt() async throws {
+        let store = KeychainSecretStore(client: InMemoryKeychainClient())
+
+        #expect(try await store.relayToken() == nil)
+
+        try await store.setAdminToken(AdminToken("admin-value"))
+        try await store.setRelayToken(RelayToken("relay-value"))
+        try await store.setRelayToken(RelayToken("updated-relay-value"))
+
+        #expect(try await store.relayToken()?.value == "updated-relay-value")
+        #expect(try await store.adminToken()?.value == "admin-value")
+    }
+
+    @Test
     func propagatesKeychainFailures() async throws {
         let client = InMemoryKeychainClient(failure: KeychainClientError.operationFailed(-25293))
         let store = KeychainSecretStore(client: client)

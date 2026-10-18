@@ -7,6 +7,7 @@ public struct KeychainSecretStore: SecretStore {
     private enum Account {
         static let service = "padserver"
         static let adminToken = "admin-token"
+        static let relayToken = "relay-token"
         static let projectPrefix = "project:"
         static let projectSeparator = ":"
     }
@@ -59,6 +60,17 @@ public struct KeychainSecretStore: SecretStore {
 
     public func setAdminToken(_ token: AdminToken) async throws {
         try await client.write(Data(token.value.utf8), service: Account.service, account: Account.adminToken)
+    }
+
+    public func relayToken() async throws -> RelayToken? {
+        guard let data = try await client.read(service: Account.service, account: Account.relayToken) else {
+            return nil
+        }
+        return RelayToken(try Self.decode(data))
+    }
+
+    public func setRelayToken(_ token: RelayToken) async throws {
+        try await client.write(Data(token.value.utf8), service: Account.service, account: Account.relayToken)
     }
 
     private static func projectPrefix(for project: ProjectName) -> String {
