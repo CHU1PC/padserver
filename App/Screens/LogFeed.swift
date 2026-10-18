@@ -6,7 +6,12 @@ import SwiftUI
 struct LogFeed: View {
     let logBus: any LogBus
 
-    @State private var presenter = LogFeedPresenter()
+    @State private var presenter: LogFeedPresenter
+
+    init(logBus: any LogBus, project: String? = nil) {
+        self.logBus = logBus
+        _presenter = State(initialValue: LogFeedPresenter(project: project))
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -42,6 +47,9 @@ private struct LogRowView: View {
             HStack {
                 Text(row.timestamp, format: .dateTime.hour().minute().second())
                 Text(row.source)
+                if let project = row.project {
+                    Text(project)
+                }
                 Text(row.level.rawValue.uppercased()).foregroundStyle(color)
             }
             .font(.caption.monospaced())

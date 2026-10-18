@@ -11,7 +11,7 @@ struct RootView: View {
             SetupScreen(secretStore: KeychainSecretStore(), adminEndpoint: adminEndpoint)
                 .tabItem { Label("Setup", systemImage: "key") }
             NavigationStack {
-                ProjectList(load: { try await Composition.listProjects() })
+                ProjectList(logBus: logBus, load: { try await Composition.listProjects() })
             }
             .tabItem { Label("Projects", systemImage: "square.stack") }
             RequestFeed(logBus: logBus)

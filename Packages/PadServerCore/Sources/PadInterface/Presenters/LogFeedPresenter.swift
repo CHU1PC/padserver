@@ -7,6 +7,7 @@ public struct LogRow: Identifiable, Hashable, Sendable {
     public let source: String
     public let level: LogLevel
     public let message: String
+    public let project: String?
 }
 
 /// ログを到着順に溜めて, 画面に出す行へ変えます.
@@ -16,16 +17,19 @@ public struct LogFeedPresenter: Sendable {
 
     public private(set) var rows: [LogRow] = []
     private var nextID = 0
+    private let project: String?
 
-    public init() {
-        // 明示した初期化子で公開 API を安定させます.
+    /// `project` を渡すと, そのプロジェクトのログだけを残します. 名前の無いログは残りません.
+    public init(project: String? = nil) {
+        self.project = project
     }
 
     public mutating func append(_ entry: LogEntry) {
+        if let project, entry.project != project { return }
         rows.append(
             LogRow(
                 id: nextID, timestamp: entry.timestamp, source: entry.source, level: entry.level,
-                message: entry.message))
+                message: entry.message, project: entry.project))
         nextID += 1
         if rows.count > Self.rowLimit {
             rows.removeFirst(rows.count - Self.rowLimit)

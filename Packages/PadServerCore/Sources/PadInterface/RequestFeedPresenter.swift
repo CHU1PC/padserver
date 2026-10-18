@@ -8,6 +8,7 @@ public struct RequestFeedRow: Identifiable, Hashable, Sendable {
     public let path: String
     public let status: Int
     public let durationMilliseconds: Double
+    public let project: String?
 
     // 4xx と 5xx を失敗として色分けする.
     private static let firstFailureStatus = 400
@@ -51,7 +52,7 @@ public struct RequestFeedPresenter: Sendable {
         else { return nil }
         return RequestFeedRow(
             id: id, timestamp: entry.timestamp, host: String(host), path: String(path), status: status,
-            durationMilliseconds: duration)
+            durationMilliseconds: duration, project: entry.project)
     }
 
     private static func value(of part: Substring, key: String) -> Substring? {
