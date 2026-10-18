@@ -1,0 +1,39 @@
+#!/bin/sh
+# Docker の API を mutual TLS で開けて dockerd を起動する (busybox init が respawn する).
+
+set -eu
+
+tls_dir=/var/lib/padserver/tls
+port=2376
+
+if [ ! -s "$tls_dir/server-key.pem" ]; then
+	# 端末ごとの鍵は, その端末の初回起動で作る. image には鍵を入れない.
+	umask 077
+	mkdir -p "$tls_dir"
+	cd "$tls_dir"
+	openssl req -x509 -newkey rsa:3072 -nodes -days 3650 -subj "/CN=padserver-docker-ca" \
+		-keyout ca-key.pem -out ca.pem
+	{
+		printf 'basicConstraints=CA:FALSE\n'
+		printf 'subjectAltName=DNS:localhost,IP:127.0.0.1\n'
+		printf 'extendedKeyUsage=serverAuth\n'
+	} >server-ext.cnf
+	printf 'basicConstraints=CA:FALSE\nextendedKeyUsage=clientAuth\n' >client-ext.cnf
+	openssl req -newkey rsa:3072 -nodes -subj "/CN=padserver-docker-server" \
+		-keyout server-key.pem -out server.csr
+	openssl x509 -req -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial \
+		-days 3650 -extfile server-ext.cnf -out server.pem
+	openssl req -newkey rsa:3072 -nodes -subj "/CN=padserver-docker-client" \
+		-keyout client-key.pem -out client.csr
+	openssl x509 -req -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial \
+		-days 3650 -extfile client-ext.cnf -out client.pem
+	rm -f server.csr client.csr server-ext.cnf client-ext.cnf ca.srl
+fi
+
+exec dockerd \
+	--host unix:///var/run/docker.sock \
+	--host "tcp://0.0.0.0:$port" \
+	--tlsverify \
+	--tlscacert "$tls_dir/ca.pem" \
+	--tlscert "$tls_dir/server.pem" \
+	--tlskey "$tls_dir/server-key.pem"

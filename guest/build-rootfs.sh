@@ -38,20 +38,21 @@ rootfs_packages=(
   libblkid=2.42.3-r1
   libbsd=0.12.2-r0
   libcom_err=1.47.4-r0
-  libcrypto3=3.5.8-r0
+  libcrypto3=3.5.9-r0
   libeconf=0.8.3-r0
   libmd=1.2.0-r0
   libmnl=1.0.5-r2
   libncursesw=6.6_p20260516-r0
   libnftnl=1.3.1-r0
   libseccomp=2.6.1-r0
-  libssl3=3.5.8-r0
+  libssl3=3.5.9-r0
   libuuid=2.42.3-r1
   libxtables=1.8.13-r0
   musl=1.2.6-r2
   musl-utils=1.2.6-r2
   ncurses-terminfo-base=6.6_p20260516-r0
   netcat-openbsd=1.234.1-r0
+  openssl=3.5.9-r0
   readline=8.3.3-r1
   runc=1.4.3-r2
   scanelf=1.3.9-r1
@@ -178,7 +179,9 @@ install -m 0755 /guest/init /rootfs/init
 install -d -m 0755 /rootfs/usr/bin
 install -m 0755 "${tctish}"/scripts/* /rootfs/usr/bin/
 ln -sf ../usr/bin/mount.ios /rootfs/sbin/mount.ios
-install -d -m 0755 /rootfs/etc/dropbear /rootfs/ios_host /rootfs/private
+install -d -m 0755 /rootfs/etc/dropbear /rootfs/ios_host /rootfs/private /rootfs/etc/padserver
+install -m 0755 /guest/rootfs/etc/padserver/start-dockerd /rootfs/etc/padserver/
+cat /guest/rootfs/etc/padserver/inittab.docker >> /rootfs/etc/inittab
 install -m 0644 "${tctish}/placeholder_keys/placeholder_key.pub" /rootfs/etc/dropbear/
 
 # app が使う root の password は tctiSH の build_rootfs.sh の値をそのまま使う. repo には書かない.
