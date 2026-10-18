@@ -24,10 +24,42 @@ configure_flags=(
   --enable-tcg-threaded-interpreter
 )
 qemu_subprojects=(keycodemapdb berkeley-softfloat-3 berkeley-testfloat-3 slirp libucontext)
+# QEMURunner が dlsym で解決する記号.
+library_symbols=(qemu_init qemu_main_loop qemu_cleanup)
+library_name="libqemu-x86_64.dylib"
 
 die() {
   printf 'Error: %s\n' "$*" >&2
   exit 1
+}
+
+# ninja が実行ファイルを作る link の命令から, main を持つ system_main.c.o を外し, dylib として再 link する.
+link_library() {
+  local build_dir="$1" output="$2" exports="$3"
+  local link_line word skip=0 symbol
+  local -a words=() link_args=()
+
+  link_line="$(cd "$build_dir" && ninja -t commands qemu-system-x86_64 | grep -E '^[^ ]+ +-o qemu-system-x86_64-unsigned ')"
+  [[ -n "$link_line" && "$link_line" != *$'\n'* ]] || die "could not find a single link command for qemu-system-x86_64-unsigned."
+  [[ "$link_line" == *system_main.c.o* ]] || die "the link command has no system_main.c.o."
+  read -r -a words <<< "$link_line"
+  for word in "${words[@]}"; do
+    if ((skip)); then
+      skip=0
+      continue
+    fi
+    case "$word" in
+      -o) skip=1 ;;
+      *system_main.c.o | -Wl,-exported_symbols_list,*) ;;
+      *) link_args+=("$word") ;;
+    esac
+  done
+
+  : > "$exports"
+  for symbol in "${library_symbols[@]}"; do
+    printf '_%s\n' "$symbol" >> "$exports"
+  done
+  (cd "$build_dir" && "${link_args[@]}" -dynamiclib -o "$output" "-Wl,-exported_symbols_list,${exports}")
 }
 
 # nix の shell の中で呼ばれる. 作業用の写しを configure して build し, 成果物を out_dir に置く.
@@ -40,10 +72,13 @@ build_in_shell() {
   # 最後の署名の工程が Xcode の Rez と SetFile を PATH に要る.
   (cd "$build_dir" && PATH="${XCODE_TOOLS_DIR}:${PATH}" nice ninja -j3 qemu-system-x86_64)
 
-  rm -f -- "${out_dir}/qemu-system-x86_64" "${out_dir}/stamp"
+  link_library "$build_dir" "${build_dir}/${library_name}" "${work}/exports.txt"
+
+  rm -f -- "${out_dir}/qemu-system-x86_64" "${out_dir}/${library_name}" "${out_dir}/stamp"
   rm -rf -- "${out_dir}/pc-bios"
   cp -RL -- "${qemu_src}/pc-bios" "${out_dir}/pc-bios"
   cp -- "${build_dir}/qemu-system-x86_64" "${out_dir}/qemu-system-x86_64"
+  cp -- "${build_dir}/${library_name}" "${out_dir}/${library_name}"
   printf '%s\n' "$stamp" > "${out_dir}/stamp"
 }
 
@@ -75,8 +110,8 @@ qemu_commit="$(git -C "${source_dir}/qemu" rev-parse HEAD)"
 lock_hash="$(shasum -a 256 "${source_dir}/tctiSH/flake.lock" | cut -d ' ' -f 1)"
 stamp="${qemu_commit} ${lock_hash} ${configure_flags[*]}"
 
-if [[ -x "${out_dir}/qemu-system-x86_64" && "$(cat "${out_dir}/stamp" 2> /dev/null || true)" == "$stamp" ]]; then
-  printf 'qemu-system-x86_64 is up to date: %s/qemu-system-x86_64\n' "$out_dir"
+if [[ -x "${out_dir}/qemu-system-x86_64" && -f "${out_dir}/${library_name}" && "$(cat "${out_dir}/stamp" 2> /dev/null || true)" == "$stamp" ]]; then
+  printf 'qemu-system-x86_64 and %s are up to date: %s\n' "$library_name" "$out_dir"
   exit 0
 fi
 
@@ -93,4 +128,4 @@ cp -- "${source_dir}/tctiSH/flake.nix" "${source_dir}/tctiSH/flake.lock" "${work
   --profile "${out_dir}/nix-gc-root" "path:${work}/flake#host-qemu" \
   --command bash "${BASH_SOURCE[0]}" --in-shell "$work" "$stamp"
 
-printf 'built %s/qemu-system-x86_64\n' "$out_dir"
+printf 'built %s/qemu-system-x86_64 and %s\n' "$out_dir" "$library_name"
