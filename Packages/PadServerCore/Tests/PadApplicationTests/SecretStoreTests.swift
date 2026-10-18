@@ -45,6 +45,7 @@ private actor InMemorySecretStore: SecretStore {
 
     private var secrets: [SecretKey: String] = [:]
     private var currentAdminToken: AdminToken?
+    private var currentRelayToken: RelayToken?
 
     func secret(named name: String, for project: ProjectName) throws -> String? {
         secrets[SecretKey(project: project, name: name)]
@@ -71,5 +72,13 @@ private actor InMemorySecretStore: SecretStore {
 
     func setAdminToken(_ token: AdminToken) throws {
         currentAdminToken = token
+    }
+
+    func relayToken() throws -> RelayToken? {
+        currentRelayToken
+    }
+
+    func setRelayToken(_ token: RelayToken) throws {
+        currentRelayToken = token
     }
 }

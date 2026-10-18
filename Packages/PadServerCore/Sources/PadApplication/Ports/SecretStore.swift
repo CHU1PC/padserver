@@ -7,4 +7,6 @@ public protocol SecretStore: Sendable {
     func removeSecret(named name: String, for project: ProjectName) async throws
     func adminToken() async throws -> AdminToken?
     func setAdminToken(_ token: AdminToken) async throws
+    func relayToken() async throws -> RelayToken?
+    func setRelayToken(_ token: RelayToken) async throws
 }

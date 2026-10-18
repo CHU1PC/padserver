@@ -9,6 +9,7 @@ public actor InMemorySecretStore: SecretStore {
 
     private var secrets: [SecretKey: String] = [:]
     private var currentAdminToken: AdminToken?
+    private var currentRelayToken: RelayToken?
 
     public init() {
         // 明示した初期化子で公開 API を安定させます。
@@ -36,5 +37,13 @@ public actor InMemorySecretStore: SecretStore {
 
     public func setAdminToken(_ token: AdminToken) throws {
         currentAdminToken = token
+    }
+
+    public func relayToken() throws -> RelayToken? {
+        currentRelayToken
+    }
+
+    public func setRelayToken(_ token: RelayToken) throws {
+        currentRelayToken = token
     }
 }
