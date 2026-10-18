@@ -17,16 +17,20 @@ private enum DeployControllerTestConstants {
 }
 
 private struct DeployControllerFixture {
-    let storage = InMemoryProjectStorage()
+    let storage: InMemoryProjectStorage
     let application: Application<RouterResponder<AdminRequestContext>>
 
-    init() {
+    init(
+        storage: InMemoryProjectStorage = InMemoryProjectStorage(),
+        releaseID: UUID = DeployControllerTestConstants.releaseID
+    ) {
+        self.storage = storage
         let router = Router(context: AdminRequestContext.self)
         DeployController(
             planDeployment: PlanDeployment(storage: storage),
             commitDeployment: CommitDeployment(
                 storage: storage,
-                idGenerator: FixedIDGenerator(id: DeployControllerTestConstants.releaseID))
+                idGenerator: FixedIDGenerator(id: releaseID))
         ).addRoutes(to: router)
         application = Application(responder: router.buildResponder())
     }
@@ -191,4 +195,67 @@ func deploymentEndpointsRequireAdminAuthorization(uri: String) async throws {
         let response = try await client.execute(uri: uri, method: .post, body: deploymentBody(hashes: []))
         #expect(response.status == .unauthorized)
     }
+}
+
+@Test func commitRegistersUnregisteredProjectAndListsIt() async throws {
+    let fixture = DeployControllerFixture()
+    try await fixture.storeBlob(DeployControllerTestConstants.storedHash)
+
+    try await fixture.application.test(.router) { client in
+        let response = try await client.execute(
+            uri: "/v1/projects/example-site/deployments",
+            method: .post,
+            body: deploymentBody(hashes: [DeployControllerTestConstants.storedHash])
+        )
+
+        #expect(response.status == .created)
+    }
+    let name = try ProjectName("example-site")
+    #expect(try await fixture.storage.listProjects() == [Project(name: name, kind: .staticSite)])
+    #expect(try await fixture.storage.listRoutes().map(\.project) == [name])
+    #expect(try await fixture.storage.listReleases().map(\.state) == [.active])
+}
+
+@Test func commitSucceedsAgainForRegisteredProject() async throws {
+    let fixture = DeployControllerFixture()
+    try await fixture.storeBlob(DeployControllerTestConstants.storedHash)
+    let secondRelease = try #require(UUID(uuidString: "00000000-0000-4000-8000-000000000002"))
+    let second = DeployControllerFixture(storage: fixture.storage, releaseID: secondRelease)
+
+    for application in [fixture.application, second.application] {
+        try await application.test(.router) { client in
+            let response = try await client.execute(
+                uri: "/v1/projects/example-site/deployments",
+                method: .post,
+                body: deploymentBody(hashes: [DeployControllerTestConstants.storedHash])
+            )
+            #expect(response.status == .created)
+        }
+    }
+    #expect(try await fixture.storage.listProjects().count == 1)
+    #expect(try await fixture.storage.listRoutes().count == 1)
+    #expect(try await fixture.storage.listReleases().map(\.state) == [.retired, .active])
+}
+
+@Test func commitRejectsRouteUsedByAnotherProjectWithJSONError() async throws {
+    let fixture = DeployControllerFixture()
+    try await fixture.storeBlob(DeployControllerTestConstants.storedHash)
+    try await fixture.application.test(.router) { client in
+        let first = try await client.execute(
+            uri: "/v1/projects/other-site/deployments",
+            method: .post,
+            body: deploymentBody(name: "other-site", hashes: [DeployControllerTestConstants.storedHash])
+        )
+        #expect(first.status == .created)
+
+        let response = try await client.execute(
+            uri: "/v1/projects/example-site/deployments",
+            method: .post,
+            body: deploymentBody(hashes: [DeployControllerTestConstants.storedHash])
+        )
+
+        #expect(response.status == .badRequest)
+        #expect(try errorCode(response) == .invalidRequest)
+    }
+    #expect(try await fixture.storage.listProjects().count == 1)
 }
