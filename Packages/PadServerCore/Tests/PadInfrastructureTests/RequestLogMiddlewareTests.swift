@@ -69,6 +69,59 @@ private func expectLogEntries(foundEntry: LogEntry?, missingEntry: LogEntry?, be
     #expect(entry?.message.contains("host=example.com path=/private status=500 duration_ms=") == true)
 }
 
+@Test func requestLogMiddlewareAttachesProjectNameForMatchedRoute() async throws {
+    let storage = InMemoryProjectStorage()
+    let bus = PadInfrastructure.InMemoryLogBus()
+    let route = Route(
+        project: try ProjectName("site"), host: try RouteHost("example.com"),
+        pathPrefix: try RoutePathPrefix("/docs"), target: .staticSite)
+    try await storage.saveProject(Project(name: route.project, kind: .staticSite), routes: [route])
+    let application = loggedApplication(storage: storage, bus: bus) { _, _, _ in Response(status: .ok) }
+
+    try await application.test(.router) { client in
+        _ = try await client.execute(uri: "/docs/page", method: .get)
+    }
+    let stream = await bus.subscribe()
+    var iterator = stream.makeAsyncIterator()
+    let entry = await iterator.next()
+    #expect(entry?.project == "site")
+}
+
+@Test func requestLogMiddlewareLeavesProjectNameEmptyForMissingRoute() async throws {
+    let storage = InMemoryProjectStorage()
+    let bus = PadInfrastructure.InMemoryLogBus()
+    let application = loggedApplication(storage: storage, bus: bus) { _, _, _ in Response(status: .ok) }
+
+    try await application.test(.router) { client in
+        _ = try await client.execute(uri: "/missing", method: .get)
+    }
+    let stream = await bus.subscribe()
+    var iterator = stream.makeAsyncIterator()
+    let entry = await iterator.next()
+    #expect(entry?.message.contains("status=404") == true)
+    #expect(entry?.project == nil)
+}
+
+@Test func requestLogMiddlewareAttachesProjectNameForStoppedProject() async throws {
+    let storage = InMemoryProjectStorage()
+    let bus = PadInfrastructure.InMemoryLogBus()
+    let route = Route(
+        project: try ProjectName("site"), host: try RouteHost("example.com"),
+        pathPrefix: try RoutePathPrefix("/"), target: .staticSite)
+    try await storage.saveProject(Project(name: route.project, kind: .staticSite), routes: [route])
+    try await storage.saveProjectRunState(.stopped, for: route.project)
+    let application = loggedApplication(storage: storage, bus: bus) { _, _, _ in Response(status: .ok) }
+
+    try await application.test(.router) { client in
+        _ = try await client.execute(uri: "/", method: .get)
+    }
+    let stream = await bus.subscribe()
+    var iterator = stream.makeAsyncIterator()
+    let entry = await iterator.next()
+    #expect(entry?.message.contains("status=503") == true)
+    #expect(entry?.project == "site")
+}
+
 private func loggedApplication(
     storage: InMemoryProjectStorage, bus: PadInfrastructure.InMemoryLogBus,
     handleRoute: @escaping @Sendable (Route, Request, BasicRequestContext) async throws -> Response
