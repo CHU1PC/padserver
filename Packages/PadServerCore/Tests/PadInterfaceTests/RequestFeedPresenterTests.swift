@@ -82,3 +82,14 @@ private func servingEntry(at seconds: TimeInterval, path: String = "/", status: 
     #expect(presenter.rows.first?.path == "/149")
     #expect(presenter.rows.last?.path == "/50")
 }
+
+@Test func rowCarriesProjectNameWhenEntryHasOne() {
+    var presenter = RequestFeedPresenter()
+    presenter.receive(
+        LogEntry(
+            timestamp: Date(timeIntervalSince1970: 1), source: "serving", level: .info,
+            message: "host=example.com path=/ status=200 duration_ms=1.0", project: "blog"))
+    presenter.receive(servingEntry(at: 2))
+
+    #expect(presenter.rows.map(\.project) == [nil, "blog"])
+}

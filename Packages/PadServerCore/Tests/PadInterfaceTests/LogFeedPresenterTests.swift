@@ -45,3 +45,25 @@ private func entry(_ message: String, level: LogLevel = .info) -> LogEntry {
     #expect(presenter.rows.first?.message == "message 5")
     #expect(presenter.rows.last?.message == "message \(total - 1)")
 }
+
+private func projectEntry(_ message: String, project: String?) -> LogEntry {
+    LogEntry(timestamp: fixedTimestamp, source: "serving", level: .info, message: message, project: project)
+}
+
+@Test func logFeedFilteredByProjectKeepsOnlyThatProjectsEntries() {
+    var presenter = LogFeedPresenter(project: "blog")
+    presenter.append(projectEntry("blog 1", project: "blog"))
+    presenter.append(projectEntry("shop 1", project: "shop"))
+    presenter.append(projectEntry("unnamed", project: nil))
+    presenter.append(projectEntry("blog 2", project: "blog"))
+
+    #expect(presenter.rows.map(\.message) == ["blog 1", "blog 2"])
+}
+
+@Test func logFeedWithoutFilterKeepsEveryEntryAndExposesProjectName() {
+    var presenter = LogFeedPresenter()
+    presenter.append(projectEntry("blog 1", project: "blog"))
+    presenter.append(projectEntry("unnamed", project: nil))
+
+    #expect(presenter.rows.map(\.project) == ["blog", nil])
+}

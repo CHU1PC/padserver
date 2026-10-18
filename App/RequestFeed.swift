@@ -14,7 +14,9 @@ struct RequestFeed: View {
                     .foregroundStyle(row.isFailure ? .red : .green)
                 VStack(alignment: .leading) {
                     Text(row.path)
-                    Text(row.host).font(.caption).foregroundStyle(.secondary)
+                    Text(row.project.map { "\($0) · \(row.host)" } ?? row.host)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer()
                 Text(row.timestamp, format: .dateTime.hour().minute().second())

@@ -3,6 +3,7 @@ import PadInterface
 import SwiftUI
 
 struct ProjectList: View {
+    let logBus: any LogBus
     let load: @Sendable () async throws -> [ListProjects.Status]
 
     @State private var rows: [ProjectListRow] = []
@@ -17,21 +18,26 @@ struct ProjectList: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(rows) { row in
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(row.name).font(.headline)
-                        Text(row.kind).font(.subheadline).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    VStack(alignment: .trailing) {
-                        Text(row.isRunning ? "Running" : "Stopped")
-                            .foregroundStyle(row.isRunning ? .green : .secondary)
-                        Text(row.activeRelease.map { "Release \($0)" } ?? "No release")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                NavigationLink(value: row.name) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(row.name).font(.headline)
+                            Text(row.kind).font(.subheadline).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing) {
+                            Text(row.isRunning ? "Running" : "Stopped")
+                                .foregroundStyle(row.isRunning ? .green : .secondary)
+                            Text(row.activeRelease.map { "Release \($0)" } ?? "No release")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
             }
+        }
+        .navigationDestination(for: String.self) { name in
+            ProjectDetail(name: name, logBus: logBus)
         }
         .navigationTitle("Projects")
         .task { await reload() }
