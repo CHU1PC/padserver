@@ -33,3 +33,38 @@ private let sampleProjects = """
 @Test func statusRendersMessageWhenThereAreNoProjects() {
     #expect(StatusReport.render(AdminProjectsResponse(projects: [])) == "No projects.")
 }
+
+private let httpOK = 200
+
+private func lines(_ body: String) async throws -> [String] {
+    let server = StubServer(.json(status: httpOK, body: body))
+    let response = try await server.makeClient().listProjects()
+    return StatusReport.render(response).split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+}
+
+@Test func statusRendersGuestAndDockerWhenPresent() async throws {
+    let body = #"{"projects":[],"guest":{"state":"ready","docker":{"responding":true}}}"#
+
+    #expect(try await lines(body) == ["No projects.", "", "Guest: ready", "Docker: responding"])
+}
+
+@Test func statusRendersDockerNotRespondingAndFailedGuest() async throws {
+    let body = #"{"projects":[],"guest":{"state":"failed","docker":{"responding":false}}}"#
+
+    #expect(try await lines(body) == ["No projects.", "", "Guest: failed", "Docker: not responding"])
+}
+
+@Test func statusRendersGuestWithoutDockerField() async throws {
+    let body = #"{"projects":[],"guest":{"state":"starting"}}"#
+
+    #expect(try await lines(body) == ["No projects.", "", "Guest: starting"])
+}
+
+@Test func statusReadsOldResponseWithoutGuest() async throws {
+    let rendered = try await lines(sampleProjects)
+
+    #expect(rendered.first?.hasPrefix("PROJECT") == true)
+    #expect(rendered.contains { !$0.contains("Guest") })
+    #expect(!rendered.joined().contains("Guest"))
+    #expect(try await lines(#"{"projects":[]}"#) == ["No projects."])
+}

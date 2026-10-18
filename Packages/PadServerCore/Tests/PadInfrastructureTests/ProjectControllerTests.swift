@@ -11,10 +11,26 @@ import Testing
 
 private let releaseUUID = UUID(uuidString: "00000000-0000-4000-8000-000000000001")
 
-private func makeApplication(storage: InMemoryProjectStorage) -> Application<RouterResponder<BasicRequestContext>> {
+private actor StubGuestController: GuestController {
+    private var current: GuestState
+
+    init(current: GuestState) {
+        self.current = current
+    }
+
+    func state() -> GuestState { current }
+    func start() { current = .starting }
+    func stop() { current = .stopped }
+}
+
+private func makeApplication(
+    storage: InMemoryProjectStorage, guest: (any GuestController)? = nil
+) -> Application<RouterResponder<BasicRequestContext>> {
     let router = Router(context: BasicRequestContext.self)
-    ProjectController(listProjects: ListProjects(storage: storage), setProjectState: SetProjectState(storage: storage))
-        .addRoutes(to: router)
+    ProjectController(
+        listProjects: ListProjects(storage: storage), setProjectState: SetProjectState(storage: storage),
+        guestController: guest
+    ).addRoutes(to: router)
     return Application(responder: router.buildResponder())
 }
 
@@ -147,5 +163,30 @@ func projectControllerRejectsInvalidProjectName(action: String) async throws {
         #expect(list.status == .unauthorized)
         #expect(stop.status == .unauthorized)
         #expect(try await storage.projectRunState(for: ProjectName("site")) == .running)
+    }
+}
+
+@Test(arguments: [
+    (GuestState.stopped, "stopped"), (GuestState.starting, "starting"),
+    (GuestState.ready, "ready"), (GuestState.failed, "failed"),
+])
+func projectControllerReportsGuestState(state: GuestState, wireValue: String) async throws {
+    let app = makeApplication(storage: InMemoryProjectStorage(), guest: StubGuestController(current: state))
+
+    try await app.test(.router) { client in
+        let response = try await client.execute(uri: "/v1/projects", method: .get)
+
+        #expect(response.status == .ok)
+        #expect(String(buffer: response.body).contains("\"guest\":{\"state\":\"\(wireValue)\"}"))
+        let body = try AdminAPIJSON.makeDecoder().decode(AdminProjectsResponse.self, from: Data(buffer: response.body))
+        #expect(body.guest == AdminGuestStatus(state: state))
+    }
+}
+
+@Test func projectControllerOmitsGuestWithoutGuestController() async throws {
+    try await makeApplication(storage: InMemoryProjectStorage()).test(.router) { client in
+        let response = try await client.execute(uri: "/v1/projects", method: .get)
+
+        #expect(!String(buffer: response.body).contains("guest"))
     }
 }

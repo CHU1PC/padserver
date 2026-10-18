@@ -137,6 +137,20 @@ release の `state` は `ReleaseState` と一致します. 配備確定後にプ
 }
 ```
 
+guest を持つ server は, 応答に `guest` を足します. `state` は `stopped`, `starting`, `ready`, `failed` のどれかです. `docker.responding` は guest 内の Docker が応答するかを示します. `guest` と `docker` は省略されることがあり, 既存のキーは変わりません. `padctl` は, どちらも無い応答を読めます.
+
+```json
+{
+  "projects": [],
+  "guest": {
+    "state": "ready",
+    "docker": {
+      "responding": true
+    }
+  }
+}
+```
+
 `POST /v1/projects/{name}/start` と `POST /v1/projects/{name}/stop` は request body を持ちません. 成功時は `200 OK` とし, 更新後の同じ状態表現を返します.
 
 ```json

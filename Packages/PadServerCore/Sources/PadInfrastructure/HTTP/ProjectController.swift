@@ -7,16 +7,23 @@ import PadInterface
 public struct ProjectController: Sendable {
     private let listProjects: ListProjects
     private let setProjectState: SetProjectState
+    private let guestController: (any GuestController)?
 
-    public init(listProjects: ListProjects, setProjectState: SetProjectState) {
+    public init(
+        listProjects: ListProjects, setProjectState: SetProjectState, guestController: (any GuestController)? = nil
+    ) {
         self.listProjects = listProjects
         self.setProjectState = setProjectState
+        self.guestController = guestController
     }
 
     public func addRoutes<Context: RequestContext>(to router: Router<Context>) {
         router.get("/v1/projects") { _, _ in
             let statuses = try await listProjects()
-            return try Self.jsonResponse(AdminProjectsResponse(projects: statuses.map(Self.adminStatus)))
+            let guest = await guestController?.state()
+            return try Self.jsonResponse(
+                AdminProjectsResponse(
+                    projects: statuses.map(Self.adminStatus), guest: guest.map { AdminGuestStatus(state: $0) }))
         }
         router.post("/v1/projects/{name}/start") { _, context in
             try await changeState(.running, parameters: context.parameters)

@@ -4,6 +4,18 @@ import PadInterface
 
 enum StatusReport {
     static func render(_ response: AdminProjectsResponse) -> String {
+        let projects = renderProjects(response)
+        guard let guest = response.guest else {
+            return projects
+        }
+        var lines = [projects, "", "Guest: \(guest.state.rawValue)"]
+        if let docker = guest.docker {
+            lines.append("Docker: \(docker.responding ? "responding" : "not responding")")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private static func renderProjects(_ response: AdminProjectsResponse) -> String {
         guard !response.projects.isEmpty else {
             return "No projects."
         }
