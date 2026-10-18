@@ -1,0 +1,148 @@
+{
+  "protocol": "padserver-relay.v1",
+  "format": "docs/relay-protocol.md の付録と relay/test-vectors/README.md を参照",
+  "invalidFrames": [
+    {
+      "name": "invalid-empty",
+      "description": "0 byte",
+      "hex": "",
+      "expect": {
+        "level": "decode",
+        "reason": "frame too short"
+      }
+    },
+    {
+      "name": "invalid-4-bytes",
+      "description": "header の途中で終わる (4 byte)",
+      "hex": "03000000",
+      "expect": {
+        "level": "decode",
+        "reason": "frame too short"
+      }
+    },
+    {
+      "name": "invalid-type-0",
+      "description": "種類 0 は無い",
+      "hex": "0000000001",
+      "expect": {
+        "level": "decode",
+        "reason": "unknown frame type"
+      }
+    },
+    {
+      "name": "invalid-type-9",
+      "description": "種類 9 は版 1 に無い",
+      "hex": "0900000001",
+      "expect": {
+        "level": "decode",
+        "reason": "unknown frame type"
+      }
+    },
+    {
+      "name": "invalid-type-255",
+      "description": "種類 255 は版 1 に無い",
+      "hex": "ff00000001",
+      "expect": {
+        "level": "decode",
+        "reason": "unknown frame type"
+      }
+    },
+    {
+      "name": "invalid-ack-empty",
+      "description": "Ack の payload が 0 byte",
+      "hex": "0800000001",
+      "expect": {
+        "level": "connection",
+        "reason": "ack payload must be 4 bytes"
+      }
+    },
+    {
+      "name": "invalid-ack-3-bytes",
+      "description": "Ack の payload が 3 byte",
+      "hex": "0800000001000004",
+      "expect": {
+        "level": "connection",
+        "reason": "ack payload must be 4 bytes"
+      }
+    },
+    {
+      "name": "invalid-ack-5-bytes",
+      "description": "Ack の payload が 5 byte",
+      "hex": "08000000010000000400",
+      "expect": {
+        "level": "connection",
+        "reason": "ack payload must be 4 bytes"
+      }
+    },
+    {
+      "name": "invalid-res-body-over-1mib",
+      "description": "ResBody の payload が 1 MiB より 1 byte 大きい (1,048,577 byte)",
+      "headerHex": "0500000001",
+      "payload": {
+        "repeat": {
+          "byteHex": "00",
+          "count": 1048577
+        }
+      },
+      "totalLength": 1048582,
+      "expect": {
+        "level": "connection",
+        "reason": "body chunk too large"
+      }
+    },
+    {
+      "name": "invalid-req-head-not-json",
+      "description": "ReqHead の payload が JSON でない",
+      "hex": "01000000017b",
+      "expect": {
+        "level": "request",
+        "reason": "invalid head"
+      }
+    },
+    {
+      "name": "invalid-req-head-missing-host",
+      "description": "ReqHead に host が無い",
+      "hex": "01000000017b226d6574686f64223a22474554222c2270617468223a222f222c2268656164657273223a5b5d2c22686173426f6479223a66616c73657d",
+      "expect": {
+        "level": "request",
+        "reason": "invalid head"
+      }
+    },
+    {
+      "name": "invalid-req-head-path-no-slash",
+      "description": "ReqHead の path が / で始まらない",
+      "hex": "01000000017b226d6574686f64223a22474554222c2270617468223a22696e6465782e68746d6c222c22686f7374223a226578616d706c652e636f6d222c2268656164657273223a5b5d2c22686173426f6479223a66616c73657d",
+      "expect": {
+        "level": "request",
+        "reason": "invalid head"
+      }
+    },
+    {
+      "name": "invalid-res-head-status-99",
+      "description": "ResHead の status が 200 未満",
+      "hex": "04000000017b22737461747573223a39392c2268656164657273223a5b5d7d",
+      "expect": {
+        "level": "request",
+        "reason": "invalid head"
+      }
+    },
+    {
+      "name": "invalid-res-head-status-600",
+      "description": "ResHead の status が 599 より大きい",
+      "hex": "04000000017b22737461747573223a3630302c2268656164657273223a5b5d7d",
+      "expect": {
+        "level": "request",
+        "reason": "invalid head"
+      }
+    },
+    {
+      "name": "invalid-res-head-header-not-pair",
+      "description": "ResHead の header が [名前, 値] の組でない",
+      "hex": "04000000017b22737461747573223a3230302c2268656164657273223a5b5b2261225d5d7d",
+      "expect": {
+        "level": "request",
+        "reason": "invalid head"
+      }
+    }
+  ]
+}

@@ -94,6 +94,8 @@ iPad をローカルサーバーにするアプリについて, 決めたこと�
 | 84 | ドメインの扱いは範囲外 | どのドメインをどう Cloudflare に向けるかは, PadServer の範囲外とする | サーバーを使う側の事情で決めます. PadServer は任意のドメインを relay に割り当てる一般的な手順を示します (M3-20). 所有者の決定です | PadServer の開発中に特定のドメインの扱いを決める | 2026-10-17 |
 | 85 | README は最後に1回だけ書く | PR では `README.md` を変えない. 何ができるかと証跡は PR の本文に書き, README は Issue #193 で最後に書く | 全ての PR が README の末尾に節を足すと, 1件 merge するたびに他の全ての PR が衝突して, CI をやり直します. 並列の実装の速さが落ちるためです. 所有者の決定です | 全ての PR で README を更新する (2026-10-17 に docs/pull-requests.md の 6.5 に書いたもの) | 2026-10-17 |
 | 86 | guest の Docker の鍵の渡し方と ssh | アプリが端末ごとに作った CA の証明書と, server の証明書と鍵だけを, 起動のたびに 2 つ目の読み取り専用の virtio-blk (tar) で guest に渡す. guest は tmpfs に展開する. client の鍵は guest に渡さない. guest の ssh は dropbear の `-s` で password を止め, 公開の placeholder 鍵は入れない | kernel の再ビルドが要りません. kernel の command line に載らないので, `/proc/cmdline` と `ps` に出ません. guest の disk と initrd に鍵が残らず, 以前の版が disk に作った鍵 (client の秘密鍵を含む) と公開鍵は, 起動のたびに消します. 項目58の「公開の鍵は使わない」を, 鍵だけでなく password にも広げました. 2376 の host 側の口は, QEMU の monitor が 127.0.0.1 に限って開けます | kernel の command line (`/proc/cmdline` に出て, 長さの上限がある), QEMU の fw_cfg (tctiSH の kernel に `FW_CFG_SYSFS` が無く, 再ビルドが要る), 9p (virtfs) (host の directory に鍵を置いたままになり, 組み込みの QEMU で使えるかも未確認), initrd に連結する (guest の rootfs に client 以外の鍵が載る), guest の初回起動で鍵を作る (項目58と #127 に反する) | 2026-10-18 |
+| 87 | relay の取り決めの版と frame | [relay-protocol.md](relay-protocol.md) の通りにする (版 1). frame は, 種類 1 byte と要求の番号 4 byte (big endian) の header と payload にする. 本文の chunk は 256 KiB を目安に 1 MiB 以下とし, 向きごと, 要求ごとに 4 MiB の window と ack を付ける. 版は WebSocket の subprotocol `padserver-relay.v1` で表す | M1 の検証 (spike 013 と 014) の値を元に, M3-1 で本体が決めました. 本文の frame に window と ack が無いと, 遅い受け手に対して Durable Object が 3 秒で `Exceeded Memory Limit` になります. 版を subprotocol にするのは, 配備の途中で古い版と新しい版が混ざっても, 繋ぐ時点で共通の版を選べるためです. 暫定の値 (ping の間隔, 待ち時間の上限, 同時に流す要求の数) は, 文書の14章に残しています | window を付けない, window を交渉で決める, 版を frame の header に持たせる | 2026-10-19 |
+| 88 | relay の接続の認証と path | tunnel の確立は `GET /_padserver/tunnel` で行い, `Authorization: Bearer <token>` で認証する. token は 32 byte の乱数 (base64url) にする. relay は token の SHA-256 だけを Worker の secret に持ち, アプリは token を Keychain に持つ. 認証は WebSocket を受け付ける前に行う | header に載せると, URL にも access log にも token が残りません. relay に hash だけを置くと, 設定が読まれても token は取り出せません. 管理 API の token とは別にするので, 片方の漏れがもう片方に及びません. `/_padserver/` で始まる path は relay が自分で処理し, 訪問者の path と衝突させません. iOS の WebSocket で `Authorization` を付けられることは, 実機で未確認です | query に token を載せる, spike の `x-spike-token`, token そのものを relay の secret に置く, spike の path `/_ws` | 2026-10-19 |
 
 ## 未決定
 
@@ -101,13 +103,14 @@ iPad をローカルサーバーにするアプリについて, 決めたこと�
 
 | 項目 | 状況 |
 | --- | --- |
-| Kikitoru の大きい音声の upload の経路 | 未着手. relay を通せる大きさが分かってから決める |
+| Kikitoru の大きい音声の upload の経路 | 所有者の判断を待つ. relay を通せる要求の本文は 100 MiB (104,857,600 byte) までと分かった (2026-10-18. 項目87). 500MB の音声は, 1つの要求では通せない. 候補は, 配れる大きさに上限を置く, relay を通さない経路に限る, 本文を 100 MiB 未満の複数の要求に分ける, の3つ. 詳細は [relay-protocol.md](relay-protocol.md) の10章 |
 | compose の動かし方と, 対応する機能の範囲 | 未着手. guest の作り直しの検証の後に決める |
 | guest を arm64 に切り替えるか | 未着手. arm64 の guest が動くかの検証の後に決める |
-| relay で大きいファイルと streaming を運ぶ取り決め | 公開の部分を作る前に, 小さく検証して決める |
 
 2026-10-11 に, 提案のうち16件を1つずつ確認して, 項目50から65にしました.
 feature branch の push と PR の作成を誰が行うかは, 2026-10-13 に項目74で決めました.
+
+relay で大きいファイルと streaming を運ぶ取り決めは, 2026-10-19 に [relay-protocol.md](relay-protocol.md) にまとめ (項目87, 88), 表から外しました. 暫定の値は, その文書の14章に残しています.
 
 次の3つは, 項目48で決着したので, 表から外しました.
 

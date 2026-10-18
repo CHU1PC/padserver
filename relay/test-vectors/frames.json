@@ -1,0 +1,510 @@
+{
+  "protocol": "padserver-relay.v1",
+  "format": "docs/relay-protocol.md の付録と relay/test-vectors/README.md を参照",
+  "frames": [
+    {
+      "name": "req-head-get",
+      "description": "本文の無い GET. hasBody が false なので, ReqBody と ReqEnd は続かない",
+      "frame": {
+        "type": "ReqHead",
+        "typeValue": 1,
+        "id": 1,
+        "payload": {
+          "json": {
+            "method": "GET",
+            "path": "/index.html",
+            "host": "example.com",
+            "headers": [
+              [
+                "accept",
+                "text/html"
+              ],
+              [
+                "user-agent",
+                "example-agent"
+              ]
+            ],
+            "hasBody": false
+          }
+        }
+      },
+      "hex": "01000000017b226d6574686f64223a22474554222c2270617468223a222f696e6465782e68746d6c222c22686f7374223a226578616d706c652e636f6d222c2268656164657273223a5b5b22616363657074222c22746578742f68746d6c225d2c5b22757365722d6167656e74222c226578616d706c652d6167656e74225d5d2c22686173426f6479223a66616c73657d"
+    },
+    {
+      "name": "req-head-post",
+      "description": "本文のある POST. path に query と percent-encoding を含む. hasBody が true なので, ReqBody と ReqEnd が続く",
+      "frame": {
+        "type": "ReqHead",
+        "typeValue": 1,
+        "id": 2,
+        "payload": {
+          "json": {
+            "method": "POST",
+            "path": "/upload?name=a%20b",
+            "host": "www.example.com",
+            "headers": [
+              [
+                "content-type",
+                "text/plain"
+              ],
+              [
+                "content-length",
+                "11"
+              ]
+            ],
+            "hasBody": true
+          }
+        }
+      },
+      "hex": "01000000027b226d6574686f64223a22504f5354222c2270617468223a222f75706c6f61643f6e616d653d6125323062222c22686f7374223a227777772e6578616d706c652e636f6d222c2268656164657273223a5b5b22636f6e74656e742d74797065222c22746578742f706c61696e225d2c5b22636f6e74656e742d6c656e677468222c223131225d5d2c22686173426f6479223a747275657d"
+    },
+    {
+      "name": "req-head-long-path",
+      "description": "300 byte の path",
+      "frame": {
+        "type": "ReqHead",
+        "typeValue": 1,
+        "id": 3,
+        "payload": {
+          "json": {
+            "method": "GET",
+            "path": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "host": "example.com",
+            "headers": [],
+            "hasBody": false
+          }
+        }
+      },
+      "hex": "01000000037b226d6574686f64223a22474554222c2270617468223a222f6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161222c22686f7374223a226578616d706c652e636f6d222c2268656164657273223a5b5d2c22686173426f6479223a66616c73657d"
+    },
+    {
+      "name": "req-head-utf8-header",
+      "description": "header の値に UTF-8 の日本語を含む. JSON の中でも escape せず, 生の UTF-8 で書く",
+      "frame": {
+        "type": "ReqHead",
+        "typeValue": 1,
+        "id": 4,
+        "payload": {
+          "json": {
+            "method": "GET",
+            "path": "/",
+            "host": "example.com",
+            "headers": [
+              [
+                "x-title",
+                "日本語のタイトル"
+              ]
+            ],
+            "hasBody": false
+          }
+        }
+      },
+      "hex": "01000000047b226d6574686f64223a22474554222c2270617468223a222f222c22686f7374223a226578616d706c652e636f6d222c2268656164657273223a5b5b22782d7469746c65222c22e697a5e69cace8aa9ee381aee382bfe382a4e38388e383ab225d5d2c22686173426f6479223a66616c73657d"
+    },
+    {
+      "name": "req-head-json-escape",
+      "description": "header の値に引用符と backslash を含む. JSON の escape の形を固定する",
+      "frame": {
+        "type": "ReqHead",
+        "typeValue": 1,
+        "id": 5,
+        "payload": {
+          "json": {
+            "method": "GET",
+            "path": "/",
+            "host": "example.com",
+            "headers": [
+              [
+                "x-note",
+                "say \"hi\" \\ done"
+              ]
+            ],
+            "hasBody": false
+          }
+        }
+      },
+      "hex": "01000000057b226d6574686f64223a22474554222c2270617468223a222f222c22686f7374223a226578616d706c652e636f6d222c2268656164657273223a5b5b22782d6e6f7465222c22736179205c2268695c22205c5c20646f6e65225d5d2c22686173426f6479223a66616c73657d"
+    },
+    {
+      "name": "req-head-duplicate-headers",
+      "description": "同じ名前の header を, 並べた順のまま 2 回持つ (名前は小文字)",
+      "frame": {
+        "type": "ReqHead",
+        "typeValue": 1,
+        "id": 6,
+        "payload": {
+          "json": {
+            "method": "GET",
+            "path": "/",
+            "host": "example.com",
+            "headers": [
+              [
+                "cookie",
+                "a=1"
+              ],
+              [
+                "cookie",
+                "b=2"
+              ]
+            ],
+            "hasBody": false
+          }
+        }
+      },
+      "hex": "01000000067b226d6574686f64223a22474554222c2270617468223a222f222c22686f7374223a226578616d706c652e636f6d222c2268656164657273223a5b5b22636f6f6b6965222c22613d31225d2c5b22636f6f6b6965222c22623d32225d5d2c22686173426f6479223a66616c73657d"
+    },
+    {
+      "name": "req-head-unknown-field",
+      "description": "未知の field は無視して読む. encode ではこの形を作らない",
+      "frame": {
+        "type": "ReqHead",
+        "typeValue": 1,
+        "id": 7,
+        "payload": {
+          "json": {
+            "method": "GET",
+            "path": "/",
+            "host": "example.com",
+            "headers": [],
+            "hasBody": false,
+            "future": 1
+          }
+        }
+      },
+      "hex": "01000000077b226d6574686f64223a22474554222c2270617468223a222f222c22686f7374223a226578616d706c652e636f6d222c2268656164657273223a5b5d2c22686173426f6479223a66616c73652c22667574757265223a317d",
+      "decodeOnly": true
+    },
+    {
+      "name": "req-body-text",
+      "description": "要求の本文の chunk (11 byte)",
+      "frame": {
+        "type": "ReqBody",
+        "typeValue": 2,
+        "id": 2,
+        "payload": {
+          "utf8": "hello world"
+        }
+      },
+      "hex": "020000000268656c6c6f20776f726c64"
+    },
+    {
+      "name": "req-body-binary",
+      "description": "0x00 と 0xff を含む本文. byte をそのまま運ぶ",
+      "frame": {
+        "type": "ReqBody",
+        "typeValue": 2,
+        "id": 2,
+        "payload": {
+          "hex": "00ff10fe"
+        }
+      },
+      "hex": "020000000200ff10fe"
+    },
+    {
+      "name": "req-body-empty",
+      "description": "payload が 0 byte の ReqBody. 受け手は何もしない. 送り手はこの frame を送らない",
+      "frame": {
+        "type": "ReqBody",
+        "typeValue": 2,
+        "id": 2,
+        "payload": {
+          "hex": ""
+        }
+      },
+      "hex": "0200000002",
+      "decodeOnly": true
+    },
+    {
+      "name": "req-end",
+      "description": "要求の本文の終わり",
+      "frame": {
+        "type": "ReqEnd",
+        "typeValue": 3,
+        "id": 2,
+        "payload": {
+          "hex": ""
+        }
+      },
+      "hex": "0300000002"
+    },
+    {
+      "name": "res-head-200",
+      "description": "content-length 付きの 200",
+      "frame": {
+        "type": "ResHead",
+        "typeValue": 4,
+        "id": 1,
+        "payload": {
+          "json": {
+            "status": 200,
+            "headers": [
+              [
+                "content-type",
+                "text/plain; charset=utf-8"
+              ],
+              [
+                "content-length",
+                "13"
+              ]
+            ]
+          }
+        }
+      },
+      "hex": "04000000017b22737461747573223a3230302c2268656164657273223a5b5b22636f6e74656e742d74797065222c22746578742f706c61696e3b20636861727365743d7574662d38225d2c5b22636f6e74656e742d6c656e677468222c223133225d5d7d"
+    },
+    {
+      "name": "res-head-206",
+      "description": "Range への応答",
+      "frame": {
+        "type": "ResHead",
+        "typeValue": 4,
+        "id": 8,
+        "payload": {
+          "json": {
+            "status": 206,
+            "headers": [
+              [
+                "content-range",
+                "bytes 0-99/1000"
+              ],
+              [
+                "content-length",
+                "100"
+              ]
+            ]
+          }
+        }
+      },
+      "hex": "04000000087b22737461747573223a3230362c2268656164657273223a5b5b22636f6e74656e742d72616e6765222c22627974657320302d39392f31303030225d2c5b22636f6e74656e742d6c656e677468222c22313030225d5d7d"
+    },
+    {
+      "name": "res-head-set-cookie-twice",
+      "description": "set-cookie を 2 つ, 並べた順のまま持つ",
+      "frame": {
+        "type": "ResHead",
+        "typeValue": 4,
+        "id": 9,
+        "payload": {
+          "json": {
+            "status": 200,
+            "headers": [
+              [
+                "set-cookie",
+                "a=1; Path=/"
+              ],
+              [
+                "set-cookie",
+                "b=2; Path=/"
+              ]
+            ]
+          }
+        }
+      },
+      "hex": "04000000097b22737461747573223a3230302c2268656164657273223a5b5b227365742d636f6f6b6965222c22613d313b20506174683d2f225d2c5b227365742d636f6f6b6965222c22623d323b20506174683d2f225d5d7d"
+    },
+    {
+      "name": "res-head-utf8-header",
+      "description": "応答の header の値に UTF-8 の日本語を含む",
+      "frame": {
+        "type": "ResHead",
+        "typeValue": 4,
+        "id": 10,
+        "payload": {
+          "json": {
+            "status": 200,
+            "headers": [
+              [
+                "x-title",
+                "日本語のタイトル"
+              ]
+            ]
+          }
+        }
+      },
+      "hex": "040000000a7b22737461747573223a3230302c2268656164657273223a5b5b22782d7469746c65222c22e697a5e69cace8aa9ee381aee382bfe382a4e38388e383ab225d5d7d"
+    },
+    {
+      "name": "res-head-204",
+      "description": "本文の無い応答. ResEnd は必ず続く",
+      "frame": {
+        "type": "ResHead",
+        "typeValue": 4,
+        "id": 11,
+        "payload": {
+          "json": {
+            "status": 204,
+            "headers": []
+          }
+        }
+      },
+      "hex": "040000000b7b22737461747573223a3230342c2268656164657273223a5b5d7d"
+    },
+    {
+      "name": "res-body-text",
+      "description": "応答の本文の chunk (13 byte)",
+      "frame": {
+        "type": "ResBody",
+        "typeValue": 5,
+        "id": 1,
+        "payload": {
+          "utf8": "Hello, world!"
+        }
+      },
+      "hex": "050000000148656c6c6f2c20776f726c6421"
+    },
+    {
+      "name": "res-body-empty",
+      "description": "payload が 0 byte の ResBody. 受け手は何もしない. 送り手はこの frame を送らない",
+      "frame": {
+        "type": "ResBody",
+        "typeValue": 5,
+        "id": 1,
+        "payload": {
+          "hex": ""
+        }
+      },
+      "hex": "0500000001",
+      "decodeOnly": true
+    },
+    {
+      "name": "res-body-256kib",
+      "description": "256 KiB (262,144 byte) の chunk. 目安の大きさ",
+      "frame": {
+        "type": "ResBody",
+        "typeValue": 5,
+        "id": 1,
+        "payload": {
+          "repeat": {
+            "byteHex": "61",
+            "count": 262144
+          }
+        }
+      },
+      "headerHex": "0500000001",
+      "totalLength": 262149
+    },
+    {
+      "name": "res-body-1mib",
+      "description": "1 MiB (1,048,576 byte) の chunk. 受け手が受け付ける最大",
+      "frame": {
+        "type": "ResBody",
+        "typeValue": 5,
+        "id": 1,
+        "payload": {
+          "repeat": {
+            "byteHex": "62",
+            "count": 1048576
+          }
+        }
+      },
+      "headerHex": "0500000001",
+      "totalLength": 1048581
+    },
+    {
+      "name": "res-end",
+      "description": "応答の終わり",
+      "frame": {
+        "type": "ResEnd",
+        "typeValue": 6,
+        "id": 1,
+        "payload": {
+          "hex": ""
+        }
+      },
+      "hex": "0600000001"
+    },
+    {
+      "name": "res-end-with-payload",
+      "description": "ResEnd に余分な payload が付いても無視する. encode ではこの形を作らない",
+      "frame": {
+        "type": "ResEnd",
+        "typeValue": 6,
+        "id": 1,
+        "payload": {
+          "hex": "ff"
+        }
+      },
+      "hex": "0600000001ff",
+      "decodeOnly": true
+    },
+    {
+      "name": "cancel",
+      "description": "その要求を止める",
+      "frame": {
+        "type": "Cancel",
+        "typeValue": 7,
+        "id": 3,
+        "payload": {
+          "hex": ""
+        }
+      },
+      "hex": "0700000003"
+    },
+    {
+      "name": "cancel-id-zero",
+      "description": "要求の番号 0 は割り当てないが, byte の層では受け付ける. 受け取った側は, 知らない番号として無視する",
+      "frame": {
+        "type": "Cancel",
+        "typeValue": 7,
+        "id": 0,
+        "payload": {
+          "hex": ""
+        }
+      },
+      "hex": "0700000000",
+      "decodeOnly": true
+    },
+    {
+      "name": "ack-256kib",
+      "description": "262,144 byte を受け取ったことを知らせる",
+      "frame": {
+        "type": "Ack",
+        "typeValue": 8,
+        "id": 1,
+        "payload": {
+          "ackBytes": 262144
+        }
+      },
+      "hex": "080000000100040000"
+    },
+    {
+      "name": "ack-max-u32",
+      "description": "ack の byte 数の最大値",
+      "frame": {
+        "type": "Ack",
+        "typeValue": 8,
+        "id": 1,
+        "payload": {
+          "ackBytes": 4294967295
+        }
+      },
+      "hex": "0800000001ffffffff"
+    },
+    {
+      "name": "req-end-id-max",
+      "description": "要求の番号の最大値 (0xFFFFFFFF)",
+      "frame": {
+        "type": "ReqEnd",
+        "typeValue": 3,
+        "id": 4294967295,
+        "payload": {
+          "hex": ""
+        }
+      },
+      "hex": "03ffffffff"
+    },
+    {
+      "name": "res-end-id-boundary",
+      "description": "要求の番号の上位 byte が立つ値 (0x80000001). 符号付きの整数で読むと負になる",
+      "frame": {
+        "type": "ResEnd",
+        "typeValue": 6,
+        "id": 2147483649,
+        "payload": {
+          "hex": ""
+        }
+      },
+      "hex": "0680000001"
+    }
+  ]
+}
