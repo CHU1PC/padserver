@@ -27,9 +27,12 @@ public struct QEMUArguments: Sendable {
 
     public var values: [String] {
         [
+            "-M", "pc",
             "-m", memory,
             "-device", "virtio-net-pci,id=net1,netdev=net0",
             "-netdev", networkBackend,
+            "-device", "virtio-rng-pci",
+            "-append", "tcti_disk=file console=ttyS0",
             "-cpu", "Haswell-v4,-pcid,-tsc-deadline,-invpcid,-spec-ctrl",
             "-smp", "cpus=\(cpuCount),maxcpus=\(maxCPUCount),sockets=1,cores=\(maxCPUCount),threads=1",
             "-device", "virtio-blk-pci,id=disk1,drive=drive1,num-queues=\(maxCPUCount)",

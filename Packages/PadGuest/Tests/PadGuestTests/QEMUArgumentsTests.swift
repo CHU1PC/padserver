@@ -14,9 +14,12 @@ import Testing
 
     #expect(
         arguments.values == [
+            "-M", "pc",
             "-m", "1G",
             "-device", "virtio-net-pci,id=net1,netdev=net0",
             "-netdev", "user,id=net0,net=192.168.100.0/24,dhcpstart=192.168.100.100,hostfwd=tcp:127.0.0.1:10022-:22",
+            "-device", "virtio-rng-pci",
+            "-append", "tcti_disk=file console=ttyS0",
             "-cpu", "Haswell-v4,-pcid,-tsc-deadline,-invpcid,-spec-ctrl",
             "-smp", "cpus=2,maxcpus=4,sockets=1,cores=4,threads=1",
             "-device", "virtio-blk-pci,id=disk1,drive=drive1,num-queues=4",
