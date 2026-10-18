@@ -25,7 +25,7 @@ configure_flags=(
 )
 qemu_subprojects=(keycodemapdb berkeley-softfloat-3 berkeley-testfloat-3 slirp libucontext)
 # QEMURunner が dlsym で解決する記号.
-library_symbols=(qemu_init qemu_main_loop qemu_cleanup)
+library_symbols=(qemu_init qemu_main_loop qemu_cleanup bql_unlock)
 library_name="libqemu-x86_64.dylib"
 
 die() {

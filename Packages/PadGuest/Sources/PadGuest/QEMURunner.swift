@@ -12,16 +12,19 @@ public struct QEMURunner: Sendable {
     private typealias InitFunction = @convention(c) (Int32, UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Void
     private typealias MainLoopFunction = @convention(c) () -> Int32
     private typealias CleanupFunction = @convention(c) (Int32) -> Void
+    private typealias UnlockFunction = @convention(c) () -> Void
 
     private struct EntryPoints: Sendable {
         let qemuInit: InitFunction
         let qemuMainLoop: MainLoopFunction
         let qemuCleanup: CleanupFunction
+        let bqlUnlock: UnlockFunction?
 
         init(handle: UnsafeMutableRawPointer) throws {
             qemuInit = try Self.symbol("qemu_init", in: handle)
             qemuMainLoop = try Self.symbol("qemu_main_loop", in: handle)
             qemuCleanup = try Self.symbol("qemu_cleanup", in: handle)
+            bqlUnlock = dlsym(handle, "bql_unlock").map { unsafeBitCast($0, to: UnlockFunction.self) }
         }
 
         private static func symbol<Function>(_ name: String, in handle: UnsafeMutableRawPointer) throws -> Function {
@@ -75,6 +78,8 @@ public struct QEMURunner: Sendable {
         defer { argv.forEach { free($0) } }
         entryPoints.qemuInit(Int32(values.count), &argv)
         entryPoints.qemuCleanup(entryPoints.qemuMainLoop())
+        // qemu_init が取った BQL を手放す. 握ったままだと exit() が exit notifier の BQL 待ちで戻らない (#401).
+        entryPoints.bqlUnlock?()
         // この thread を終了させない. library の constructor が RCU の reader として登録するのは
         // dlopen を呼んだ thread で, 終了すると registry に解放済みの node が残り, call_rcu が壊れる (#402).
         // 登録解除の関数は library から export されていないので, 呼べない.
