@@ -30,6 +30,7 @@ JSON のキーは lower camel case とし, domain 型の値と対応させます
 | `GET` | `/v1/projects` | プロジェクトと稼働状態の一覧を返す |
 | `POST` | `/v1/projects/{name}/start` | プロジェクトを開始する |
 | `POST` | `/v1/projects/{name}/stop` | プロジェクトを停止する |
+| `GET` | `/v1/projects/{name}/usage` | プロジェクトの現在の使用量を返す |
 | `GET` | `/v1/logs/stream` | 直近のログを返してから新しいログを streaming する |
 | `PUT` | `/v1/files/{name}` | ファイルを置き場に streaming で受け取る |
 | `GET` | `/v1/files/{name}` | ファイルを streaming で返す |
@@ -154,6 +155,32 @@ release の `state` は `ReleaseState` と一致します. 配備確定後にプ
 ```
 
 存在しないプロジェクトは `404 Not Found` とします. 有効な release が無いプロジェクトの開始, すでに同じ状態のプロジェクトへの再要求の扱いは未確定です.
+
+### 5.1 使用量
+
+`GET /v1/projects/{name}/usage` は `200 OK` とし, プロジェクトの現在の使用量を `usage` に入れて返します.
+
+```json
+{
+  "usage": {
+    "cpuUsage": 1.5,
+    "memoryBytes": 268435456,
+    "measuredAt": "2026-10-17T12:34:56Z"
+  }
+}
+```
+
+`cpuUsage` は CPU 1 コアを 1 とした, 使用したコア数の合計です (1.0 は 1 コア分). 複数のコアを使うと 1 を超えます. `memoryBytes` は使用中のメモリのバイト数, `measuredAt` は測った日時で, 2章の形式で送ります.
+
+使用量を測れないプロジェクト (例: 静的サイト) は, `usage` を `null` にして `200 OK` を返します.
+
+```json
+{
+  "usage": null
+}
+```
+
+存在しないプロジェクトは `404 Not Found` (`project_not_found`), 不正なプロジェクト名は `400 Bad Request` (`invalid_request`) とします.
 
 ## 6. ログ streaming
 

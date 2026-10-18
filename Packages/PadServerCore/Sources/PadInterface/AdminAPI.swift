@@ -73,6 +73,39 @@ public struct AdminProjectsResponse: Codable, Hashable, Sendable {
     }
 }
 
+public struct AdminProjectUsage: Codable, Hashable, Sendable {
+    public let cpuUsage: Double
+    public let memoryBytes: Int
+    public let measuredAt: Date
+
+    public init(cpuUsage: Double, memoryBytes: Int, measuredAt: Date) {
+        self.cpuUsage = cpuUsage
+        self.memoryBytes = memoryBytes
+        self.measuredAt = measuredAt
+    }
+
+    public init(_ usage: ProjectUsage) {
+        self.init(cpuUsage: usage.cpuUsage, memoryBytes: usage.memoryBytes, measuredAt: usage.measuredAt)
+    }
+}
+
+public struct AdminProjectUsageResponse: Codable, Hashable, Sendable {
+    public let usage: AdminProjectUsage?
+
+    public init(usage: AdminProjectUsage?) {
+        self.usage = usage
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case usage
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(usage, forKey: .usage)
+    }
+}
+
 public struct AdminFilesResponse: Codable, Hashable, Sendable {
     public let files: [StoredFile]
 
