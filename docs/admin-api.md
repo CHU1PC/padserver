@@ -259,6 +259,8 @@ M2 ではログ stream に対する絞り込み, 再開 cursor, 過去ログの�
 
 存在しないファイルは `404 Not Found` (`file_not_found`) とします.
 
+共有リンクの公開 URL は, 配信の入口 (loopback と tailnet の待ち受け) の `GET /s/{secret}` です. 管理の待ち受けには置きません. host を問わず, 静的サイトの経路の解決より先に処理します. 有効なら `200 OK` でファイルの中身を返し (Range に対応します), 未知の `secret`, 期限切れ, 失効, ファイルの削除は `404 Not Found` とします. この path は要求の log に残しません (`secret` を log に出さないためです).
+
 ### 7.4 共有リンクの一覧と失効
 
 `GET /v1/share-links` は `200 OK` とし, 発行済みの共有リンクを返します. `secret` は含めません.

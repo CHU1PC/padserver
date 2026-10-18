@@ -14,6 +14,12 @@ private struct SystemIDGenerator: IDGenerator {
     }
 }
 
+private struct SystemTimeSource: TimeSource {
+    func now() -> Date {
+        Date()
+    }
+}
+
 enum Composition {
     // 配信は tailnet の外から relay 経由で届く loopback の port, 管理は tailnet 側の port で受ける.
     static let deliveryPort = 8080
@@ -49,7 +55,10 @@ enum Composition {
             storage: FileProjectStorage(directory: directory),
             secretStore: KeychainSecretStore(),
             idGenerator: SystemIDGenerator(),
-            logBus: logBus)
+            logBus: logBus,
+            fileStore: DiskFileStore(directory: directory.appendingPathComponent("files")),
+            linkStore: FileShareLinkStore(directory: directory),
+            timeSource: SystemTimeSource())
     }
 
     /// tailnet の IPv4 の範囲に入る, 自分の interface の address を返します.

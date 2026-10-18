@@ -11,11 +11,16 @@ public enum ServingServer {
         port: Int,
         resolveRoute: ResolveRoute,
         logBus: any LogBus = InMemoryLogBus(),
+        handlePublicPath: @escaping @Sendable (Request, BasicRequestContext) async throws -> Response? = { _, _ in
+            nil
+        },
         handleRoute: @escaping @Sendable (Route, Request, BasicRequestContext) async throws -> Response
     ) -> Application<CallbackResponder<BasicRequestContext>> {
         let requestLogger = RequestLogMiddleware(logBus: logBus)
         let responder = CallbackResponder<BasicRequestContext> { request, context in
-            try await requestLogger.handle(request, context: context) { request, context, loggedProject in
+            // 公開 path は host の解決より先に処理し, 要求の log にも残しません.
+            if let response = try await handlePublicPath(request, context) { return response }
+            return try await requestLogger.handle(request, context: context) { request, context, loggedProject in
                 guard let host = try routeHost(for: request) else {
                     return Response(status: .notFound)
                 }
