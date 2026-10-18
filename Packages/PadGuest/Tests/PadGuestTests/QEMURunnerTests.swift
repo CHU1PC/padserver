@@ -24,6 +24,27 @@ private let stubSource = """
     }
     """
 
+// 本物の QEMU の library は, dlopen の constructor が RCU の reader として登録する thread と,
+// qemu_init を呼ぶ thread が同じでないと, 登録した thread の終了後に call_rcu が壊れる (#402).
+private let threadStubSource = """
+    #include <pthread.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+
+    static void log_thread(const char *label) {
+        uint64_t tid = 0;
+        pthread_threadid_np(NULL, &tid);
+        FILE *log = fopen(getenv("PADGUEST_THREAD_LOG"), "a");
+        fprintf(log, "%s %llu\\n", label, tid);
+        fclose(log);
+    }
+
+    __attribute__((constructor)) static void on_load(void) { log_thread("load"); }
+    void qemu_init(int argc, char **argv) { log_thread("init"); }
+    int qemu_main_loop(void) { return 0; }
+    void qemu_cleanup(int status) { log_thread("cleanup"); }
+    """
+
 private enum Constants {
     static let stubExitStatus = 7
     static let logTimeout: TimeInterval = 10
@@ -142,4 +163,25 @@ private func readLog(at url: URL, until marker: String) async throws -> String {
         ])
         .joined(separator: "\n") + "\n"
     #expect(log == expected)
+}
+
+@Test func qemuRunnerLoadsLibraryOnTheThreadThatRunsQEMU() async throws {
+    let directory = try makeWorkDirectory()
+    defer { removeWorkDirectory(directory) }
+    let path = try compileDylib(source: threadStubSource, in: directory, name: "thread-stub")
+    let logURL = directory.appendingPathComponent("thread.log")
+    setenv("PADGUEST_THREAD_LOG", logURL.path, 1)
+    let runner = QEMURunner(libraryPath: path, biosDirectory: "/guest/pc-bios")
+
+    try runner.start(arguments: qemuArguments)
+
+    let log = try await readLog(at: logURL, until: "cleanup")
+    let threads = Dictionary(
+        uniqueKeysWithValues: log.split(separator: "\n").map { line -> (String, String) in
+            let parts = line.split(separator: " ")
+            return (String(parts[0]), String(parts[1]))
+        })
+    #expect(threads["load"] != nil)
+    #expect(threads["load"] == threads["init"])
+    #expect(threads["init"] == threads["cleanup"])
 }
