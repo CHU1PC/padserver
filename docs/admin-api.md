@@ -163,7 +163,13 @@ release の `state` は `ReleaseState` と一致します. 配備確定後にプ
 {"timestamp":"2026-10-17T12:34:56Z","source":"web","level":"info","message":"Started"}
 ```
 
-`LogEntry` の項目は `timestamp`, `source`, `level`, `message` です. `level` は `debug`, `info`, `warning`, `error` のいずれかです. 日時は2章の形式で送ります. 接続を閉じるとその購読を解除し, サーバー側のログ生成や他の購読者には影響しません. クライアントが切断した場合, サーバーは当該 stream の送信を止めて購読を終了します.
+`LogEntry` の項目は `timestamp`, `source`, `level`, `message` と, 省略できる `project`, `service` です. `level` は `debug`, `info`, `warning`, `error` のいずれかです. 日時は2章の形式で送ります. `project` と `service` は, そのログを出したプロジェクトと service の名前です. 値が無いログ (guest や App のログ) では欄ごと省き, 欄が無い行は今までどおりです. 欄がある行の例は次の通りです.
+
+```json
+{"timestamp":"2026-10-17T12:34:56Z","source":"serving","level":"info","message":"GET / 200","project":"blog","service":"web"}
+```
+
+接続を閉じるとその購読を解除し, サーバー側のログ生成や他の購読者には影響しません. クライアントが切断した場合, サーバーは当該 stream の送信を止めて購読を終了します.
 
 M2 ではログ stream に対する絞り込み, 再開 cursor, 過去ログの保持期間は定めません. 後続で絞り込みが必要な場合は, 通信型との整合を確認して追加します.
 
