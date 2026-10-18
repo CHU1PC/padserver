@@ -3,6 +3,7 @@ set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source_dir="${script_dir}/../build/sources"
+patch_dir="${script_dir}/patches"
 
 # tctiSH のこの commit が参照する QEMU submodule の commit を固定する。
 tctish_commit="76b6f6081fc328c05c4e0fc1d770aec7f1cdcbc4"
@@ -49,7 +50,24 @@ fetch_source() {
   printf '%s %s\n' "$name" "$commit"
 }
 
+apply_patches() {
+  local name="$1" patch
+  for patch in "${patch_dir}/${name}"-*.patch; do
+    [[ -e "$patch" ]] || continue
+    if git -C "${source_dir}/${name}" apply --reverse --check "$patch" 2> /dev/null; then
+      continue
+    fi
+    if ! git -C "${source_dir}/${name}" apply "$patch"; then
+      printf 'Error: could not apply %s.\n' "$patch" >&2
+      return 1
+    fi
+    printf 'applied %s\n' "$(basename -- "$patch")"
+  done
+}
+
 mkdir -p -- "$source_dir"
 export GIT_TERMINAL_PROMPT=0
 fetch_source tctiSH https://github.com/tctiSH/tctiSH.git "$tctish_commit"
 fetch_source qemu https://github.com/tctiSH/qemu.git "$qemu_commit"
+apply_patches tctiSH
+apply_patches qemu
