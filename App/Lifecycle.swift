@@ -6,6 +6,7 @@ import UIKit
 final class Lifecycle {
     private let logBus: any LogBus
     private var serverTask: Task<Void, Never>?
+    private var guestTask: Task<Void, Never>?
 
     init(logBus: any LogBus) {
         self.logBus = logBus
@@ -15,6 +16,9 @@ final class Lifecycle {
         UIApplication.shared.isIdleTimerDisabled = true
         if serverTask != nil, Self.isListening(port: Composition.deliveryPort) {
             return
+        }
+        if guestTask == nil {
+            guestTask = Task { await Composition.startGuest() }
         }
         serverTask?.cancel()
         serverTask = Task { [logBus] in await Composition.run(logBus: logBus) }

@@ -34,6 +34,11 @@ analyzer_rules:
   - unused_declaration
   - unused_import
 
+# Apple の platform では Crypto が CryptoKit を再公開し, 解析が Crypto を使っていないと見るため.
+unused_import:
+  always_keep_imports:
+    - Crypto
+
 large_tuple:
   warning: 2
   error: 3

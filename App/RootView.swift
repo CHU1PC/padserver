@@ -18,7 +18,7 @@ struct RootView: View {
             }
             .tabItem { Label("Projects", systemImage: "square.stack") }
             NavigationStack {
-                GuestStatus(load: { nil })
+                GuestStatus(load: { await Composition.guestStatus() })
                     .navigationTitle("Guest")
             }
             .tabItem { Label("Guest", systemImage: "desktopcomputer") }
