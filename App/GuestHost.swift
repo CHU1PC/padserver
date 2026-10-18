@@ -20,7 +20,6 @@ actor GuestHost: GuestController {
         static let monitorPort = 10045
         static let dockerGuestPort: UInt16 = 2376
         static let qemuFramework = "qemu-x86_64-softmmu"
-        static let networkBackend = "user,id=net0"
         static let monitorArguments = ["-nographic", "-monitor", "tcp:127.0.0.1:\(monitorPort),server,nowait"]
     }
 
@@ -58,7 +57,7 @@ actor GuestHost: GuestController {
                 QEMUArguments(
                     memory: Constants.memory, cpuCount: Constants.cpuCount, maxCPUCount: Constants.cpuCount,
                     kernelPath: kernel.path, initrdPath: initrd.path, diskPath: diskPath,
-                    networkBackend: Constants.networkBackend)
+                    networkBackend: QEMUArguments.guestNetworkBackend)
             },
             additionalArguments: Constants.monitorArguments,
             credentials: credentials,

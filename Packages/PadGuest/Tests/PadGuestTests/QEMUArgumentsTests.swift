@@ -28,3 +28,7 @@ import Testing
             "-initrd", "/guest/initrd.img",
         ])
 }
+
+@Test func guestNetworkBackendMatchesGuestFixedAddress() {
+    #expect(QEMUArguments.guestNetworkBackend == "user,id=net0,net=192.168.100.0/24,dhcpstart=192.168.100.100")
+}
