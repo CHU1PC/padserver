@@ -229,3 +229,26 @@ func waitContainerRejectsMalformedBody() async throws {
         }
     }
 }
+
+@Test(.timeLimit(.minutes(1)))
+func createContainerSendsJSONContentType() async throws {
+    try await withServer(routes: ["/containers/create": respond(201, createdJSON)]) { client, log in
+        _ = try await client.createContainer(CreateContainerRequest(image: "alpine"))
+
+        #expect(await log.requests.map(\.contentType) == ["application/json"])
+    }
+}
+
+@Test(.timeLimit(.minutes(1)))
+func requestsWithoutBodyHaveNoContentType() async throws {
+    let routes = [
+        "/containers/json": respond(200, "[]"),
+        "/containers/\(containerID)/start": respond(204),
+    ]
+    try await withServer(routes: routes) { client, log in
+        _ = try await client.listContainers()
+        try await client.startContainer(id: containerID)
+
+        #expect(await log.requests.map(\.contentType) == [nil, nil])
+    }
+}

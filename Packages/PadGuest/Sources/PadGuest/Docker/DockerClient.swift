@@ -79,6 +79,7 @@ public final class DockerClient: Sendable {
     ) async throws -> (status: Int, body: Data) {
         var request = try makeRequest(method: method, path: path, query: query, timeout: timeout)
         request.httpBody = body
+        if body != nil { request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
         let data: Data
         let response: URLResponse
         do {
