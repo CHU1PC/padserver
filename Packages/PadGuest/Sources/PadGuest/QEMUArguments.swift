@@ -1,4 +1,6 @@
 public struct QEMUArguments: Sendable {
+    public static let guestNetworkBackend = "user,id=net0,net=192.168.100.0/24,dhcpstart=192.168.100.100"
+
     public let memory: String
     public let cpuCount: Int
     public let maxCPUCount: Int
