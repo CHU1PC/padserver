@@ -16,7 +16,7 @@ public actor QEMUGuestController {
         static let pollInterval = Duration.seconds(1)
     }
 
-    private let launch: @Sendable () async throws -> Void
+    private let launch: @Sendable () async throws -> @Sendable () async throws -> Void
     private let quit: @Sendable () async throws -> Void
     private let isDockerReady: @Sendable () async -> Bool
     private let clock: any Clock<Duration>
@@ -31,13 +31,23 @@ public actor QEMUGuestController {
         diskSizeBytes: UInt64,
         arguments: @escaping @Sendable (_ diskPath: String) -> QEMUArguments,
         additionalArguments: [String] = [],
+        credentials: @escaping @Sendable () async throws -> GuestCredentials,
         isDockerReady: @escaping @Sendable () async -> Bool,
         readinessTimeout: Duration
     ) {
         self.init(
             launch: {
                 let diskURL = try disk.createIfNeeded(sizeBytes: diskSizeBytes)
-                try runner.start(arguments: arguments(diskURL.path), additionalArguments: additionalArguments)
+                let credentialsDisk = try GuestCredentialsDisk.write(try await credentials())
+                do {
+                    try runner.start(
+                        arguments: arguments(diskURL.path),
+                        additionalArguments: additionalArguments + credentialsDisk.additionalArguments)
+                } catch {
+                    try credentialsDisk.remove()
+                    throw error
+                }
+                return { try credentialsDisk.remove() }
             },
             quit: { try monitor.quit() },
             isDockerReady: isDockerReady,
@@ -48,7 +58,7 @@ public actor QEMUGuestController {
     }
 
     init(
-        launch: @escaping @Sendable () async throws -> Void,
+        launch: @escaping @Sendable () async throws -> @Sendable () async throws -> Void,
         quit: @escaping @Sendable () async throws -> Void,
         isDockerReady: @escaping @Sendable () async -> Bool,
         clock: any Clock<Duration>,
@@ -70,16 +80,29 @@ public actor QEMUGuestController {
     public func start() async throws {
         guard current == .stopped else { throw ControllerError.notStopped }
         current = .starting
+        let cleanup: @Sendable () async throws -> Void
         do {
-            try await launch()
-            let responded = try await Self.waitUntilReady(
-                clock: clock, timeout: readinessTimeout, interval: pollInterval, isReady: isDockerReady)
-            guard responded else { throw ControllerError.readinessTimedOut }
-            current = .ready
+            cleanup = try await launch()
         } catch {
             current = .failed
             throw error
         }
+        do {
+            let responded = try await Self.waitUntilReady(
+                clock: clock, timeout: readinessTimeout, interval: pollInterval, isReady: isDockerReady)
+            guard responded else { throw ControllerError.readinessTimedOut }
+        } catch {
+            current = .failed
+            try await cleanup()
+            throw error
+        }
+        do {
+            try await cleanup()
+        } catch {
+            current = .failed
+            throw error
+        }
+        current = .ready
     }
 
     public func stop() async throws {
