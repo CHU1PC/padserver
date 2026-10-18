@@ -90,3 +90,40 @@ private func seedRoute(storage: InMemoryProjectStorage, target: RouteTarget) asy
         try makeServers(adminPort: PadServersTestConstants.deliveryPort).makeAdminApplication()
     }
 }
+
+private typealias DeliveryApplication = Application<CallbackResponder<BasicRequestContext>>
+
+private let deliveryApplicationMakers: [(String, @Sendable (PadServers) -> DeliveryApplication)] = [
+    ("loopback", { $0.makeDeliveryApplication() }),
+    ("tailnet", { $0.makeTailnetDeliveryApplication() }),
+]
+
+@Test(arguments: deliveryApplicationMakers.map(\.0))
+func padServersAnswerTheSameOnLoopbackAndTailnetDelivery(name: String) async throws {
+    let makeApplication = try #require(deliveryApplicationMakers.first { $0.0 == name }).1
+    let storage = InMemoryProjectStorage()
+    try await seedRoute(storage: storage, target: .staticSite)
+
+    try await makeApplication(makeServers(storage: storage)).test(.router) { client in
+        let site = try await client.execute(uri: "/", method: .get)
+        #expect(site.status == .ok)
+        #expect(String(buffer: site.body) == "hello")
+    }
+    try await makeApplication(makeServers()).test(.router) { client in
+        let unrouted = try await client.execute(uri: "/", method: .get)
+        #expect(unrouted.status == .notFound)
+
+        let admin = try await client.execute(uri: "/v1/projects", method: .get)
+        #expect(admin.status == .notFound)
+    }
+}
+
+@Test func padServersListenOnLoopbackAndTailnetWithTheDeliveryPort() {
+    let servers = makeServers()
+    #expect(
+        servers.makeDeliveryApplication().configuration.address
+            == .hostname("127.0.0.1", port: PadServersTestConstants.deliveryPort))
+    #expect(
+        servers.makeTailnetDeliveryApplication().configuration.address
+            == .hostname(PadServersTestConstants.tailnetAddress, port: PadServersTestConstants.deliveryPort))
+}

@@ -7,6 +7,7 @@ public enum ServingServer {
     private static let maximumAuthorityParts = 2
 
     public static func makeApplication(
+        address: String = "127.0.0.1",
         port: Int,
         resolveRoute: ResolveRoute,
         logBus: any LogBus = InMemoryLogBus(),
@@ -32,7 +33,7 @@ public enum ServingServer {
         }
         return Application(
             responder: responder,
-            configuration: .init(address: .hostname("127.0.0.1", port: port))
+            configuration: .init(address: .hostname(address, port: port))
         )
     }
     private static func routeHost(for request: Request) throws -> RouteHost? {
