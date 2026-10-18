@@ -24,6 +24,7 @@ public final class DockerClient: Sendable {
 
     private enum Constants {
         static let okStatus = 200
+        static let forbiddenStatus = 403
         // 追尾は応答が途切れることがあるので, 既定の 60 秒より長く待つ (1 日)
         static let streamingTimeout: TimeInterval = 86_400
     }
@@ -99,6 +100,9 @@ public final class DockerClient: Sendable {
         let response: URLResponse
         do {
             (data, response) = try await session.upload(for: request, fromFile: bodyFile)
+        } catch let error as URLError where error.code == .clientCertificateRequired {
+            // 相互 TLS の接続で 403 を受けると, URLSession はこの error にしてしまう
+            return (Constants.forbiddenStatus, Data())
         } catch {
             throw ClientError.connectionFailed
         }
