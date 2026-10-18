@@ -37,11 +37,15 @@ public struct DeployController: Sendable {
     private func commit(_ request: Request, context: AdminRequestContext) async throws -> Response {
         do {
             let deployment = try await validatedDeployment(request, context: context)
-            let release = try await commitDeployment(project: deployment.project.name, manifest: deployment.manifest)
+            let release = try await commitDeployment(
+                project: deployment.project, routes: deployment.routes, manifest: deployment.manifest)
             return try jsonResponse(
                 AdminDeploymentResponse(project: deployment.project, release: release), status: .created)
         } catch let rejection as InvalidDeploymentRequest {
             return try errorResponse(.invalidRequest, message: rejection.message, status: .badRequest)
+        } catch RegisterProjectRoutes.Error.duplicateRoute {
+            return try errorResponse(
+                .invalidRequest, message: "A route is already used by another project.", status: .badRequest)
         } catch CommitDeployment.Failure.blobNotFound {
             return try errorResponse(
                 .deploymentIncomplete, message: "Required blobs are missing.", status: .conflict)
@@ -77,7 +81,8 @@ public struct DeployController: Sendable {
             throw InvalidDeploymentRequest(message: "A file path is invalid.")
         }
         return ValidatedDeployment(
-            project: Project(name: name, kind: .staticSite), manifest: ReleaseManifest(files: files))
+            project: Project(name: name, kind: .staticSite), routes: decoded.manifest.routes,
+            manifest: ReleaseManifest(files: files))
     }
 
     private func jsonResponse<Body: Encodable>(_ body: Body, status: HTTPResponse.Status) throws -> Response {
@@ -96,6 +101,7 @@ public struct DeployController: Sendable {
 
 private struct ValidatedDeployment {
     let project: Project
+    let routes: [Route]
     let manifest: ReleaseManifest
 }
 
