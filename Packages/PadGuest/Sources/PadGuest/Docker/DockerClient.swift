@@ -19,6 +19,7 @@ public final class DockerClient: Sendable {
         case connectionFailed
         case unexpectedStatus(Int)
         case invalidResponse
+        case bodyFileUnreadable
     }
 
     private enum Constants {
@@ -73,14 +74,8 @@ public final class DockerClient: Sendable {
     func send(
         method: String, path: String, query: [URLQueryItem] = [], body: Data? = nil, timeout: TimeInterval? = nil
     ) async throws -> (status: Int, body: Data) {
-        guard var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
-        else { throw ClientError.invalidResponse }
-        if !query.isEmpty { components.queryItems = query }
-        guard let url = components.url else { throw ClientError.invalidResponse }
-        var request = URLRequest(url: url)
-        request.httpMethod = method
+        var request = try makeRequest(method: method, path: path, query: query, timeout: timeout)
         request.httpBody = body
-        if let timeout { request.timeoutInterval = timeout }
         let data: Data
         let response: URLResponse
         do {
@@ -88,8 +83,42 @@ public final class DockerClient: Sendable {
         } catch {
             throw ClientError.connectionFailed
         }
+        return (try Self.status(of: response), data)
+    }
+
+    /// ファイルを本文として, メモリに溜めずに送る.
+    func send(
+        method: String, path: String, query: [URLQueryItem] = [], bodyFile: URL, timeout: TimeInterval? = nil
+    ) async throws -> (status: Int, body: Data) {
+        // 読めないファイルは URLSession が空の本文で送ってしまうので, 先に弾く
+        guard FileManager.default.isReadableFile(atPath: bodyFile.path) else { throw ClientError.bodyFileUnreadable }
+        let request = try makeRequest(method: method, path: path, query: query, timeout: timeout)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.upload(for: request, fromFile: bodyFile)
+        } catch {
+            throw ClientError.connectionFailed
+        }
+        return (try Self.status(of: response), data)
+    }
+
+    private func makeRequest(
+        method: String, path: String, query: [URLQueryItem], timeout: TimeInterval?
+    ) throws -> URLRequest {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
+        else { throw ClientError.invalidResponse }
+        if !query.isEmpty { components.queryItems = query }
+        guard let url = components.url else { throw ClientError.invalidResponse }
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        if let timeout { request.timeoutInterval = timeout }
+        return request
+    }
+
+    private static func status(of response: URLResponse) throws -> Int {
         guard let http = response as? HTTPURLResponse else { throw ClientError.invalidResponse }
-        return (http.statusCode, data)
+        return http.statusCode
     }
 }
 
