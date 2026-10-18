@@ -1,7 +1,7 @@
 import Foundation
 
 @available(macOS 10.15, iOS 13, *)
-public struct GuestDisk {
+public struct GuestDisk: Sendable {
     private let applicationSupportURL: URL
 
     public init(
