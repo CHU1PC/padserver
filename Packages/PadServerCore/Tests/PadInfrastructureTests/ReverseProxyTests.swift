@@ -10,12 +10,12 @@ private enum ReverseProxyTestConstants {
     static let kibibyte = 1_024
     static let chunkKibibytes = 64
     static let chunkSize = chunkKibibytes * kibibyte
-    static let chunkCount = 2_048
+    static let slowConsumerChunkCount = 16_384
     static let pollMilliseconds = 100
     static let maximumPolls = 100
     static let stablePollsRequired = 3
-    static let readAheadLimitMebibytes = 32
-    static let readAheadLimit = readAheadLimitMebibytes * kibibyte * kibibyte
+    static let readAheadLimitDivisor = 4
+    static let readAheadLimit = slowConsumerChunkCount * chunkSize / readAheadLimitDivisor
     static let shortTimeoutMilliseconds = 200
     static let hangSeconds = 30
     static let uploadChunkCount = 8
@@ -134,7 +134,7 @@ private func slowConsumerHandler(produced: NIOLockedValueBox<Int>) -> UpstreamHa
     { _ in
         let chunk = filledChunk()
         let body = ResponseBody { writer in
-            for _ in 0..<ReverseProxyTestConstants.chunkCount {
+            for _ in 0..<ReverseProxyTestConstants.slowConsumerChunkCount {
                 try await writer.write(chunk)
                 produced.withLockedValue { $0 += chunk.readableBytes }
             }
@@ -241,12 +241,13 @@ private func slowConsumerHandler(produced: NIOLockedValueBox<Int>) -> UpstreamHa
     }
 }
 
+// 実装の先読みは 1 MiB 未満で有界。produced の大半は kernel の buffer で数十 MiB まで揺れるため、総量の 1/4 を上限にする。
 @Test func reverseProxyDoesNotReadAheadWhenResponseIsConsumedSlowly() async throws {
     let produced = NIOLockedValueBox(0)
     let plateau = NIOLockedValueBox(0)
     let consumed = NIOLockedValueBox(0)
     let finished = NIOLockedValueBox(false)
-    let totalBytes = ReverseProxyTestConstants.chunkSize * ReverseProxyTestConstants.chunkCount
+    let totalBytes = ReverseProxyTestConstants.chunkSize * ReverseProxyTestConstants.slowConsumerChunkCount
     try await withUpstream(handler: slowConsumerHandler(produced: produced)) { port in
         let response = try await ReverseProxy().forward(proxyRequest(), to: port)
         let writer = ProbeWriter(
