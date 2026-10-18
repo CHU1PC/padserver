@@ -1,0 +1,12 @@
+diff --git a/build_stikjit.sh b/build_stikjit.sh
+index d8ebe5c..2558416 100755
+--- a/build_stikjit.sh
++++ b/build_stikjit.sh
+@@ -182,6 +182,7 @@ xcodebuild archive \
+     BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
+     SKIP_INSTALL=NO \
+     GENERATE_INFOPLIST_FILE=YES \
++    OTHER_SWIFT_FLAGS='$(inherited) -Xfrontend -module-interface-preserve-types-as-written' \
+     IPHONEOS_DEPLOYMENT_TARGET="$DEPLOYMENT_TARGET"
+ 
+ if [ ! -d "$FRAMEWORK_PATH" ]; then
