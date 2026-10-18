@@ -24,6 +24,8 @@ class FakeSocket implements TunnelSocket {
   attachment: unknown = null;
   closed: { code?: number; reason?: string } | null = null;
 
+  send(): void {}
+
   serializeAttachment(value: unknown): void {
     this.attachment = structuredClone(value);
   }
