@@ -36,6 +36,43 @@ targets:
               echo "warning: ${src} is missing, so the app is built without it."
             fi
           done
+      - name: Copy QEMU libraries
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          frameworks_dest="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+          bios_dest="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/guest/pc-bios"
+          frameworks_src="${SRCROOT}/build/qemu/ios/Frameworks"
+          bios_src="${SRCROOT}/build/sources/qemu/pc-bios"
+          missing() {
+            if [ "${CONFIGURATION}" = "Release" ]; then
+              echo "error: $1 is missing. Run scripts/build-qemu.sh first."
+              exit 1
+            fi
+            echo "warning: $1 is missing, so the app is built without it."
+          }
+          rm -rf "${bios_dest}"
+          if [ -d "${bios_src}" ]; then
+            mkdir -p "${bios_dest}"
+            cp -RL "${bios_src}/." "${bios_dest}"
+          else
+            missing "${bios_src}"
+          fi
+          found=0
+          for src in "${frameworks_src}"/*.framework; do
+            [ -d "${src}" ] || continue
+            found=1
+            mkdir -p "${frameworks_dest}"
+            dest="${frameworks_dest}/$(basename "${src}")"
+            rm -rf "${dest}"
+            cp -R "${src}" "${dest}"
+            if [ "${CODE_SIGNING_ALLOWED:-YES}" = "YES" ] && [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
+              /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --timestamp=none "${dest}"
+            fi
+          done
+          if [ "${found}" = 0 ]; then
+            missing "${frameworks_src}"
+          fi
     dependencies:
       - package: PadServerCore
         product: PadDomain
