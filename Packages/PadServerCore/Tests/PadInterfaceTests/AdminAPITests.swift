@@ -139,6 +139,17 @@ private func expectJSON<T: Encodable>(_ value: T, matches example: String) throw
     try expectJSON(entry, matches: example)
 }
 
+@Test func logEntryWithProjectAndServiceMatchesDocumentedExample() throws {
+    let example = """
+        {"timestamp":"2026-10-17T12:34:56Z","source":"serving","level":"info","message":"GET / 200",\
+        "project":"blog","service":"web"}
+        """
+    let entry = try AdminAPIJSON.makeDecoder().decode(LogEntry.self, from: Data(example.utf8))
+    try expectJSON(entry, matches: example)
+    #expect(entry.project == "blog")
+    #expect(entry.service == "web")
+}
+
 @Test func fileListJSONMatchesDocumentedExample() throws {
     let example = """
         {"files":[{"name":"report.pdf","size":1234}]}

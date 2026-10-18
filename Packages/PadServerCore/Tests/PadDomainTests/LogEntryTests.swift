@@ -30,3 +30,36 @@ func logLevelRoundTripsThroughJSON(level: LogLevel) throws {
 
     #expect(try JSONDecoder().decode(LogEntry.self, from: data) == entry)
 }
+
+@Test func logEntryDecodesLegacyJSONWithoutProjectAndService() throws {
+    let json = #"{"timestamp":0,"source":"web","level":"info","message":"Started"}"#
+    let entry = try JSONDecoder().decode(LogEntry.self, from: Data(json.utf8))
+
+    #expect(entry.project == nil)
+    #expect(entry.service == nil)
+}
+
+@Test func logEntryWithProjectAndServiceRoundTripsThroughJSON() throws {
+    let entry = LogEntry(
+        timestamp: Date(timeIntervalSince1970: 1_700_000_000),
+        source: "web",
+        level: .info,
+        message: "Started",
+        project: "blog",
+        service: "web"
+    )
+    let data = try JSONEncoder().encode(entry)
+    let decoded = try JSONDecoder().decode(LogEntry.self, from: data)
+
+    #expect(decoded == entry)
+    #expect(decoded.project == "blog")
+    #expect(decoded.service == "web")
+}
+
+@Test func logEntryOmitsProjectAndServiceKeysWhenNil() throws {
+    let entry = LogEntry(timestamp: Date(timeIntervalSince1970: 0), source: "web", level: .info, message: "Started")
+    let json = try #require(String(bytes: JSONEncoder().encode(entry), encoding: .utf8))
+
+    #expect(!json.contains("\"project\""))
+    #expect(!json.contains("\"service\""))
+}
