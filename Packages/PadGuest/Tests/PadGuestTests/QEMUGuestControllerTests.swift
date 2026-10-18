@@ -43,10 +43,12 @@ private struct LaunchFailure: Error, Equatable {}
 private actor Calls {
     private(set) var launches = 0
     private(set) var quits = 0
+    private(set) var cleanups = 0
     private(set) var probes = 0
 
     func launch() { launches += 1 }
     func quit() { quits += 1 }
+    func cleanup() { cleanups += 1 }
     func probe() -> Int {
         probes += 1
         return probes
@@ -63,6 +65,7 @@ private func makeController(
         launch: {
             await calls.launch()
             if launchFails { throw LaunchFailure() }
+            return { await calls.cleanup() }
         },
         quit: { await calls.quit() },
         isDockerReady: {
@@ -160,4 +163,41 @@ func guestControllerQuitsAfterReadinessTimeout() async throws {
 
     #expect(await controller.state() == .stopped)
     #expect(await calls.quits == 1)
+}
+
+@available(macOS 15, iOS 18, *)
+@Test(.timeLimit(.minutes(1)))
+func guestControllerRunsLaunchCleanupAfterBecomingReady() async throws {
+    let calls = Calls()
+    let controller = makeController(calls: calls, respondsAfterPolls: Constants.respondsAfterPolls)
+
+    try await controller.start()
+
+    #expect(await calls.cleanups == 1)
+}
+
+@available(macOS 15, iOS 18, *)
+@Test(.timeLimit(.minutes(1)))
+func guestControllerRunsLaunchCleanupAfterReadinessTimeout() async throws {
+    let calls = Calls()
+    let controller = makeController(calls: calls, respondsAfterPolls: nil)
+
+    await #expect(throws: QEMUGuestController.ControllerError.readinessTimedOut) {
+        try await controller.start()
+    }
+
+    #expect(await calls.cleanups == 1)
+}
+
+@available(macOS 15, iOS 18, *)
+@Test(.timeLimit(.minutes(1)))
+func guestControllerSkipsLaunchCleanupWhenLaunchFails() async throws {
+    let calls = Calls()
+    let controller = makeController(calls: calls, launchFails: true, respondsAfterPolls: 1)
+
+    await #expect(throws: LaunchFailure()) {
+        try await controller.start()
+    }
+
+    #expect(await calls.cleanups == 0)
 }

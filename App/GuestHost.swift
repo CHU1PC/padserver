@@ -18,6 +18,7 @@ actor GuestHost: GuestController {
         static let bytesPerGigabyte: UInt64 = 1_073_741_824
         static let readinessTimeoutSeconds = 180
         static let monitorPort = 10045
+        static let dockerGuestPort: UInt16 = 2376
         static let qemuFramework = "qemu-x86_64-softmmu"
         static let networkBackend = "user,id=net0"
         static let monitorArguments = ["-nographic", "-monitor", "tcp:127.0.0.1:\(monitorPort),server,nowait"]
@@ -41,6 +42,10 @@ actor GuestHost: GuestController {
         self.kernel = kernel
         self.initrd = initrd
         self.qemuLibrary = qemuLibrary
+        let provider = GuestCredentialsProvider(store: KeychainCredentialStore())
+        let credentials: @Sendable () async throws -> GuestCredentials = { try await provider.credentials() }
+        let readiness = GuestDockerReadiness(
+            guestPort: Constants.dockerGuestPort, forwarder: PortForwarder(), credentials: credentials)
         controller = QEMUGuestController(
             runner: QEMURunner(
                 libraryPath: qemuLibrary.path, biosDirectory: guestDirectory.appendingPathComponent("pc-bios").path),
@@ -54,8 +59,8 @@ actor GuestHost: GuestController {
                     networkBackend: Constants.networkBackend)
             },
             additionalArguments: Constants.monitorArguments,
-            // #383 の鍵の受け渡しが入るまで, Docker の応答は確かめられない.
-            isDockerReady: { false },
+            credentials: credentials,
+            isDockerReady: { await readiness.isReady() },
             readinessTimeout: .seconds(Constants.readinessTimeoutSeconds))
     }
 
