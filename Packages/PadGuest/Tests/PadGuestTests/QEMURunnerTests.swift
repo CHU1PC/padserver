@@ -24,6 +24,14 @@ private let stubSource = """
     }
     """
 
+private let unlockFunctionSource = """
+    void bql_unlock(void) {
+        FILE *log = open_log();
+        fprintf(log, "unlock\\n");
+        fclose(log);
+    }
+    """
+
 // 本物の QEMU の library は, dlopen の constructor が RCU の reader として登録する thread と,
 // qemu_init を呼ぶ thread が同じでないと, 登録した thread の終了後に call_rcu が壊れる (#402).
 private let threadStubSource = """
@@ -145,24 +153,27 @@ private func readLog(at url: URL, until marker: String) async throws -> String {
 }
 
 @Test func qemuRunnerPassesArgumentsAndRunsEntryPointsInOrder() async throws {
-    let directory = try makeWorkDirectory()
-    defer { removeWorkDirectory(directory) }
-    let path = try compileDylib(source: stubSource, in: directory, name: "stub")
-    let logURL = directory.appendingPathComponent("stub.log")
-    setenv("PADGUEST_STUB_LOG", logURL.path, 1)
-    let additionalArguments = ["-display", "none"]
-    let runner = QEMURunner(libraryPath: path, biosDirectory: "/guest/pc-bios")
+    // 環境変数を共有するので, 2 つの stub は順に動かす
+    for (source, hasUnlock) in [(stubSource + unlockFunctionSource, true), (stubSource, false)] {
+        let directory = try makeWorkDirectory()
+        defer { removeWorkDirectory(directory) }
+        let path = try compileDylib(source: source, in: directory, name: "stub")
+        let logURL = directory.appendingPathComponent("stub.log")
+        setenv("PADGUEST_STUB_LOG", logURL.path, 1)
+        let additionalArguments = ["-display", "none"]
+        let runner = QEMURunner(libraryPath: path, biosDirectory: "/guest/pc-bios")
 
-    try runner.start(arguments: qemuArguments, additionalArguments: additionalArguments)
+        try runner.start(arguments: qemuArguments, additionalArguments: additionalArguments)
 
-    let log = try await readLog(at: logURL, until: "cleanup")
-    let expectedArguments = ["qemu-system", "-L", "/guest/pc-bios"] + qemuArguments.values + additionalArguments
-    let expected =
-        (["init \(expectedArguments.count)"] + expectedArguments.map { "arg \($0)" } + [
-            "cleanup \(Constants.stubExitStatus)"
-        ])
-        .joined(separator: "\n") + "\n"
-    #expect(log == expected)
+        let log = try await readLog(at: logURL, until: hasUnlock ? "unlock" : "cleanup")
+        let expectedArguments = ["qemu-system", "-L", "/guest/pc-bios"] + qemuArguments.values + additionalArguments
+        let expected =
+            (["init \(expectedArguments.count)"] + expectedArguments.map { "arg \($0)" } + [
+                "cleanup \(Constants.stubExitStatus)"
+            ] + (hasUnlock ? ["unlock"] : []))
+            .joined(separator: "\n") + "\n"
+        #expect(log == expected)
+    }
 }
 
 @Test func qemuRunnerLoadsLibraryOnTheThreadThatRunsQEMU() async throws {
