@@ -45,10 +45,10 @@ else
 	echo "DISK BACKEND NOT YET IMPLEMENTED! Changes will NOT persist."
 fi
 
-mkdir -p "$ios/userroot/root/.ssh" "$ios/work"
+mkdir -p "$ios/userroot/root" "$ios/work"
 chmod 700 "$ios/userroot/root"
-cp /etc/dropbear/placeholder_key.pub "$ios/userroot/root/.ssh/authorized_keys"
-chmod -R 600 "$ios/userroot/root/.ssh"
+# 以前の版が disk に置いた公開の鍵を消す.
+rm -f "$ios/userroot/root/.ssh/authorized_keys"
 
 mount -t overlay overlay \
 	-o "lowerdir=/var/tcti-rootfs/ro-root,upperdir=$ios/userroot,workdir=$ios/work" \

@@ -182,7 +182,8 @@ ln -sf ../usr/bin/mount.ios /rootfs/sbin/mount.ios
 install -d -m 0755 /rootfs/etc/dropbear /rootfs/ios_host /rootfs/private /rootfs/etc/padserver
 install -m 0755 /guest/rootfs/etc/padserver/start-dockerd /rootfs/etc/padserver/
 cat /guest/rootfs/etc/padserver/inittab.docker >> /rootfs/etc/inittab
-install -m 0644 "${tctish}/placeholder_keys/placeholder_key.pub" /rootfs/etc/dropbear/
+sed -i "s|/usr/sbin/dropbear -RF\$|/usr/sbin/dropbear -RFs|" /rootfs/etc/inittab
+grep -q "dropbear -RFs\$" /rootfs/etc/inittab
 
 # app が使う root の password は tctiSH の build_rootfs.sh の値をそのまま使う. repo には書かない.
 password_hash="$(sed -n "s/^ROOT_PASSWORD_HASH=.\(.*\).\$/\1/p" "${tctish}/build_rootfs.sh")"
