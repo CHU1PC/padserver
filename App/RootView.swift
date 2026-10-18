@@ -17,6 +17,11 @@ struct RootView: View {
                     loadUsage: { try await Composition.projectUsage(of: $0) })
             }
             .tabItem { Label("Projects", systemImage: "square.stack") }
+            NavigationStack {
+                GuestStatus(load: { nil })
+                    .navigationTitle("Guest")
+            }
+            .tabItem { Label("Guest", systemImage: "desktopcomputer") }
             RequestFeed(logBus: logBus)
                 .tabItem { Label("Requests", systemImage: "arrow.left.arrow.right") }
             LogFeed(logBus: logBus)
