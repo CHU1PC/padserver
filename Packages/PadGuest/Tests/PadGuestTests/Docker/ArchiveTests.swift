@@ -101,3 +101,14 @@ func putArchiveFailsWhenFileIsMissing() async throws {
         #expect(await log.requests.isEmpty)
     }
 }
+
+@Test(.timeLimit(.minutes(1)))
+func putArchiveDoesNotSendJSONContentType() async throws {
+    try await withTarFile("tar") { tar in
+        try await withServer(routes: ["/containers/abc/archive?path=/app": respond(200)]) { client, log in
+            try await client.putArchive(containerID: "abc", path: "/app", fromFile: tar)
+
+            #expect(await log.requests.first?.contentType != "application/json")
+        }
+    }
+}

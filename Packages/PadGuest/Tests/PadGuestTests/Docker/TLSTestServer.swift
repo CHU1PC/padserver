@@ -32,6 +32,12 @@ struct RecordedRequest: Equatable, Sendable {
     let method: String
     let path: String
     let body: String
+    /// 比較には使わない. Content-Type を調べる試験だけが読む.
+    var contentType: String?
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.method == rhs.method && lhs.path == rhs.path && lhs.body == rhs.body
+    }
 }
 
 actor RequestLog {
@@ -150,22 +156,24 @@ struct TLSTestServer: Sendable {
         }
         let head = text[..<separator.lowerBound]
         let body = String(text[separator.upperBound...])
-        let contentLength =
-            head.split(separator: "\r\n")
-            .compactMap { line -> Int? in
-                let field = line.split(separator: ":", maxSplits: 1)
-                guard field.count == Constants.headerFieldParts, field[0].lowercased() == "content-length" else {
-                    return nil
-                }
-                return Int(field[1].trimmingCharacters(in: .whitespaces))
-            }
-            .first ?? 0
+        let contentLength = headerValue("content-length", in: head).flatMap { Int($0) } ?? 0
         guard body.utf8.count >= contentLength else { return nil }
         let requestLine = (head.split(separator: "\r\n").first ?? "").split(
             separator: " ", maxSplits: Constants.requestLineParts - 1)
         let method = requestLine.first.map(String.init) ?? ""
         let path = requestLine.count > Constants.pathIndex ? String(requestLine[Constants.pathIndex]) : ""
-        return RecordedRequest(method: method, path: path, body: body)
+        return RecordedRequest(
+            method: method, path: path, body: body, contentType: headerValue("content-type", in: head))
+    }
+
+    private static func headerValue(_ name: String, in head: Substring) -> String? {
+        head.split(separator: "\r\n")
+            .compactMap { line -> String? in
+                let field = line.split(separator: ":", maxSplits: 1)
+                guard field.count == Constants.headerFieldParts, field[0].lowercased() == name else { return nil }
+                return field[1].trimmingCharacters(in: .whitespaces)
+            }
+            .first
     }
 
     private static func respond(
