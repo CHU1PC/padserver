@@ -1,3 +1,5 @@
+import { RequestForwarder, textResponse } from "./forward";
+
 const SUPPORTED_VERSIONS = [1];
 const PROTOCOL_PREFIX = "padserver-relay.v";
 const READY_STATE_OPEN = 1;
@@ -5,8 +7,11 @@ const READY_STATE_CLOSED = 3;
 
 export const REPLACED_CLOSE_CODE = 4000;
 
+export const TUNNEL_PATH = "/_padserver/tunnel";
+
 export interface TunnelSocket {
   readonly readyState: number;
+  send(message: Uint8Array): void;
   close(code?: number, reason?: string): void;
   serializeAttachment(value: unknown): void;
   deserializeAttachment(): unknown;
@@ -121,18 +126,13 @@ export function selectCurrentSocket(sockets: TunnelSocket[]): TunnelSocket | nul
   return current;
 }
 
-function textResponse(status: number, body: string): Response {
-  return new Response(body, {
-    status,
-    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
-  });
-}
-
 function closeCodeFor(code: number): number {
   return code >= 1000 && code < 5000 && code !== 1005 && code !== 1006 && code !== 1015 ? code : 1000;
 }
 
 export class TunnelObject {
+  private readonly forwarder = new RequestForwarder();
+
   constructor(
     private readonly state: TunnelState,
     private readonly env: TunnelEnv,
@@ -142,6 +142,7 @@ export class TunnelObject {
   }
 
   async fetch(request: Request): Promise<Response> {
+    if (new URL(request.url).pathname !== TUNNEL_PATH) return this.forward(request);
     if (!(await verifyToken(request.headers.get("authorization"), this.env.TOKEN_SHA256))) {
       return textResponse(401, "unauthorized");
     }
@@ -156,16 +157,26 @@ export class TunnelObject {
     return this.deps.upgradeResponse(client, `${PROTOCOL_PREFIX}${version}`);
   }
 
-  webSocketMessage(_ws: TunnelSocket, _message: string | ArrayBuffer): void {}
+  webSocketMessage(ws: TunnelSocket, message: string | ArrayBuffer): void {
+    this.forwarder.handleMessage(ws, message);
+  }
 
   async webSocketClose(ws: TunnelSocket, code: number, _reason: string, _wasClean: boolean): Promise<void> {
+    this.forwarder.failSocket(ws, "agent disconnected");
     if (ws.readyState === READY_STATE_CLOSED) return;
     ws.close(closeCodeFor(code));
   }
 
   async webSocketError(ws: TunnelSocket, _error: unknown): Promise<void> {
+    this.forwarder.failSocket(ws, "agent disconnected");
     if (ws.readyState === READY_STATE_CLOSED) return;
     ws.close(1011, "error");
+  }
+
+  private forward(request: Request): Promise<Response> {
+    const ws = selectCurrentSocket(this.state.getWebSockets());
+    if (ws === null) return Promise.resolve(textResponse(502, "agent not connected"));
+    return this.forwarder.forward(request, ws);
   }
 
   private replaceCurrentSockets(): void {
@@ -174,6 +185,7 @@ export class TunnelObject {
       if (ws.readyState !== READY_STATE_OPEN || attachment === null || attachment.replaced) continue;
       ws.serializeAttachment({ ...attachment, replaced: true } satisfies SocketAttachment);
       ws.close(REPLACED_CLOSE_CODE, "replaced");
+      this.forwarder.failSocket(ws, "agent replaced");
     }
   }
 }
