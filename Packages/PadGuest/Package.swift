@@ -34,6 +34,10 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
             ],
             swiftSettings: commonSwiftSettings),
+        .testTarget(
+            name: "PadGuestIntegrationTests",
+            dependencies: ["PadGuest"],
+            swiftSettings: commonSwiftSettings),
     ],
     swiftLanguageModes: [.v6]
 )
