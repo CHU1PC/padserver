@@ -1,0 +1,14 @@
+{
+  "name": "padserver-relay-streaming-spike",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p worker && tsc --noEmit -p client"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261018.1",
+    "@types/bun": "1.4.3",
+    "typescript": "5.9.3",
+    "wrangler": "4.151.1"
+  }
+}
