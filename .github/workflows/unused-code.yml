@@ -31,21 +31,5 @@ jobs:
           xcodegen --version
           swift --version
           xcodebuild -version
-      - name: Generate project and build with compiler log
-        run: |
-          xcodegen generate
-          set -o pipefail
-          xcodebuild -project PadServer.xcodeproj -scheme PadServer \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            CODE_SIGNING_ALLOWED=NO build | tee "$RUNNER_TEMP/xcodebuild.log"
-          xcodebuild -project PadServer.xcodeproj -scheme PadTestSupport \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            CODE_SIGNING_ALLOWED=NO build | tee -a "$RUNNER_TEMP/xcodebuild.log"
-      - name: Analyze unused declarations and imports
-        run: |
-          swiftlint analyze --strict \
-            --only-rule unused_declaration \
-            --only-rule unused_import \
-            --compiler-log-path "$RUNNER_TEMP/xcodebuild.log"
+      - name: Generate project, build and analyze unused declarations and imports
+        run: scripts/ci/unused-code.sh
