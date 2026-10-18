@@ -20,6 +20,7 @@ public actor RelayClient: RelayConnection {
     private var generation = 0
     private var socket: (any RelaySocket)?
     private var receiveTask: Task<Void, Never>?
+    private var receivedCount = 0
 
     public init() {
         self.init(connector: URLSessionRelaySocketConnector())
@@ -61,6 +62,15 @@ public actor RelayClient: RelayConnection {
         update(.disconnected)
     }
 
+    func send(_ message: RelaySocketMessage) async throws {
+        guard let socket else { throw RelaySocketError.closed(code: nil) }
+        try await socket.send(message)
+    }
+
+    func receivedMessageCount() -> Int {
+        receivedCount
+    }
+
     private func teardown() {
         generation += 1
         receiveTask?.cancel()
@@ -75,6 +85,7 @@ public actor RelayClient: RelayConnection {
             while true {
                 let message = try await socket.receive()
                 guard current == generation else { return }
+                receivedCount += 1
                 guard case .data(let data) = message else { continue }
                 if !deliver(data, from: socket) { return }
             }

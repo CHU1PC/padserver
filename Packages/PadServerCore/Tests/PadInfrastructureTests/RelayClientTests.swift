@@ -10,6 +10,7 @@ private final class FakeSocket: RelaySocket, Sendable {
     private let stream: AsyncThrowingStream<RelaySocketMessage, any Error>
     private let continuation: AsyncThrowingStream<RelaySocketMessage, any Error>.Continuation
     private let closed = Mutex<[Int]>([])
+    private let sentMessages = Mutex<[RelaySocketMessage]>([])
 
     init() {
         (stream, continuation) = AsyncThrowingStream<RelaySocketMessage, any Error>.makeStream()
@@ -17,6 +18,14 @@ private final class FakeSocket: RelaySocket, Sendable {
 
     var closedCodes: [Int] {
         closed.withLock { $0 }
+    }
+
+    var sent: [RelaySocketMessage] {
+        sentMessages.withLock { $0 }
+    }
+
+    func send(_ message: RelaySocketMessage) throws {
+        sentMessages.withLock { $0.append(message) }
     }
 
     func receive() async throws -> RelaySocketMessage {
@@ -209,4 +218,43 @@ func relayClientBecomesReconnectingOnOtherCloseCodes(code: Int) async throws {
 
     #expect(await client.state() == .disconnected)
     #expect(socket.closedCodes == [1000])
+}
+
+@Test func relayClientSendsMessagesThroughTheConnectedSocket() async throws {
+    let socket = FakeSocket()
+    let client = RelayClient(connector: FakeConnector(.success(socket)))
+
+    await client.start(try makeConfig())
+    try await client.send(.text("ping"))
+    try await client.send(.data(Data([1, 2])))
+
+    let sent = socket.sent
+    #expect(sent.count == 2)
+    guard case .text(let text) = sent[0], case .data(let data) = sent[1] else {
+        Issue.record("unexpected messages: \(sent)")
+        return
+    }
+    #expect(text == "ping")
+    #expect(data == Data([1, 2]))
+}
+
+@Test func relayClientSendThrowsWithoutConnection() async {
+    let client = RelayClient(connector: FakeConnector(.success(FakeSocket())))
+
+    await #expect(throws: RelaySocketError.closed(code: nil)) {
+        try await client.send(.text("ping"))
+    }
+}
+
+@Test func relayClientCountsEveryReceivedMessageIncludingText() async throws {
+    let socket = FakeSocket()
+    let client = RelayClient(connector: FakeConnector(.success(socket)))
+    var frames = client.frames.makeAsyncIterator()
+
+    await client.start(try makeConfig())
+    socket.push(.text("pong"))
+    socket.push(.data(try RelayFrame.reqEnd(id: 1).encode()))
+    _ = await frames.next()
+
+    #expect(await client.receivedMessageCount() == 2)
 }
