@@ -34,12 +34,14 @@ public struct PadServers: Sendable {
         self.logBus = logBus
     }
 
-    /// 配信と管理の待ち受けを同時に動かし, どちらかが終わるか失敗したら両方を止めます.
+    /// 配信 (loopback と tailnet) と管理の待ち受けを同時に動かし, どれかが終わるか失敗したら全部を止めます.
     public func run() async throws {
         let delivery = makeDeliveryApplication()
+        let tailnetDelivery = makeTailnetDeliveryApplication()
         let admin = try makeAdminApplication()
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask { try await delivery.runService() }
+            group.addTask { try await tailnetDelivery.runService() }
             group.addTask { try await admin.runService() }
             defer { group.cancelAll() }
             try await group.next()
@@ -47,8 +49,17 @@ public struct PadServers: Sendable {
     }
 
     func makeDeliveryApplication() -> Application<CallbackResponder<BasicRequestContext>> {
+        makeDeliveryApplication(address: "127.0.0.1")
+    }
+
+    func makeTailnetDeliveryApplication() -> Application<CallbackResponder<BasicRequestContext>> {
+        makeDeliveryApplication(address: ports.tailnetAddress)
+    }
+
+    private func makeDeliveryApplication(address: String) -> Application<CallbackResponder<BasicRequestContext>> {
         let staticFiles = StaticFileResponder(storage: storage)
         return ServingServer.makeApplication(
+            address: address,
             port: ports.delivery,
             resolveRoute: ResolveRoute(storage: storage),
             logBus: logBus
