@@ -24,12 +24,27 @@ struct TLSTestResponse: Sendable {
     let body: String
 }
 
+struct RecordedRequest: Equatable, Sendable {
+    let method: String
+    let path: String
+    let body: String
+}
+
+actor RequestLog {
+    private(set) var requests: [RecordedRequest] = []
+
+    func append(_ request: RecordedRequest) {
+        requests.append(request)
+    }
+}
+
 /// 相互 TLS を要求する, 試験用の HTTP サーバー. 応答は path ごとに決める.
 struct TLSTestServer: Sendable {
     private enum Constants {
         static let maximumRequestBytes = 65_536
         static let requestLineParts = 3
         static let pathIndex = 1
+        static let headerFieldParts = 2
         static let notFoundStatus = 404
     }
 
@@ -41,13 +56,15 @@ struct TLSTestServer: Sendable {
     private let listener: NWListener
     let port: UInt16
 
-    static func start(credentials: GuestCredentials, routes: [String: TLSTestResponse]) async throws -> TLSTestServer {
+    static func start(
+        credentials: GuestCredentials, routes: [String: TLSTestResponse], log: RequestLog? = nil
+    ) async throws -> TLSTestServer {
         let options = try tlsOptions(credentials: credentials)
         let listener = try NWListener(using: NWParameters(tls: options, tcp: NWProtocolTCP.Options()))
         let queue = DispatchQueue(label: "TLSTestServer.listener")
         listener.newConnectionHandler = { connection in
             connection.start(queue: queue)
-            receiveRequest(connection, routes: routes, buffer: Data())
+            receiveRequest(connection, routes: routes, log: log, buffer: Data())
         }
         let states = AsyncStream<NWListener.State> { continuation in
             listener.stateUpdateHandler = { continuation.yield($0) }
@@ -97,7 +114,9 @@ struct TLSTestServer: Sendable {
         listener.cancel()
     }
 
-    private static func receiveRequest(_ connection: NWConnection, routes: [String: TLSTestResponse], buffer: Data) {
+    private static func receiveRequest(
+        _ connection: NWConnection, routes: [String: TLSTestResponse], log: RequestLog?, buffer: Data
+    ) {
         let maximum = Constants.maximumRequestBytes
         connection.receive(minimumIncompleteLength: 1, maximumLength: maximum) { data, _, _, error in
             guard error == nil, let data else {
@@ -105,22 +124,51 @@ struct TLSTestServer: Sendable {
                 return
             }
             let received = buffer + data
-            guard let text = String(data: received, encoding: .utf8), text.contains("\r\n\r\n") else {
-                receiveRequest(connection, routes: routes, buffer: received)
+            guard let request = parse(received) else {
+                receiveRequest(connection, routes: routes, log: log, buffer: received)
                 return
             }
-            respond(to: text, on: connection, routes: routes)
+            respond(to: request, on: connection, routes: routes, log: log)
         }
     }
 
-    private static func respond(to request: String, on connection: NWConnection, routes: [String: TLSTestResponse]) {
-        let parts = request.split(separator: " ", maxSplits: Constants.requestLineParts - 1)
-        let path = parts.count > Constants.pathIndex ? String(parts[Constants.pathIndex]) : ""
-        let response = routes[path] ?? TLSTestResponse(status: Constants.notFoundStatus, body: "not found")
+    /// head と本文 (Content-Length の分) が揃うまでは nil を返す.
+    private static func parse(_ data: Data) -> RecordedRequest? {
+        guard let text = String(data: data, encoding: .utf8), let separator = text.range(of: "\r\n\r\n") else {
+            return nil
+        }
+        let head = text[..<separator.lowerBound]
+        let body = String(text[separator.upperBound...])
+        let contentLength =
+            head.split(separator: "\r\n")
+            .compactMap { line -> Int? in
+                let field = line.split(separator: ":", maxSplits: 1)
+                guard field.count == Constants.headerFieldParts, field[0].lowercased() == "content-length" else {
+                    return nil
+                }
+                return Int(field[1].trimmingCharacters(in: .whitespaces))
+            }
+            .first ?? 0
+        guard body.utf8.count >= contentLength else { return nil }
+        let requestLine = (head.split(separator: "\r\n").first ?? "").split(
+            separator: " ", maxSplits: Constants.requestLineParts - 1)
+        let method = requestLine.first.map(String.init) ?? ""
+        let path = requestLine.count > Constants.pathIndex ? String(requestLine[Constants.pathIndex]) : ""
+        return RecordedRequest(method: method, path: path, body: body)
+    }
+
+    private static func respond(
+        to request: RecordedRequest, on connection: NWConnection, routes: [String: TLSTestResponse],
+        log: RequestLog?
+    ) {
+        let response = routes[request.path] ?? TLSTestResponse(status: Constants.notFoundStatus, body: "not found")
         let head =
             "HTTP/1.1 \(response.status) X\r\nContent-Length: \(response.body.utf8.count)\r\nConnection: close\r\n\r\n"
-        connection.send(
-            content: Data((head + response.body).utf8),
-            completion: .contentProcessed { _ in connection.cancel() })
+        Task {
+            await log?.append(request)
+            connection.send(
+                content: Data((head + response.body).utf8),
+                completion: .contentProcessed { _ in connection.cancel() })
+        }
     }
 }
